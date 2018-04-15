@@ -6,8 +6,10 @@
 package accesoupv.controller;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -17,12 +19,19 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 /**
@@ -44,6 +53,12 @@ public class AjustesController implements Initializable {
     private ComboBox<String> comboDrive;
     @FXML
     private TextField textUser;
+    @FXML
+    private MenuItem menuAyuda;
+    @FXML
+    private MenuItem menuAyudaVPN;
+    @FXML
+    private MenuItem menuAyudaDSIC;
     
     //Constants (Messages)
     public static final String SUCCESS_MESSAGE = "El archivo ha sido creado con éxito.\n¿Desea abrir la carpeta en la cual ha sido guardado?";
@@ -95,8 +110,32 @@ public class AjustesController implements Initializable {
         dataDrives = FXCollections.observableList(drives);
     }
     
+    private void gotoAyuda(String page) {
+        try {
+            Stage stage = new Stage();
+            FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/AyudaView.fxml"));
+            Parent root = (Parent) myLoader.load();
+            AyudaController dialogue = myLoader.<AyudaController>getController();
+            dialogue.init(stage, page);
+            Scene scene = new Scene(root);
+
+            stage.setScene(scene);
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.show();
+        } catch (IOException ex) {
+        }
+    }
+    
     @FXML
     private void closeDialogue(ActionEvent event) {
+        if (!textVPN.getText().equals(PrincipalController.vpn)
+                || !textUser.getText().equals(PrincipalController.user)
+                || !comboDrive.getSelectionModel().getSelectedItem().equals(PrincipalController.drive)) {
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Desea cerrar sin guardar los cambios?");
+            confirm.setHeaderText(null);
+            Optional<ButtonType> result = confirm.showAndWait();
+            if (result.get() != ButtonType.OK) return;
+        }
         Node mynode = (Node) event.getSource();
         mynode.getScene().getWindow().hide();
     }
@@ -115,8 +154,10 @@ public class AjustesController implements Initializable {
                     Bindings.isEmpty(textVPN.textProperty())
             )
         );
-        
         buttonClose.disableProperty().bind(noPrefs);
+        menuAyuda.setOnAction((e) -> gotoAyuda(""));
+        menuAyudaDSIC.setOnAction((e) -> gotoAyuda("DSIC"));
+        menuAyudaVPN.setOnAction((e) -> gotoAyuda("VPN"));
         
         Platform.runLater(() -> buttonClose.requestFocus());
     }    

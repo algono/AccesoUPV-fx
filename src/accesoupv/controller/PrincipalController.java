@@ -15,6 +15,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.VBox;
@@ -40,13 +41,21 @@ public class PrincipalController implements Initializable {
     @FXML
     private MenuItem menuAyuda;
     @FXML
-    private MenuItem ayudaVPN;
+    private MenuItem menuAyudaVPN;
     @FXML
-    private MenuItem ayudaDSIC;
+    private MenuItem menuAyudaDSIC;
     @FXML
     private MenuItem menuDisconnectW;
     @FXML
-    private MenuItem menuDisconnectUPV;
+    private MenuItem menuExit;
+    @FXML
+    private Button buttonAccessW;
+    @FXML
+    private Button buttonAyudaDSIC;
+    @FXML
+    private Button buttonDisconnectW;
+    @FXML
+    private Button buttonAccessDSIC;
     
     public static String drive, vpn, user;
     
@@ -71,7 +80,7 @@ public class PrincipalController implements Initializable {
             stage.initModality(Modality.APPLICATION_MODAL);
             if (noPrefs) stage.showAndWait();
             else stage.show();
-        } catch (IOException e) {}
+        } catch (IOException ex) {}
     }
     
     private void gotoAyuda(String page) {
@@ -94,8 +103,9 @@ public class PrincipalController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         loadPrefs();
         menuAyuda.setOnAction((e) -> gotoAyuda(""));
-        ayudaDSIC.setOnAction((e) -> gotoAyuda("DSIC"));
-        ayudaVPN.setOnAction((e) -> gotoAyuda("VPN"));
+        menuAyudaDSIC.setOnAction((e) -> gotoAyuda("DSIC"));
+        buttonAyudaDSIC.setOnAction((e) -> gotoAyuda("DSIC"));
+        menuAyudaVPN.setOnAction((e) -> gotoAyuda("VPN"));
         menuAjustes.setOnAction((e) -> gotoAjustes(false));
     }    
     
