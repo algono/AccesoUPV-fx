@@ -18,7 +18,7 @@
    <center>
       <Accordion maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
          <panes>
-            <TitledPane fx:id="vpnPane" animated="false" expanded="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo crear una VPN a la UPV">
+            <TitledPane fx:id="paneVPN" animated="false" expanded="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo crear una VPN a la UPV">
                <content>
                   <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="578.0">
                      <children>
@@ -29,7 +29,7 @@
                   </VBox>
                </content>
             </TitledPane>
-            <TitledPane animated="false" expanded="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo guardar el usuario y contraseña del DSIC">
+            <TitledPane fx:id="paneDSIC" animated="false" expanded="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo guardar el usuario y contraseña del DSIC">
                <content>
                   <VBox prefHeight="200.0" prefWidth="100.0" spacing="5.0">
                      <children>

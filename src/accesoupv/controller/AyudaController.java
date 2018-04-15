@@ -8,6 +8,7 @@ package accesoupv.controller;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -29,7 +30,9 @@ import javafx.stage.Stage;
 public class AyudaController implements Initializable {
     
     @FXML
-    private TitledPane vpnPane;
+    private TitledPane paneVPN;
+    @FXML
+    private TitledPane paneDSIC;
     @FXML
     private WebView vpnWeb;
     @FXML
@@ -54,9 +57,13 @@ public class AyudaController implements Initializable {
     private Stage primaryStage;
     private final Clipboard clipboard = Clipboard.getSystemClipboard();
     
-    public void init(Stage stage) {
+    public void init(Stage stage, String page) {
         primaryStage = stage;
         primaryStage.setTitle("Ayuda");
+        switch(page) {
+            case "VPN": Platform.runLater(() -> paneVPN.setExpanded(true)); break;
+            case "DSIC": Platform.runLater(() -> paneDSIC.setExpanded(true)); break;
+        }
     }
     
     private void addToClipboard(String text) {
@@ -78,8 +85,7 @@ public class AyudaController implements Initializable {
         vpnWeb.getEngine().load(VPN_WEB);
         vpnLink.setOnAction(e -> vpnWeb.getEngine().load(VPN_WEB));
         evirLink.setOnAction(e -> {
-            try {
-                Runtime.getRuntime().exec("mstsc");
+            try { Runtime.getRuntime().exec("mstsc");
             } catch (IOException ex) { new Alert(Alert.AlertType.ERROR, EVIR_ERROR_MESSAGE).show(); }
         });
         clipLinux.setOnAction((e) -> { 
@@ -92,6 +98,6 @@ public class AyudaController implements Initializable {
             copiedLinux.setVisible(false);
             copiedWindows.setVisible(true);
         });
-        vpnPane.expandedProperty().addListener((obs, oldValue, newValue) -> primaryStage.setMaximized(newValue));
+        paneVPN.expandedProperty().addListener((obs, oldValue, newValue) -> primaryStage.setMaximized(newValue));
     }
 }
