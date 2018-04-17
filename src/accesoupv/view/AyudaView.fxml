@@ -40,7 +40,7 @@
                            </children>
                         </HBox>
                         <Label layoutX="20.0" layoutY="20.0" text="2. En &quot;Equipo&quot; escriba una de las siguientes direcciones:" />
-                        <GridPane alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" VBox.vgrow="NEVER">
+                        <GridPane alignment="CENTER" hgap="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" VBox.vgrow="NEVER">
                            <columnConstraints>
                               <ColumnConstraints fillWidth="false" hgrow="NEVER" maxWidth="-Infinity" minWidth="10.0" />
                               <ColumnConstraints fillWidth="false" hgrow="NEVER" maxWidth="-Infinity" minWidth="10.0" />

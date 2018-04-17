@@ -5,6 +5,7 @@
  */
 package accesoupv.controller;
 
+import static accesoupv.Launcher.acceso;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -74,7 +75,10 @@ public class AjustesController implements Initializable {
         primaryStage.setTitle("Preferencias");
         noPrefs.set(nPrefs);
         if (nPrefs) {
-            primaryStage.setOnCloseRequest((we) -> Platform.exit());
+            primaryStage.setOnCloseRequest((evt) -> {
+                Platform.exit();
+                System.exit(0);
+            });
             textWarning.setVisible(true);
             if (dataDrives.contains("W:")) {
                 comboDrive.getSelectionModel().select("W:");
@@ -83,17 +87,17 @@ public class AjustesController implements Initializable {
             }
         } else {
             //Escribe las preferencias guardadas (si hay)
-            textUser.setText(PrincipalController.user);
-            comboDrive.getSelectionModel().select(PrincipalController.drive);
-            textVPN.setText(PrincipalController.vpn);
+            textUser.setText(acceso.getUser());
+            comboDrive.getSelectionModel().select(acceso.getDrive());
+            textVPN.setText(acceso.getVPN());
         }
     }
     
     @FXML
     private void savePrefs(ActionEvent event) {
-            PrincipalController.vpn = textVPN.getText();
-            PrincipalController.drive = comboDrive.getValue();
-            PrincipalController.user = textUser.getText();
+            acceso.setVPN(textVPN.getText());
+            acceso.setDrive(comboDrive.getValue());
+            acceso.setUser(textUser.getText());
             //Cierra la ventana de ajustes
             Node mynode = (Node) event.getSource();
             mynode.getScene().getWindow().hide();
@@ -128,9 +132,9 @@ public class AjustesController implements Initializable {
     
     @FXML
     private void closeDialogue(ActionEvent event) {
-        if (!textVPN.getText().equals(PrincipalController.vpn)
-                || !textUser.getText().equals(PrincipalController.user)
-                || !comboDrive.getSelectionModel().getSelectedItem().equals(PrincipalController.drive)) {
+        if (!textVPN.getText().equals(acceso.getVPN())
+                || !textUser.getText().equals(acceso.getUser())
+                || !comboDrive.getSelectionModel().getSelectedItem().equals(acceso.getDrive())) {
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Desea cerrar sin guardar los cambios?");
             confirm.setHeaderText(null);
             Optional<ButtonType> result = confirm.showAndWait();

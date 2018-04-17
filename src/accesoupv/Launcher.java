@@ -5,8 +5,7 @@
  */
 package accesoupv;
 
-import accesoupv.controller.PrincipalController;
-import java.util.prefs.Preferences;
+import accesoupv.model.AccesoUPV;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -18,7 +17,9 @@ import javafx.stage.WindowEvent;
  *
  * @author Alejandro
  */
-public class AccesoUPV extends Application {
+public class Launcher extends Application {
+    
+    public static AccesoUPV acceso = new AccesoUPV();
     
     @Override
     public void start(Stage stage) throws Exception {
@@ -29,15 +30,9 @@ public class AccesoUPV extends Application {
         stage.setScene(scene);
         stage.show();
         stage.setOnCloseRequest((WindowEvent we) -> {
-            //Guardar las preferencias
-            Preferences prefs = Preferences.userNodeForPackage(AccesoUPV.class);
-            prefs.put("drive", PrincipalController.drive);
-            prefs.put("vpn", PrincipalController.vpn);
-            prefs.put("user", PrincipalController.user);
-            //Desconectar Disco W (si estaba conectado)
-            
-            //Desconectar VPN
-            
+            acceso.savePrefs();
+            acceso.disconnectW();
+            acceso.disconnectVPN();
         });
     }
 

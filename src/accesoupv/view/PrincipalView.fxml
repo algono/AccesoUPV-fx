@@ -6,7 +6,6 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.input.KeyCodeCombination?>
@@ -14,8 +13,6 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
@@ -37,12 +34,18 @@
             </Menu>
           <Menu mnemonicParsing="false" text="Ajustes">
             <items>
-              <MenuItem fx:id="menuAjustes" mnemonicParsing="false" text="Preferencias" />
+              <MenuItem fx:id="menuAjustes" mnemonicParsing="false" text="Preferencias">
+                     <accelerator>
+                        <KeyCodeCombination alt="DOWN" code="P" control="UP" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
             </items>
           </Menu>
             <Menu mnemonicParsing="false" text="Avanzado">
                <items>
-                  <MenuItem disable="true" mnemonicParsing="false" onAction="#createCMD" text="Crear CMD" />
+                  <MenuItem mnemonicParsing="false" onAction="#createCMD" text="Crear CMD">
+                     <accelerator>
+                        <KeyCodeCombination alt="DOWN" code="C" control="UP" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
                </items>
             </Menu>
           <Menu mnemonicParsing="false" text="Ayuda">
@@ -62,64 +65,49 @@
             <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
          </BorderPane.margin>
          <center>
-            <StackPane>
+            <GridPane alignment="CENTER" prefHeight="154.0" prefWidth="427.0" vgap="10.0">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="10.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+              </columnConstraints>
+              <rowConstraints>
+                  <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="100.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="42.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="400.0" minHeight="-Infinity" prefHeight="82.0" vgrow="SOMETIMES" />
+                  <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="76.0" vgrow="SOMETIMES" />
+              </rowConstraints>
                <children>
-                  <VBox fx:id="loadingScreen" alignment="CENTER" prefHeight="200.0" prefWidth="100.0" visible="false">
-                     <children>
-                        <ProgressIndicator />
-                     </children>
-                  </VBox>
-                  <GridPane alignment="CENTER" prefHeight="154.0" prefWidth="427.0" vgap="10.0">
-                    <columnConstraints>
-                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="10.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                    </columnConstraints>
-                    <rowConstraints>
-                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="100.0" vgrow="SOMETIMES" />
-                      <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="42.0" vgrow="SOMETIMES" />
-                      <RowConstraints maxHeight="400.0" minHeight="-Infinity" prefHeight="82.0" vgrow="SOMETIMES" />
-                        <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="76.0" vgrow="SOMETIMES" />
-                    </rowConstraints>
-                     <children>
-                        <Text fill="#615f5f" strokeType="OUTSIDE" strokeWidth="0.0" text="¿Qué desea hacer?" GridPane.columnSpan="3" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                        </Text>
-                        <Text fill="#4d4747" strokeType="OUTSIDE" strokeWidth="0.0" text="Disco W" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
-                           <font>
-                              <Font size="18.0" />
-                           </font>
-                        </Text>
-                        <Button fx:id="buttonAccessW" mnemonicParsing="false" text="Acceder" textFill="#3d5426" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER">
-                           <font>
-                              <Font size="18.0" />
-                           </font>
-                        </Button>
-                        <Button fx:id="buttonDisconnectW" mnemonicParsing="false" text="Desconectar" textFill="#b22828" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
-                        <Separator orientation="VERTICAL" prefHeight="200.0" prefWidth="9.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.rowSpan="3" GridPane.valignment="CENTER" GridPane.vgrow="ALWAYS" />
-                        <Text fill="#58579e" strokeType="OUTSIDE" strokeWidth="0.0" text="Escritorios DSIC" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
-                           <font>
-                              <Font size="18.0" />
-                           </font>
-                        </Text>
-                        <Button fx:id="buttonAccessDSIC" layoutX="73.0" layoutY="91.0" mnemonicParsing="false" text="Acceder" textFill="#3d5426" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER">
-                           <font>
-                              <Font size="18.0" />
-                           </font>
-                        </Button>
-                        <Button fx:id="buttonAyudaDSIC" mnemonicParsing="false" text="Ayuda" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
-                     </children>
-                     <StackPane.margin>
-                        <Insets />
-                     </StackPane.margin>
-                  </GridPane>
+                  <Text fill="#615f5f" strokeType="OUTSIDE" strokeWidth="0.0" text="¿Qué desea hacer?" GridPane.columnSpan="3" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Text>
+                  <Text fill="#4d4747" strokeType="OUTSIDE" strokeWidth="0.0" text="Disco W" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </Text>
+                  <Button fx:id="buttonAccessW" mnemonicParsing="false" text="Acceder" textFill="#3d5426" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </Button>
+                  <Button fx:id="buttonDisconnectW" mnemonicParsing="false" text="Desconectar" textFill="#b22828" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
+                  <Separator orientation="VERTICAL" prefHeight="200.0" prefWidth="9.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.rowSpan="3" GridPane.valignment="CENTER" GridPane.vgrow="ALWAYS" />
+                  <Text fill="#58579e" strokeType="OUTSIDE" strokeWidth="0.0" text="Escritorios DSIC" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </Text>
+                  <Button fx:id="buttonAccessDSIC" layoutX="73.0" layoutY="91.0" mnemonicParsing="false" text="Acceder" textFill="#3d5426" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </Button>
+                  <Button fx:id="buttonAyudaDSIC" mnemonicParsing="false" text="Ayuda" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
                </children>
-               <BorderPane.margin>
-                  <Insets top="10.0" />
-               </BorderPane.margin>
-            </StackPane>
+            </GridPane>
          </center>
          <top>
             <Label fx:id="labelState" text="Estado: Conectado a la UPV" textFill="#44803a" BorderPane.alignment="CENTER" />
