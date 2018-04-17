@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.web.WebView?>
 
-<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="394.0" prefWidth="453.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="accesoupv.controller.AyudaController">
+<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="458.0" prefWidth="558.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="accesoupv.controller.AyudaController">
    <center>
       <Accordion maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
          <panes>
@@ -31,7 +31,7 @@
             </TitledPane>
             <TitledPane fx:id="paneDSIC" animated="false" expanded="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo guardar el usuario y contraseña del DSIC">
                <content>
-                  <VBox prefHeight="200.0" prefWidth="100.0" spacing="5.0">
+                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="100.0" spacing="5.0">
                      <children>
                         <HBox alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" spacing="5.0">
                            <children>
@@ -42,9 +42,9 @@
                         <Label layoutX="20.0" layoutY="20.0" text="2. En &quot;Equipo&quot; escriba una de las siguientes direcciones:" />
                         <GridPane alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" VBox.vgrow="NEVER">
                            <columnConstraints>
-                              <ColumnConstraints fillWidth="false" hgrow="NEVER" maxWidth="327.0" minWidth="10.0" prefWidth="188.0" />
-                              <ColumnConstraints fillWidth="false" hgrow="NEVER" maxWidth="157.0" minWidth="10.0" prefWidth="129.0" />
-                              <ColumnConstraints fillWidth="false" hgrow="NEVER" maxWidth="94.0" minWidth="10.0" prefWidth="75.0" />
+                              <ColumnConstraints fillWidth="false" hgrow="NEVER" maxWidth="-Infinity" minWidth="10.0" />
+                              <ColumnConstraints fillWidth="false" hgrow="NEVER" maxWidth="-Infinity" minWidth="10.0" />
+                              <ColumnConstraints fillWidth="false" hgrow="NEVER" maxWidth="-Infinity" minWidth="10.0" />
                            </columnConstraints>
                            <rowConstraints>
                               <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />

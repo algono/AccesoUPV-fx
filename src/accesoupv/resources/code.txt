@@ -1,0 +1,51 @@
+@echo off
+color 0F
+echo Estableciendo conexion a la UPV...
+rasdial "_vpn" >nul
+echo Conexion VPN creada.
+timeout>nul 2
+:menu
+cls
+echo Seleccione lo que desea hacer:
+echo --------------------------------------
+echo 1- Acceder al Disco W
+echo 2- Acceder al DSIC (Escritorio Remoto)
+echo 0- Salir
+echo --------------------------------------
+echo Escriba su seleccion aqui:
+set/p "cho=>"
+cls
+if %cho%==1 goto connectW
+if %cho%==2 goto DSIC
+if %cho%==0 goto disconnect
+goto menu
+:connectW
+if exist _drive goto accessW
+echo Creando acceso al disco W...
+net use _drive \\nasupv.upv.es\alumnos\_letter\_user >nul
+echo Conectado!
+timeout>nul 3
+:accessW
+start _drive
+goto menu
+:DSIC
+cls
+echo Elija un sistema operativo:
+echo --------------------------------------
+echo 1- Linux
+echo 2- Windows
+echo 0- Volver atras
+echo --------------------------------------
+echo Escriba su seleccion aqui:
+set/p "cho=>"
+cls
+if %cho%==1 mstsc /v:linuxdesktop.dsic.upv.es
+if %cho%==2 mstsc /v:windesktop.dsic.upv.es
+if %cho%==0 goto menu
+goto menu
+:disconnect
+if exist _drive net use _drive /delete >nul
+rasdial "_vpn" /DISCONNECT >nul
+echo Desconectado!
+timeout>nul 2
+exit

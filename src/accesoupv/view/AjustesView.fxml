@@ -48,8 +48,8 @@
             <Text fx:id="textWarning" fill="RED" strokeType="OUTSIDE" strokeWidth="0.0" text="AVISO: No hay preferencias establecidas. Debe establecerlas para continuar." visible="false" />
             <HBox alignment="BOTTOM_CENTER" spacing="30.0">
                <children>
-                  <Button fx:id="buttonAccept" defaultButton="true" mnemonicParsing="false" onAction="#savePrefs" prefWidth="70.0" text="Aceptar" />
-                  <Button fx:id="buttonClose" cancelButton="true" mnemonicParsing="false" onAction="#closeDialogue" prefWidth="70.0" text="Cancelar" />
+                  <Button fx:id="buttonAccept" defaultButton="true" mnemonicParsing="false" onAction="#savePrefs" text="Aceptar" />
+                  <Button fx:id="buttonClose" cancelButton="true" mnemonicParsing="false" onAction="#closeDialogue" text="Cancelar" />
                </children>
                <padding>
                   <Insets bottom="10.0" />
