@@ -25,6 +25,7 @@ public class AccesoUPV {
     //Servers
     public static final String LINUX_DSIC = "linuxdesktop.dsic.upv.es";
     public static final String WIN_DSIC = "windesktop.dsic.upv.es";
+    public static final String UPV_SERVER = "www.upv.es";
     
     
     public AccesoUPV() {
@@ -68,17 +69,19 @@ public class AccesoUPV {
     //Desconectar Disco W (si estaba conectado)
     public void disconnectW() {
         try {
-            new ProcessBuilder("cmd.exe", "/c", "net use " + drive + " /delete").start();
+            Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + drive + " /delete").start();
+            p.waitFor();
             isWConnected.set(false);
-        } catch (IOException ex) {
+        } catch (IOException | InterruptedException ex) {
             new Alert(Alert.AlertType.ERROR, "Ha habido un error al desconectar el disco W. Deberá desconectarlo manualmente.").showAndWait();
         }
     }
     //Desconectar VPN
     public void disconnectVPN() {
         try {
-            new ProcessBuilder("cmd.exe", "/c", "rasdial " + vpn + " /DISCONNECT").start();
-        } catch (IOException ex) {
+            Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial " + vpn + " /DISCONNECT").start();
+            p.waitFor();
+        } catch (IOException | InterruptedException ex) {
             new Alert(Alert.AlertType.ERROR, "No ha podido desconectarse la VPN. Deberá desconectarla manualmente.").showAndWait();
         }
     }

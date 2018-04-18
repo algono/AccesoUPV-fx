@@ -6,7 +6,9 @@
 package accesoupv.controller;
 
 import static accesoupv.Launcher.acceso;
+import accesoupv.model.AccesoUPV;
 import accesoupv.model.CodeFiller;
+import accesoupv.model.LoadingTask;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,11 +17,11 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -44,7 +46,9 @@ public class PrincipalController implements Initializable {
     @FXML
     private Label textState;
     @FXML
-    private MenuItem menuAccessW;
+    private MenuItem menuLinuxDSIC;
+    @FXML
+    private MenuItem menuWinDSIC;
     @FXML
     private MenuItem menuAjustes;
     @FXML
@@ -54,38 +58,30 @@ public class PrincipalController implements Initializable {
     @FXML
     private MenuItem menuAyudaDSIC;
     @FXML
-    private MenuItem menuDisconnectW;
-    @FXML
-    private MenuItem menuExit;
-    @FXML
-    private Button buttonAccessW;
-    @FXML
     private Button buttonDisconnectW;
     @FXML
     private Button buttonLinuxDSIC;
     @FXML
-    private Button buttonWindowsDSIC;
+    private Button buttonWinDSIC;
     
     //Messages
-    public static final String SUCCESS_MSG = "El archivo ha sido creado con éxito.\n¿Desea abrir la carpeta en la cual ha sido guardado?";
+    public static final String SUCCESS_CMD_MSG = "El archivo ha sido creado con éxito.\n¿Desea abrir la carpeta en la cual ha sido guardado?";
     public static final String ERROR_CMD_MSG = "Ha habido un error al crear el programa. Vuelva a intentarlo.";
-    public static final String ERROR_FOLDER_MSG = "Ha habido un error al abrir la carpeta. Ábrala manualmente.";
+    public static final String ERROR_FOLDER_MSG = "Ha habido un error al tratar de abrir la carpeta. Ábrala manualmente.";
     
-    private boolean gotoLoadingScreen(String taskId) {
-        boolean completed = false;
+    private void gotoLoadingScreen(Task task) {
         try {    
             Stage stage = new Stage();
             FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/LoadingView.fxml"));
             Parent root = (Parent) myLoader.load();
             LoadingController dialogue = myLoader.<LoadingController>getController();
-            completed = dialogue.init(stage, taskId);
+            dialogue.init(stage, task);
             Scene scene = new Scene(root);
             
             stage.setScene(scene);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
         } catch (IOException ex) {}
-        return completed;
     }
     
     @FXML
@@ -102,7 +98,7 @@ public class PrincipalController implements Initializable {
                 CodeFiller filler = new CodeFiller(in, acceso.createMap(), new FileOutputStream(output));
                 filler.transcript();
                 //Si todo ha ido bien, muestra un mensaje de éxito, y da al usuario la opción de acceder a la carpeta donde se encuentra el output
-                Alert success = new Alert(Alert.AlertType.CONFIRMATION, SUCCESS_MSG);
+                Alert success = new Alert(Alert.AlertType.CONFIRMATION, SUCCESS_CMD_MSG);
                 success.setHeaderText(null);
                 Optional<ButtonType> result = success.showAndWait();
                 if (result.get() == ButtonType.OK) {
@@ -152,23 +148,55 @@ public class PrincipalController implements Initializable {
         }
     }
     
+    private void connectVPN() {
+        LoadingTask task = new LoadingTask(LoadingTask.ERROR_VPN);
+        task.setCallable(task::connectVPN);
+        gotoLoadingScreen(task);
+    }
+    @FXML
+    private void accessW(ActionEvent event) {
+        File drive = new File(acceso.getDrive());
+        if (!drive.exists()) {
+            LoadingTask task = new LoadingTask(LoadingTask.ERROR_W);
+            task.setCallable(task::accessW);
+            gotoLoadingScreen(task);
+        }
+        try {
+            Desktop.getDesktop().open(drive);
+        } catch (IOException ex) {
+            new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).showAndWait();
+        }
+    }
+    private void accessDSIC(String server) {
+        try {
+            new ProcessBuilder("cmd.exe", "/c", "mstsc /v:" + server).start();
+        } catch (IOException ex) {
+            Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         //If prefs are incomplete, go to Preferences
         if (acceso.isIncomplete()) { gotoAjustes(true); }
         //Assigns buttons' actions
+        menuLinuxDSIC.setOnAction((e) -> accessDSIC(AccesoUPV.LINUX_DSIC));
+        buttonLinuxDSIC.setOnAction((e) -> accessDSIC(AccesoUPV.LINUX_DSIC));
+        menuWinDSIC.setOnAction((e) -> accessDSIC(AccesoUPV.WIN_DSIC));
+        buttonWinDSIC.setOnAction((e) -> accessDSIC(AccesoUPV.WIN_DSIC));
         menuAyuda.setOnAction((e) -> gotoAyuda(""));
         menuAyudaDSIC.setOnAction((e) -> gotoAyuda("DSIC"));
         menuAyudaVPN.setOnAction((e) -> gotoAyuda("VPN"));
         menuAjustes.setOnAction((e) -> gotoAjustes(false));
-        buttonAccessW.setOnAction((e) -> gotoLoadingScreen("W"));
-        menuAccessW.setOnAction((e) -> gotoLoadingScreen("W"));
-        buttonDisconnectW.setOnAction((e) -> acceso.disconnectW());
+        buttonDisconnectW.setOnAction((e) -> {
+            acceso.disconnectW();
+            Alert success = new Alert(Alert.AlertType.INFORMATION, "Disco W eliminado con éxito.");
+            success.setTitle("Completado");
+            success.setHeaderText(null);
+            success.show();
+        });
         //Sets bindings
         buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.isWConnected));
         //Sets up the VPN connection
-        boolean vpnActive = gotoLoadingScreen("VPN");
-        if (vpnActive) textState.setText("Estado: Conectado (vía VPN)");
-        else textState.setText("Estado: Conectado (vía Wi-Fi UPV)");
+        connectVPN();
     }
 }
