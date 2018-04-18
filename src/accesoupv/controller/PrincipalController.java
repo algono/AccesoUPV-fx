@@ -15,13 +15,15 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -29,7 +31,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
-import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -41,13 +42,9 @@ import javafx.stage.Stage;
 public class PrincipalController implements Initializable {
     
     @FXML
-    private Label labelState;
-    @FXML
-    private VBox loadingScreen;
+    private Label textState;
     @FXML
     private MenuItem menuAccessW;
-    @FXML
-    private MenuItem menuAccessDSIC;
     @FXML
     private MenuItem menuAjustes;
     @FXML
@@ -63,30 +60,32 @@ public class PrincipalController implements Initializable {
     @FXML
     private Button buttonAccessW;
     @FXML
-    private Button buttonAyudaDSIC;
-    @FXML
     private Button buttonDisconnectW;
     @FXML
-    private Button buttonAccessDSIC;
+    private Button buttonLinuxDSIC;
+    @FXML
+    private Button buttonWindowsDSIC;
     
     //Messages
     public static final String SUCCESS_MSG = "El archivo ha sido creado con éxito.\n¿Desea abrir la carpeta en la cual ha sido guardado?";
     public static final String ERROR_CMD_MSG = "Ha habido un error al crear el programa. Vuelva a intentarlo.";
     public static final String ERROR_FOLDER_MSG = "Ha habido un error al abrir la carpeta. Ábrala manualmente.";
     
-    private void setupVPN() {
+    private boolean gotoLoadingScreen(String taskId) {
+        boolean completed = false;
         try {    
             Stage stage = new Stage();
             FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/LoadingView.fxml"));
             Parent root = (Parent) myLoader.load();
             LoadingController dialogue = myLoader.<LoadingController>getController();
-            dialogue.init(stage);
+            completed = dialogue.init(stage, taskId);
             Scene scene = new Scene(root);
             
             stage.setScene(scene);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
         } catch (IOException ex) {}
+        return completed;
     }
     
     @FXML
@@ -96,8 +95,7 @@ public class PrincipalController implements Initializable {
             FileChooser fc = new FileChooser();
             fc.setInitialFileName("Programa.cmd");
             fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivo de comandos(*.cmd)", "*.cmd"));
-            Node mynode = (Node) event.getSource();
-            File output = fc.showSaveDialog(mynode.getScene().getWindow());
+            File output = fc.showSaveDialog(textState.getScene().getWindow());
             if (output != null) {
                 output.createNewFile();
                 InputStream in = getClass().getResourceAsStream("/accesoupv/resources/code.txt");
@@ -161,15 +159,16 @@ public class PrincipalController implements Initializable {
         //Assigns buttons' actions
         menuAyuda.setOnAction((e) -> gotoAyuda(""));
         menuAyudaDSIC.setOnAction((e) -> gotoAyuda("DSIC"));
-        buttonAyudaDSIC.setOnAction((e) -> gotoAyuda("DSIC"));
         menuAyudaVPN.setOnAction((e) -> gotoAyuda("VPN"));
         menuAjustes.setOnAction((e) -> gotoAjustes(false));
-        buttonAccessW.setOnAction((e) -> acceso.accessW());
+        buttonAccessW.setOnAction((e) -> gotoLoadingScreen("W"));
+        menuAccessW.setOnAction((e) -> gotoLoadingScreen("W"));
         buttonDisconnectW.setOnAction((e) -> acceso.disconnectW());
         //Sets bindings
         buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.isWConnected));
         //Sets up the VPN connection
-        setupVPN();
-    }    
-    
+        boolean vpnActive = gotoLoadingScreen("VPN");
+        if (vpnActive) textState.setText("Estado: Conectado (vía VPN)");
+        else textState.setText("Estado: Conectado (vía Wi-Fi UPV)");
+    }
 }

@@ -5,8 +5,6 @@
  */
 package accesoupv.model;
 
-import java.awt.Desktop;
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,20 +64,7 @@ public class AccesoUPV {
         prefs.put("vpn", vpn);
         prefs.put("user", user);
     }
-    public void accessW() {
-        try {
-            Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + drive + " " + getDirW()).start();
-            p.waitFor();
-            try {
-                Desktop.getDesktop().open(new File(drive));
-            } catch (IOException ex) {
-                new Alert(Alert.AlertType.ERROR, "Ha habido un error al tratar de abrir la carpeta del disco W. Hágalo manualmente.").show();
-            }
-            isWConnected.set(true);
-        } catch (IOException ex) {
-            new Alert(Alert.AlertType.ERROR, "Ha habido un error al tratar de conectarse al disco W. Inténtelo de nuevo más tarde.").show();
-        } catch (InterruptedException ex) {}
-    }
+    
     //Desconectar Disco W (si estaba conectado)
     public void disconnectW() {
         try {
