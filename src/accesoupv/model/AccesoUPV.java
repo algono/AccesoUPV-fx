@@ -72,24 +72,4 @@ public class AccesoUPV {
         prefs.put("vpn", vpn);
         prefs.put("user", user);
     }
-    
-    //Desconectar Disco W (si estaba conectado)
-    public void disconnectW() {
-        try {
-            Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + drive + " /delete").start();
-            p.waitFor();
-            isWConnected.set(false);
-        } catch (IOException | InterruptedException ex) {
-            new Alert(Alert.AlertType.ERROR, "Ha habido un error al desconectar el disco W. Deberá desconectarlo manualmente.").showAndWait();
-        }
-    }
-    //Desconectar VPN
-    public void disconnectVPN() {
-        try {
-            Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial " + vpn + " /DISCONNECT").start();
-            p.waitFor();
-        } catch (IOException | InterruptedException ex) {
-            new Alert(Alert.AlertType.ERROR, "No ha podido desconectarse la VPN. Deberá desconectarla manualmente.").showAndWait();
-        }
-    }
 }

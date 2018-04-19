@@ -6,9 +6,11 @@
 package accesoupv.model;
 
 import static accesoupv.Launcher.acceso;
-import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Callable;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -21,18 +23,19 @@ import javafx.scene.control.Alert;
 public class LoadingTask extends Task<Void> {
     //Messages
     public static final String ERROR_VPN = "Ha habido un error al tratar de conectarse a la UPV. Inténtelo de nuevo más tarde.";
+    public static final String ERROR_DIS_VPN = "No ha podido desconectarse la VPN. Deberá desconectarla manualmente.";
     public static final String ERROR_W = "Ha habido un error al tratar de conectarse al disco W. Inténtelo de nuevo más tarde.";
+    public static final String ERROR_DIS_W = "Ha habido un error al desconectar el disco W. Deberá desconectarlo manualmente.";
     //Timeout
     public static final int TIMEOUT = 3000;
     //Callable method
-    private Callable<Void> callable;
-    private final Alert errorAlert;
+    private final List<Callable<Void>> callables;
+    private final Alert errorAlert = new Alert(Alert.AlertType.ERROR);
     private boolean exitOnFailed;
     
-    public LoadingTask(String errorMsg, boolean exitOF) {
-        callable = null;
-        exitOnFailed = exitOF;
-        errorAlert = new Alert(Alert.AlertType.ERROR, errorMsg);
+    public LoadingTask(Callable<Void>... c) {
+        callables = new ArrayList<>(Arrays.asList(c));
+        exitOnFailed = false;
         errorAlert.setHeaderText(null);
         setOnFailed((e) -> {
             errorAlert.showAndWait();
@@ -43,20 +46,23 @@ public class LoadingTask extends Task<Void> {
         });
     }
     //Getters
-    public Callable getCallable() { return callable; }
+    public List<Callable<Void>> getCallables() { return callables; }
     public String getErrorMessage() { return errorAlert.getContentText(); }
     public boolean getExitOnFailed() { return exitOnFailed; }
     //Setters
-    public void setCallable(Callable c) { callable = c; }
+    public void addCallable(Callable<Void> c) { callables.add(c); }
+    public void addCallables(Callable<Void>... c) { callables.addAll(Arrays.asList(c)); }
     public void setErrorMessage(String msg) { errorAlert.setContentText(msg); }
     public void setExitOnFailed(boolean b) { exitOnFailed = b; }
     
     @Override
     protected Void call() throws Exception {
-        return (callable != null) ? callable.call() : null;
+        for (Callable c : callables) { c.call(); }
+        return null;
     }
-    //Metodos posibles para LoadingTask
+    //Tareas posibles para LoadingTask
     public Void connectVPN() throws Exception {
+        setErrorMessage(ERROR_VPN);
         updateMessage("Conectando con la UPV...");
         Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial " + acceso.getVPN()).start();
         p.waitFor();
@@ -66,6 +72,7 @@ public class LoadingTask extends Task<Void> {
         return null;
     }
     public Void accessW() throws Exception {
+        setErrorMessage(ERROR_W);
         updateMessage("Accediendo al disco W...");
         String drive = acceso.getDrive();
         Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + drive + " " + acceso.getDirW()).start();
@@ -75,13 +82,25 @@ public class LoadingTask extends Task<Void> {
         }
         return null;
     }
-    public Void disconnect() throws Exception {
-        if (acceso.isWConnected.get()) {
+    //Desconectar Disco W (si estaba conectado)
+    public Void disconnectW() throws Exception {
+        setErrorMessage(ERROR_DIS_W);
+        if (acceso.isWConnected()) {
             updateMessage("Desconectando Disco W...");
-            acceso.disconnectW();
+            Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + acceso.getDrive() + " /delete").start();
+            Thread.sleep(1000);
+            p.waitFor();
+            acceso.isWConnected();
         }
+        return null;
+    }
+    //Desconectar VPN
+    public Void disconnectVPN() throws Exception {
+        setErrorMessage(ERROR_DIS_VPN);
         updateMessage("Desconectando de la UPV...");
-        acceso.disconnectVPN();
+        Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial " + acceso.getVPN() + " /DISCONNECT").start();
+        Thread.sleep(1000);
+        p.waitFor();
         return null;
     }
 }

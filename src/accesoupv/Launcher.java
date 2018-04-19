@@ -5,7 +5,9 @@
  */
 package accesoupv;
 
+import accesoupv.controller.PrincipalController;
 import accesoupv.model.AccesoUPV;
+import accesoupv.model.LoadingTask;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -23,17 +25,20 @@ public class Launcher extends Application {
     
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("/accesoupv/view/PrincipalView.fxml"));
         
+        FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/PrincipalView.fxml"));
+        Parent root = (Parent) myLoader.load();
         Scene scene = new Scene(root);
         stage.setTitle("Acceso UPV");
         stage.setScene(scene);
-        stage.show();
         stage.setOnCloseRequest((WindowEvent we) -> {
             acceso.savePrefs();
-            acceso.disconnectW();
-            acceso.disconnectVPN();
+            PrincipalController principal = myLoader.<PrincipalController>getController();
+            LoadingTask task = new LoadingTask();
+            task.addCallables(task::disconnectW, task::disconnectVPN);
+            principal.gotoLoadingScreen(task);
         });
+        stage.show();
     }
 
     /**

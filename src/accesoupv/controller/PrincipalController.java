@@ -19,8 +19,8 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -67,14 +67,15 @@ public class PrincipalController implements Initializable {
     public static final String SUCCESS_CMD_MSG = "El archivo ha sido creado con éxito.\n¿Desea abrir la carpeta en la cual ha sido guardado?";
     public static final String ERROR_CMD_MSG = "Ha habido un error al crear el programa. Vuelva a intentarlo.";
     public static final String ERROR_FOLDER_MSG = "Ha habido un error al tratar de abrir la carpeta. Ábrala manualmente.";
+    public static final String ERROR_DSIC_MSG = "No se ha podido acceder al servidor DSIC.";
     
-    private void gotoLoadingScreen() {
-        try {    
+    public void gotoLoadingScreen(Task task) {
+        try {
             Stage stage = new Stage();
             FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/LoadingView.fxml"));
             Parent root = (Parent) myLoader.load();
             LoadingController dialogue = myLoader.<LoadingController>getController();
-            dialogue.init(stage);
+            dialogue.init(stage, task);
             Scene scene = new Scene(root);
             
             stage.setScene(scene);
@@ -147,25 +148,24 @@ public class PrincipalController implements Initializable {
     }
     
     private void connectVPN() {
-        LoadingTask task = new LoadingTask(LoadingTask.ERROR_VPN, true);
-        task.setCallable(task::connectVPN);
-        LoadingController.task = task;
-        gotoLoadingScreen();
+        LoadingTask task = new LoadingTask();
+        task.addCallable(task::connectVPN);
+        task.setExitOnFailed(true);
+        gotoLoadingScreen(task);
     }
     @FXML
     private void accessW(ActionEvent event) {
         LoadingTask task;
         if (!acceso.isWConnected()) {
-            task = new LoadingTask(LoadingTask.ERROR_W, false);
-            task.setCallable(task::accessW);
-            LoadingController.task = task;
-            gotoLoadingScreen();
+            task = new LoadingTask();
+            task.addCallable(task::accessW);
+            gotoLoadingScreen(task);
         }
         if (acceso.isWConnected()) {
             try {
                 Desktop.getDesktop().open(new File(acceso.getDrive()));
             } catch (IOException ex) {
-                new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).showAndWait();
+                new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
             }
         }
     }
@@ -173,7 +173,7 @@ public class PrincipalController implements Initializable {
         try {
             new ProcessBuilder("cmd.exe", "/c", "mstsc /v:" + server).start();
         } catch (IOException ex) {
-            Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex);
+            new Alert(Alert.AlertType.ERROR, ERROR_DSIC_MSG).show();
         }
     }
     @Override
@@ -190,7 +190,9 @@ public class PrincipalController implements Initializable {
         menuAyudaVPN.setOnAction((e) -> gotoAyuda("VPN"));
         menuAjustes.setOnAction((e) -> gotoAjustes(false));
         buttonDisconnectW.setOnAction((e) -> {
-            acceso.disconnectW();
+            LoadingTask task = new LoadingTask();
+            task.addCallable(task::disconnectW);
+            gotoLoadingScreen(task);
             Alert success = new Alert(Alert.AlertType.INFORMATION, "Disco W eliminado con éxito.");
             success.setTitle("Completado");
             success.setHeaderText(null);
