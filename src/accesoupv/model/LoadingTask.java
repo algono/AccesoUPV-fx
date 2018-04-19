@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
@@ -32,15 +33,15 @@ public class LoadingTask extends Task<Void> {
     public static final int TIMEOUT = 3000;
     //Callable method
     private final List<Callable<Void>> callables;
-    private final Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+    private String errorMsg;
     private boolean exitOnFailed;
     
     public LoadingTask(Callable<Void>... c) {
         callables = new ArrayList<>(Arrays.asList(c));
         exitOnFailed = false;
-        errorAlert.setHeaderText(null);
+        errorMsg = "";
         setOnFailed((e) -> {
-            errorAlert.showAndWait();
+            getErrorAlert().showAndWait();
             if (exitOnFailed) {
                 Platform.exit();
                 System.exit(-1);
@@ -49,13 +50,17 @@ public class LoadingTask extends Task<Void> {
     }
     //Getters
     public List<Callable<Void>> getCallables() { return callables; }
-    public String getErrorMessage() { return errorAlert.getContentText(); }
+    public String getErrorMessage() { return errorMsg; }
+    public Alert getErrorAlert() {
+        Alert errorAlert = new Alert(Alert.AlertType.ERROR, errorMsg);
+        errorAlert.setHeaderText(null);
+        return errorAlert;
+    }
     public boolean getExitOnFailed() { return exitOnFailed; }
     //Setters
     public void addCallable(Callable<Void> c) { callables.add(c); }
     public void addCallables(Callable<Void>... c) { callables.addAll(Arrays.asList(c)); }
-    public void setErrorMessage(String msg) { errorAlert.setContentText(msg); }
-    public void setExitOnFailed(boolean b) { exitOnFailed = b; }
+    public void setErrorMessage(String msg) { errorMsg = msg; }
     
     @Override
     protected Void call() throws Exception {
@@ -65,6 +70,7 @@ public class LoadingTask extends Task<Void> {
     //Tareas posibles para LoadingTask
     public Void connectVPN() throws Exception {
         setErrorMessage(ERROR_VPN);
+        exitOnFailed = true;
         updateMessage("Conectando con la UPV...");
         Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial " + acceso.getVPN()).start();
         p.waitFor();
@@ -87,6 +93,7 @@ public class LoadingTask extends Task<Void> {
     //Desconectar Disco W (si estaba conectado)
     public Void disconnectW() throws Exception {
         setErrorMessage(ERROR_DIS_W);
+        exitOnFailed = false;
         if (acceso.isWConnected()) {
             updateMessage("Desconectando Disco W...");
             Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + acceso.getDrive() + " /delete").start();
@@ -105,6 +112,7 @@ public class LoadingTask extends Task<Void> {
     //Desconectar VPN
     public Void disconnectVPN() throws Exception {
         setErrorMessage(ERROR_DIS_VPN);
+        exitOnFailed = true;
         updateMessage("Desconectando de la UPV...");
         Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial " + acceso.getVPN() + " /DISCONNECT").start();
         Thread.sleep(1000);

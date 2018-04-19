@@ -150,7 +150,6 @@ public class PrincipalController implements Initializable {
     private void connectVPN() {
         LoadingTask task = new LoadingTask();
         task.addCallable(task::connectVPN);
-        task.setExitOnFailed(true);
         gotoLoadingScreen(task);
     }
     @FXML

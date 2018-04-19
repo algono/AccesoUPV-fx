@@ -38,7 +38,7 @@ public class Launcher extends Application {
             LoadingTask task = new LoadingTask();
             task.addCallables(task::disconnectW, task::disconnectVPN);
             principal.gotoLoadingScreen(task);
-            if (task.getState() == Worker.State.FAILED) we.consume();
+            if (task.getState() != Worker.State.SUCCEEDED) we.consume();
         });
         stage.show();
     }
