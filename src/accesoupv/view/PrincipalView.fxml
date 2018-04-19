@@ -21,12 +21,22 @@
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
-            <Menu mnemonicParsing="false" text="Acceder">
+            <Menu mnemonicParsing="false" text="Inicio">
               <items>
-                <MenuItem mnemonicParsing="false" onAction="#accessW" text="Disco W">
+                  <Menu mnemonicParsing="false" text="Disco W">
+                    <items>
+                      <MenuItem mnemonicParsing="false" text="Action 1" />
+                    </items>
+                  </Menu>
+                <MenuItem mnemonicParsing="false" onAction="#accessW" text="Acceder">
                      <accelerator>
                         <KeyCodeCombination alt="DOWN" code="W" control="UP" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#disconnectW" text="Desconectar">
+                     <accelerator>
+                        <KeyCodeCombination alt="DOWN" code="W" control="UP" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
                   <Menu mnemonicParsing="false" text="DSIC">
                     <items>
                         <MenuItem fx:id="menuLinuxDSIC" mnemonicParsing="false" text="Linux">
@@ -106,7 +116,7 @@
                         <Font size="18.0" />
                      </font>
                   </Button>
-                  <Button fx:id="buttonDisconnectW" mnemonicParsing="false" text="Desconectar" textFill="#b22828">
+                  <Button fx:id="buttonDisconnectW" mnemonicParsing="false" onAction="#disconnectW" text="Desconectar" textFill="#b22828">
                      <font>
                         <Font size="14.0" />
                      </font>

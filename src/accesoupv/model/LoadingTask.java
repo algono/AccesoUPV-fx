@@ -11,6 +11,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.Callable;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -26,6 +27,7 @@ public class LoadingTask extends Task<Void> {
     public static final String ERROR_DIS_VPN = "No ha podido desconectarse la VPN. Deberá desconectarla manualmente.";
     public static final String ERROR_W = "Ha habido un error al tratar de conectarse al disco W. Inténtelo de nuevo más tarde.";
     public static final String ERROR_DIS_W = "Ha habido un error al desconectar el disco W. Deberá desconectarlo manualmente.";
+    public static final String ERROR_OPENED_DIS_W = "Tiene abierto un archivo/carpeta del disco W. Cierre todos los archivos e inténtelo de nuevo.";
     //Timeout
     public static final int TIMEOUT = 3000;
     //Callable method
@@ -89,6 +91,12 @@ public class LoadingTask extends Task<Void> {
             updateMessage("Desconectando Disco W...");
             Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + acceso.getDrive() + " /delete").start();
             Thread.sleep(1000);
+            try(Scanner sc = new Scanner(p.getInputStream())) {
+                if (sc.hasNext() && acceso.isWConnected()) {
+                    setErrorMessage(ERROR_OPENED_DIS_W);
+                    throw new IOException();
+                }
+            }
             p.waitFor();
             acceso.isWConnected();
         }

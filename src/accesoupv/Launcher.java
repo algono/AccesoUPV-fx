@@ -9,6 +9,7 @@ import accesoupv.controller.PrincipalController;
 import accesoupv.model.AccesoUPV;
 import accesoupv.model.LoadingTask;
 import javafx.application.Application;
+import javafx.concurrent.Worker;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -37,6 +38,7 @@ public class Launcher extends Application {
             LoadingTask task = new LoadingTask();
             task.addCallables(task::disconnectW, task::disconnectVPN);
             principal.gotoLoadingScreen(task);
+            if (task.getState() == Worker.State.FAILED) we.consume();
         });
         stage.show();
     }

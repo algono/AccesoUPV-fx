@@ -176,6 +176,19 @@ public class PrincipalController implements Initializable {
             new Alert(Alert.AlertType.ERROR, ERROR_DSIC_MSG).show();
         }
     }
+    @FXML
+    private void disconnectW(ActionEvent event) {
+        LoadingTask task = new LoadingTask();
+            task.addCallable(task::disconnectW);
+            gotoLoadingScreen(task);
+            if (!acceso.isWConnected()) {
+                Alert success = new Alert(Alert.AlertType.INFORMATION, "Disco W eliminado con éxito.");
+                success.setTitle("Completado");
+                success.setHeaderText(null);
+                success.show();
+            }
+    }
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         //If prefs are incomplete, go to Preferences
@@ -189,18 +202,11 @@ public class PrincipalController implements Initializable {
         menuAyudaDSIC.setOnAction((e) -> gotoAyuda("DSIC"));
         menuAyudaVPN.setOnAction((e) -> gotoAyuda("VPN"));
         menuAjustes.setOnAction((e) -> gotoAjustes(false));
-        buttonDisconnectW.setOnAction((e) -> {
-            LoadingTask task = new LoadingTask();
-            task.addCallable(task::disconnectW);
-            gotoLoadingScreen(task);
-            Alert success = new Alert(Alert.AlertType.INFORMATION, "Disco W eliminado con éxito.");
-            success.setTitle("Completado");
-            success.setHeaderText(null);
-            success.show();
-        });
         //Sets bindings
         buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.isWConnected));
         //Sets up the VPN connection
         connectVPN();
+        //Checks if W is already connected
+        acceso.isWConnected();
     }
 }
