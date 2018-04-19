@@ -6,6 +6,8 @@
 package accesoupv.model;
 
 import static accesoupv.Launcher.acceso;
+import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.concurrent.Callable;
 import javafx.application.Platform;
@@ -24,16 +26,30 @@ public class LoadingTask extends Task<Void> {
     public static final int TIMEOUT = 3000;
     //Callable method
     private Callable<Void> callable;
+    private final Alert errorAlert;
+    private boolean exitOnFailed;
     
-    public LoadingTask(String errorMsg) {
+    public LoadingTask(String errorMsg, boolean exitOF) {
         callable = null;
+        exitOnFailed = exitOF;
+        errorAlert = new Alert(Alert.AlertType.ERROR, errorMsg);
+        errorAlert.setHeaderText(null);
         setOnFailed((e) -> {
-            new Alert(Alert.AlertType.ERROR, errorMsg).showAndWait();
-            Platform.exit();
+            errorAlert.showAndWait();
+            if (exitOnFailed) {
+                Platform.exit();
+                System.exit(-1);
+            }
         });
     }
-    
+    //Getters
+    public Callable getCallable() { return callable; }
+    public String getErrorMessage() { return errorAlert.getContentText(); }
+    public boolean getExitOnFailed() { return exitOnFailed; }
+    //Setters
     public void setCallable(Callable c) { callable = c; }
+    public void setErrorMessage(String msg) { errorAlert.setContentText(msg); }
+    public void setExitOnFailed(boolean b) { exitOnFailed = b; }
     
     @Override
     protected Void call() throws Exception {
@@ -42,11 +58,10 @@ public class LoadingTask extends Task<Void> {
     //Metodos posibles para LoadingTask
     public Void connectVPN() throws Exception {
         updateMessage("Conectando con la UPV...");
-        boolean reachable = InetAddress.getByName("www.upv.es").isReachable(TIMEOUT);
-        if (!reachable) {
-            updateMessage("Realizando conexión VPN a la UPV...");
-            Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial " + acceso.getVPN()).start();
-            p.waitFor();
+        Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial " + acceso.getVPN()).start();
+        p.waitFor();
+        if (!InetAddress.getByName("www.upv.es").isReachable(TIMEOUT)) {
+            throw new IOException();
         }
         return null;
     }
@@ -55,8 +70,18 @@ public class LoadingTask extends Task<Void> {
         String drive = acceso.getDrive();
         Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + drive + " " + acceso.getDirW()).start();
         p.waitFor();
-        acceso.isWConnected.set(true);
+        if (!acceso.isWConnected()) {
+            throw new IOException();
+        }
         return null;
     }
-    
+    public Void disconnect() throws Exception {
+        if (acceso.isWConnected.get()) {
+            updateMessage("Desconectando Disco W...");
+            acceso.disconnectW();
+        }
+        updateMessage("Desconectando de la UPV...");
+        acceso.disconnectVPN();
+        return null;
+    }
 }

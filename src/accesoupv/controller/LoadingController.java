@@ -5,9 +5,10 @@
  */
 package accesoupv.controller;
 
+import accesoupv.model.LoadingTask;
 import java.net.URL;
 import java.util.ResourceBundle;
-import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
@@ -27,16 +28,17 @@ public class LoadingController implements Initializable {
     //Stage
     private Stage primaryStage;
     //Task this loading screen is for
-    private Task task;
+    public static LoadingTask task;
     
-    public void init(Stage stage, Task t) {
+    public void init(Stage stage) {
         primaryStage = stage;
         primaryStage.setTitle("Acceso UPV");
         //remove window decoration
         primaryStage.initStyle(StageStyle.UNDECORATED);
-        task = t;
         textState.textProperty().bind(task.messageProperty());
-        task.setOnSucceeded((e) -> primaryStage.hide());
+        task.runningProperty().addListener((obs, oldValue, newValue) -> {
+            if (!newValue) primaryStage.hide();
+        });
         new Thread(task).start();
     }
     

@@ -21,7 +21,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -69,13 +68,13 @@ public class PrincipalController implements Initializable {
     public static final String ERROR_CMD_MSG = "Ha habido un error al crear el programa. Vuelva a intentarlo.";
     public static final String ERROR_FOLDER_MSG = "Ha habido un error al tratar de abrir la carpeta. Ábrala manualmente.";
     
-    private void gotoLoadingScreen(Task task) {
+    private void gotoLoadingScreen() {
         try {    
             Stage stage = new Stage();
             FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/LoadingView.fxml"));
             Parent root = (Parent) myLoader.load();
             LoadingController dialogue = myLoader.<LoadingController>getController();
-            dialogue.init(stage, task);
+            dialogue.init(stage);
             Scene scene = new Scene(root);
             
             stage.setScene(scene);
@@ -108,7 +107,6 @@ public class PrincipalController implements Initializable {
                         new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
                     }
                 }
-                Platform.exit();
             }
         } catch (IOException ex) {
             new Alert(Alert.AlertType.ERROR, ERROR_CMD_MSG).show();
@@ -149,22 +147,26 @@ public class PrincipalController implements Initializable {
     }
     
     private void connectVPN() {
-        LoadingTask task = new LoadingTask(LoadingTask.ERROR_VPN);
+        LoadingTask task = new LoadingTask(LoadingTask.ERROR_VPN, true);
         task.setCallable(task::connectVPN);
-        gotoLoadingScreen(task);
+        LoadingController.task = task;
+        gotoLoadingScreen();
     }
     @FXML
     private void accessW(ActionEvent event) {
-        File drive = new File(acceso.getDrive());
-        if (!drive.exists()) {
-            LoadingTask task = new LoadingTask(LoadingTask.ERROR_W);
+        LoadingTask task;
+        if (!acceso.isWConnected()) {
+            task = new LoadingTask(LoadingTask.ERROR_W, false);
             task.setCallable(task::accessW);
-            gotoLoadingScreen(task);
+            LoadingController.task = task;
+            gotoLoadingScreen();
         }
-        try {
-            Desktop.getDesktop().open(drive);
-        } catch (IOException ex) {
-            new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).showAndWait();
+        if (acceso.isWConnected()) {
+            try {
+                Desktop.getDesktop().open(new File(acceso.getDrive()));
+            } catch (IOException ex) {
+                new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).showAndWait();
+            }
         }
     }
     private void accessDSIC(String server) {

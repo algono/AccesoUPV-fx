@@ -5,6 +5,7 @@
  */
 package accesoupv.model;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,6 +50,12 @@ public class AccesoUPV {
     
     //Checks if any variable is empty
     public boolean isIncomplete() { return drive == null || vpn == null || user == null; }
+    //Updates the isWConnected property and returns the result
+    public boolean isWConnected() {
+        boolean res = new File(drive).exists();
+        isWConnected.set(res);
+        return res;
+    }
     
     public Map<String,String> createMap() {
         Map<String,String> map = new HashMap<>();
