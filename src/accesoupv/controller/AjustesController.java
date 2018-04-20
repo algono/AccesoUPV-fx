@@ -106,7 +106,7 @@ public class AjustesController implements Initializable {
     private void createDriveList() {
         ArrayList<String> drives = new ArrayList<>();
         char letter = 'Z';
-        while (letter >= 'A') {
+        while (letter >= 'D') {
             String drive = letter + ":";
             if (!new File(drive).exists()) drives.add(drive);
             letter--;

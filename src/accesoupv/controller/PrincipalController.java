@@ -17,8 +17,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.beans.binding.Bindings;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -178,14 +176,8 @@ public class PrincipalController implements Initializable {
     @FXML
     private void disconnectW(ActionEvent event) {
         LoadingTask task = new LoadingTask();
-            task.addCallable(task::disconnectW);
-            gotoLoadingScreen(task);
-            if (!acceso.isWConnected()) {
-                Alert success = new Alert(Alert.AlertType.INFORMATION, "Disco W eliminado con éxito.");
-                success.setTitle("Completado");
-                success.setHeaderText(null);
-                success.show();
-            }
+        task.addCallable(task::disconnectW);
+        gotoLoadingScreen(task);
     }
     
     @Override
