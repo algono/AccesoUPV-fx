@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
@@ -62,6 +61,16 @@ public class LoadingTask extends Task<Void> {
     public void addCallables(Callable<Void>... c) { callables.addAll(Arrays.asList(c)); }
     public void setErrorMessage(String msg) { errorMsg = msg; }
     
+    protected void checkError(Process p) throws IOException {
+        try (Scanner sc = new Scanner(p.getErrorStream())) {
+            String s = "";
+            while (sc.hasNext()) {
+                s += sc.nextLine() + "\n";
+            }
+            if (!s.isEmpty()) throw new IOException(s);
+        }
+    }
+    
     @Override
     protected Void call() throws Exception {
         for (Callable c : callables) { c.call(); }
@@ -77,6 +86,7 @@ public class LoadingTask extends Task<Void> {
         if (!InetAddress.getByName("www.upv.es").isReachable(TIMEOUT)) {
             throw new IOException();
         }
+        checkError(p);
         return null;
     }
     public Void accessW() throws Exception {
@@ -85,9 +95,7 @@ public class LoadingTask extends Task<Void> {
         String drive = acceso.getDrive();
         Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + drive + " " + acceso.getDirW()).start();
         p.waitFor();
-        if (!acceso.isWConnected()) {
-            throw new IOException();
-        }
+        if (!acceso.isWConnected()) throw new IOException();
         return null;
     }
     //Desconectar Disco W (si estaba conectado)
@@ -107,6 +115,7 @@ public class LoadingTask extends Task<Void> {
             p.waitFor();
             acceso.isWConnected();
         }
+        if (acceso.isWConnected()) throw new IOException();
         return null;
     }
     //Desconectar VPN
@@ -117,6 +126,7 @@ public class LoadingTask extends Task<Void> {
         Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial " + acceso.getVPN() + " /DISCONNECT").start();
         Thread.sleep(1000);
         p.waitFor();
+        checkError(p);
         return null;
     }
 }
