@@ -24,28 +24,28 @@
             <Menu mnemonicParsing="false" text="Inicio">
               <items>
                   <Menu mnemonicParsing="false" text="Disco W">
-                    <items>
-                      <MenuItem mnemonicParsing="false" text="Action 1" />
-                    </items>
+                     <items>
+                      <MenuItem mnemonicParsing="false" onAction="#accessW" text="Acceder">
+                           <accelerator>
+                              <KeyCodeCombination alt="UP" code="A" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                           </accelerator>
+                        </MenuItem>
+                        <MenuItem mnemonicParsing="false" onAction="#disconnectW" text="Desconectar">
+                           <accelerator>
+                              <KeyCodeCombination alt="UP" code="D" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                           </accelerator>
+                        </MenuItem>
+                     </items>
                   </Menu>
-                <MenuItem mnemonicParsing="false" onAction="#accessW" text="Acceder">
-                     <accelerator>
-                        <KeyCodeCombination alt="DOWN" code="W" control="UP" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator></MenuItem>
-                  <MenuItem mnemonicParsing="false" onAction="#disconnectW" text="Desconectar">
-                     <accelerator>
-                        <KeyCodeCombination alt="DOWN" code="W" control="UP" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator>
-                  </MenuItem>
                   <Menu mnemonicParsing="false" text="DSIC">
                     <items>
                         <MenuItem fx:id="menuLinuxDSIC" mnemonicParsing="false" text="Linux">
                            <accelerator>
-                              <KeyCodeCombination alt="DOWN" code="DIGIT1" control="UP" meta="UP" shift="UP" shortcut="UP" />
+                              <KeyCodeCombination alt="UP" code="DIGIT1" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator></MenuItem>
                       <MenuItem fx:id="menuWinDSIC" mnemonicParsing="false" text="Windows">
                            <accelerator>
-                              <KeyCodeCombination alt="DOWN" code="DIGIT2" control="UP" meta="UP" shift="UP" shortcut="UP" />
+                              <KeyCodeCombination alt="UP" code="DIGIT2" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator></MenuItem>
                     </items>
                   </Menu>
@@ -55,7 +55,7 @@
             <items>
               <MenuItem fx:id="menuAjustes" mnemonicParsing="false" text="Preferencias">
                      <accelerator>
-                        <KeyCodeCombination alt="DOWN" code="P" control="UP" meta="UP" shift="UP" shortcut="UP" />
+                        <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
             </items>
           </Menu>
@@ -63,7 +63,7 @@
                <items>
                   <MenuItem mnemonicParsing="false" onAction="#createCMD" text="Crear CMD">
                      <accelerator>
-                        <KeyCodeCombination alt="DOWN" code="C" control="UP" meta="UP" shift="UP" shortcut="UP" />
+                        <KeyCodeCombination alt="UP" code="C" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
                </items>
             </Menu>
