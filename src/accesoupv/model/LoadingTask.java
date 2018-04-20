@@ -83,10 +83,10 @@ public class LoadingTask extends Task<Void> {
         updateMessage("Conectando con la UPV...");
         Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial " + acceso.getVPN()).start();
         p.waitFor();
+        checkError(p);
         if (!InetAddress.getByName("www.upv.es").isReachable(TIMEOUT)) {
             throw new IOException();
         }
-        checkError(p);
         return null;
     }
     public Void accessW() throws Exception {
@@ -95,6 +95,7 @@ public class LoadingTask extends Task<Void> {
         String drive = acceso.getDrive();
         Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + drive + " " + acceso.getDirW()).start();
         p.waitFor();
+        checkError(p);
         if (!acceso.isWConnected()) throw new IOException();
         return null;
     }
@@ -113,9 +114,9 @@ public class LoadingTask extends Task<Void> {
                 }
             }
             p.waitFor();
-            acceso.isWConnected();
+            checkError(p);
+            if (acceso.isWConnected()) throw new IOException();
         }
-        if (acceso.isWConnected()) throw new IOException();
         return null;
     }
     //Desconectar VPN
