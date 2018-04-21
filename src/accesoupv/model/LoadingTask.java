@@ -95,6 +95,7 @@ public class LoadingTask extends Task<Void> {
     }
     public Void accessW() throws Exception {
         setErrorMessage(ERROR_W);
+        exitOnFailed = false;
         updateMessage("Accediendo al disco W...");
         String drive = acceso.getDrive();
         Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + drive + " " + acceso.getDirW()).start();

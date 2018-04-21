@@ -61,10 +61,7 @@
           </Menu>
             <Menu mnemonicParsing="false" text="Avanzado">
                <items>
-                  <MenuItem mnemonicParsing="false" onAction="#createCMD" text="Crear CMD">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="C" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator></MenuItem>
+                  <MenuItem fx:id="menuCMD" mnemonicParsing="false" text="Exportar a CMD" />
                </items>
             </Menu>
           <Menu mnemonicParsing="false" text="Ayuda">

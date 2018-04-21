@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -27,6 +28,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -48,6 +50,8 @@ public class PrincipalController implements Initializable {
     private MenuItem menuWinDSIC;
     @FXML
     private MenuItem menuAjustes;
+    @FXML
+    private MenuItem menuCMD;
     @FXML
     private MenuItem menuAyuda;
     @FXML
@@ -82,8 +86,7 @@ public class PrincipalController implements Initializable {
         } catch (IOException ex) {}
     }
     
-    @FXML
-    private void createCMD(ActionEvent event) {
+    private void createCMD() {
         try {
             //El usuario elige la ruta del output
             FileChooser fc = new FileChooser();
@@ -112,19 +115,18 @@ public class PrincipalController implements Initializable {
         }
     }
     
-    private void gotoAjustes(boolean noPrefs) {
+    private void gotoAjustes(boolean exitOnCancelled) {
         try {    
             Stage stage = new Stage();
             FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/AjustesView.fxml"));
             Parent root = (Parent) myLoader.load();
             AjustesController dialogue = myLoader.<AjustesController>getController();
-            dialogue.init(stage, noPrefs);
+            dialogue.init(stage, exitOnCancelled);
             Scene scene = new Scene(root);
 
             stage.setScene(scene);
             stage.initModality(Modality.APPLICATION_MODAL);
-            if (noPrefs) stage.showAndWait();
-            else stage.show();
+            stage.showAndWait();
         } catch (IOException ex) {}
     }
     
@@ -185,19 +187,55 @@ public class PrincipalController implements Initializable {
         //If prefs are incomplete, go to Preferences
         if (acceso.isIncomplete()) { gotoAjustes(true); }
         //Assigns buttons' actions
-        menuLinuxDSIC.setOnAction((e) -> accessDSIC(AccesoUPV.LINUX_DSIC));
-        buttonLinuxDSIC.setOnAction((e) -> accessDSIC(AccesoUPV.LINUX_DSIC));
-        menuWinDSIC.setOnAction((e) -> accessDSIC(AccesoUPV.WIN_DSIC));
-        buttonWinDSIC.setOnAction((e) -> accessDSIC(AccesoUPV.WIN_DSIC));
-        menuAyuda.setOnAction((e) -> gotoAyuda(""));
-        menuAyudaDSIC.setOnAction((e) -> gotoAyuda("DSIC"));
-        menuAyudaVPN.setOnAction((e) -> gotoAyuda("VPN"));
-        menuAjustes.setOnAction((e) -> gotoAjustes(false));
+        menuLinuxDSIC.setOnAction(e -> accessDSIC(AccesoUPV.LINUX_DSIC));
+        buttonLinuxDSIC.setOnAction(e -> accessDSIC(AccesoUPV.LINUX_DSIC));
+        menuWinDSIC.setOnAction(e -> accessDSIC(AccesoUPV.WIN_DSIC));
+        buttonWinDSIC.setOnAction(e -> accessDSIC(AccesoUPV.WIN_DSIC));
+        menuCMD.setOnAction((e) -> {
+            String confMsg = "Se creará un script de comandos de Windows (.cmd), con las funciones de este programa, en la ubicación que elijas.\n\n"
+                    + "No será tan completo, pero posee las funciones principales del programa.\n\n¿Desea continuar?";
+            Alert conf = new Alert(Alert.AlertType.CONFIRMATION, confMsg);
+            conf.setTitle("Exportar a CMD");
+            conf.setHeaderText(null);
+            Optional<ButtonType> result = conf.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) createCMD();
+        });
+        menuAyuda.setOnAction(e -> gotoAyuda(""));
+        menuAyudaDSIC.setOnAction(e -> gotoAyuda("DSIC"));
+        menuAyudaVPN.setOnAction(e -> gotoAyuda("VPN"));
+        menuAjustes.setOnAction(e -> gotoAjustes(false));
         //Sets bindings
         buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.isWConnected));
-        //Sets up the VPN connection
-        connectVPN();
-        //Checks if W is already connected
-        acceso.isWConnected();
+        //Checks if the drive where W would be is already set up.
+        if (acceso.isWConnected()) {
+            String WARNING_W = 
+                    "La unidad definida para el disco W (" + acceso.getDrive() + ") ya contiene un disco asociado.\n\n"
+                    + "Antes de continuar, desconecte el disco asociado, o cambie la unidad para el disco W desde los ajustes.\n ";
+            Alert warning = new Alert(Alert.AlertType.WARNING);
+            warning.setHeaderText("Unidad " + acceso.getDrive() + " contiene disco");
+            warning.setContentText(WARNING_W);
+            ButtonType continuar = new ButtonType("Continuar");
+            ButtonType ajustes = new ButtonType("Ajustes", ButtonData.LEFT);
+            ButtonType salir = new ButtonType("Salir", ButtonData.CANCEL_CLOSE);
+            warning.getButtonTypes().setAll(continuar, ajustes, salir);
+            Optional<ButtonType> result = warning.showAndWait();
+            if (result.isPresent()) {
+                if (result.get() == ajustes) gotoAjustes(true);
+                else if (result.get() == salir) { Platform.exit(); System.exit(0); }
+                else {
+                    if (acceso.isWConnected()) {
+                        WARNING_W = "El disco aún no ha sido desconectado. Si se trata del disco W, puede continuar sin problemas.\n"
+                                + "Pero si no, el programa no funcionará correctamente.\n\n"
+                                + "¿Desea continuar?";
+                        warning.setContentText(WARNING_W);
+                        warning.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+                        result = warning.showAndWait();
+                        if (!result.isPresent() || result.get() == ButtonType.CANCEL) { Platform.exit(); System.exit(0); }
+                    }
+                }
+            }
+        }
+        acceso.isWConnected(); //Updates the property
+        connectVPN(); //Sets up the VPN connection
     }
 }

@@ -33,7 +33,6 @@ public class Launcher extends Application {
         stage.setTitle("Acceso UPV");
         stage.setScene(scene);
         stage.setOnCloseRequest((WindowEvent we) -> {
-            acceso.savePrefs();
             PrincipalController principal = myLoader.<PrincipalController>getController();
             LoadingTask task = new LoadingTask();
             task.addCallables(task::disconnectW, task::disconnectVPN);

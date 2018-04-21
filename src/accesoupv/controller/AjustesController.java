@@ -67,29 +67,34 @@ public class AjustesController implements Initializable {
     public static final String FOLDER_ERROR_MESSAGE = "Ha habido un error al abrir la carpeta. Ábrala manualmente.";
     
     private Stage primaryStage;
-    private final BooleanProperty noPrefs = new SimpleBooleanProperty();
+    private boolean exitOnCancelled;
     private ObservableList<String> dataDrives;
     
-    public void init(Stage stage, boolean nPrefs) {
+    public void init(Stage stage, boolean eOnCancel) {
         primaryStage = stage;
         primaryStage.setTitle("Preferencias");
-        noPrefs.set(nPrefs);
-        if (nPrefs) {
-            primaryStage.setOnCloseRequest((evt) -> {
+        exitOnCancelled = eOnCancel;
+        if (exitOnCancelled) {
+            stage.setOnCloseRequest((evt) -> {
                 Platform.exit();
                 System.exit(0);
             });
+        }
+        String drive;
+        if (acceso.isIncomplete()) {
             textWarning.setVisible(true);
-            if (dataDrives.contains("W:")) {
-                comboDrive.getSelectionModel().select("W:");
-            } else {
-                comboDrive.getSelectionModel().selectFirst();
-            }
+            drive = "W:"; //Por defecto, selecciona 'W:' como la unidad en comboDrive
         } else {
-            //Escribe las preferencias guardadas (si hay)
+            //Escribe las preferencias guardadas
             textUser.setText(acceso.getUser());
-            comboDrive.getSelectionModel().select(acceso.getDrive());
             textVPN.setText(acceso.getVPN());
+            drive = acceso.getDrive();
+        }
+        //Si la lista lo contiene, selecciona la unidad guardada (o 'W:' por defecto si no hay guardada ninguna unidad)
+        if (dataDrives.contains(drive)) {
+            comboDrive.getSelectionModel().select(drive);
+        } else {
+            comboDrive.getSelectionModel().selectFirst();
         }
     }
     
@@ -98,9 +103,9 @@ public class AjustesController implements Initializable {
             acceso.setVPN(textVPN.getText());
             acceso.setDrive(comboDrive.getValue());
             acceso.setUser(textUser.getText());
+            acceso.savePrefs();
             //Cierra la ventana de ajustes
-            Node mynode = (Node) event.getSource();
-            mynode.getScene().getWindow().hide();
+            primaryStage.hide();
     }
     
     private void createDriveList() {
@@ -135,13 +140,16 @@ public class AjustesController implements Initializable {
         if (!textVPN.getText().equals(acceso.getVPN())
                 || !textUser.getText().equals(acceso.getUser())
                 || !comboDrive.getSelectionModel().getSelectedItem().equals(acceso.getDrive())) {
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Desea cerrar sin guardar los cambios?");
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Desea salir sin guardar los cambios?");
             confirm.setHeaderText(null);
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.get() != ButtonType.OK) return;
         }
-        Node mynode = (Node) event.getSource();
-        mynode.getScene().getWindow().hide();
+        if (exitOnCancelled) {
+            Platform.exit();
+            System.exit(0);
+        }
+        primaryStage.hide();
     }
     
     /**
@@ -158,7 +166,6 @@ public class AjustesController implements Initializable {
                     Bindings.isEmpty(textVPN.textProperty())
             )
         );
-        buttonClose.disableProperty().bind(noPrefs);
         menuAyuda.setOnAction((e) -> gotoAyuda(""));
         menuAyudaDSIC.setOnAction((e) -> gotoAyuda("DSIC"));
         menuAyudaVPN.setOnAction((e) -> gotoAyuda("VPN"));

@@ -28,6 +28,7 @@ public class AccesoUPV {
     
     
     public AccesoUPV() {
+        //Loads prefs
         Preferences prefs = Preferences.userNodeForPackage(AccesoUPV.class);
         drive = prefs.get("drive", null);
         vpn = prefs.get("vpn", null);
@@ -46,7 +47,7 @@ public class AccesoUPV {
     public void setVPN(String v) { vpn = v; }
     public void setUser(String u) { user = u; }
     
-    //Checks if any variable is empty
+    //Checks if any variable is not defined
     public boolean isIncomplete() { return drive == null || vpn == null || user == null; }
     //Updates the isWConnected property and returns the result
     public boolean isWConnected() {
