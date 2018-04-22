@@ -100,27 +100,29 @@ public class LoadingTask extends Task<Void> {
         String drive = acceso.getDrive();
         Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + drive + " " + acceso.getDirW()).start();
         waitAndCheck(p);
-        if (!acceso.isWConnected()) throw new IOException();
+        boolean wConnected = acceso.isDriveUsed();
+        acceso.isWConnected.set(wConnected);
+        if (!wConnected) throw new IOException();
         return null;
     }
     //Desconectar Disco W (si estaba conectado)
     public Void disconnectW() throws Exception {
         setErrorMessage(ERROR_DIS_W);
         exitOnFailed = false;
-        if (acceso.isWConnected()) {
-            updateMessage("Desconectando Disco W...");
-            Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + acceso.getDrive() + " /delete").start();
-            Thread.sleep(1000);
-            try(Scanner sc = new Scanner(p.getInputStream())) {
-                if (sc.hasNext() && acceso.isWConnected()) {
-                    setErrorMessage(ERROR_OPENED_DIS_W);
-                    throw new IOException();
-                }
+        updateMessage("Desconectando Disco W...");
+        Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + acceso.getDrive() + " /delete").start();
+        Thread.sleep(1000);
+        try(Scanner sc = new Scanner(p.getInputStream())) {
+            if (sc.hasNext() && acceso.isDriveUsed()) {
+                setErrorMessage(ERROR_OPENED_DIS_W);
+                throw new IOException();
             }
-            p.waitFor();
-            checkError(p);
-            if (acceso.isWConnected()) throw new IOException();
         }
+        p.waitFor();
+        checkError(p);
+        boolean wConnected = acceso.isDriveUsed();
+        acceso.isWConnected.set(wConnected);
+        if (wConnected) throw new IOException();
         return null;
     }
     //Desconectar VPN

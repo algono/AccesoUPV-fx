@@ -35,7 +35,8 @@ public class Launcher extends Application {
         stage.setOnCloseRequest((WindowEvent we) -> {
             PrincipalController principal = myLoader.<PrincipalController>getController();
             LoadingTask task = new LoadingTask();
-            task.addCallables(task::disconnectW, task::disconnectVPN);
+            if (acceso.isWConnected.get()) task.addCallable(task::disconnectW);
+            task.addCallable(task::disconnectVPN);
             principal.gotoLoadingScreen(task);
             if (task.getState() != Worker.State.SUCCEEDED) we.consume();
         });

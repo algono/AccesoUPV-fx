@@ -30,7 +30,7 @@
                               <KeyCodeCombination alt="UP" code="A" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator>
                         </MenuItem>
-                        <MenuItem mnemonicParsing="false" onAction="#disconnectW" text="Desconectar">
+                        <MenuItem fx:id="menuDisconnectW" mnemonicParsing="false" onAction="#disconnectW" text="Desconectar">
                            <accelerator>
                               <KeyCodeCombination alt="UP" code="D" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator>

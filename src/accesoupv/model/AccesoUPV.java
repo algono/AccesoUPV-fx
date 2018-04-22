@@ -50,9 +50,8 @@ public class AccesoUPV {
     //Checks if any variable is not defined
     public boolean isIncomplete() { return drive == null || vpn == null || user == null; }
     //Updates the isWConnected property and returns the result
-    public boolean isWConnected() {
+    public boolean isDriveUsed() {
         boolean res = new File(drive).exists();
-        isWConnected.set(res);
         return res;
     }
     

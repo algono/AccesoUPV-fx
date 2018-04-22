@@ -17,7 +17,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -44,6 +43,8 @@ public class PrincipalController implements Initializable {
     
     @FXML
     private Label textState;
+    @FXML
+    private MenuItem menuDisconnectW;
     @FXML
     private MenuItem menuLinuxDSIC;
     @FXML
@@ -116,6 +117,21 @@ public class PrincipalController implements Initializable {
     }
     
     private void gotoAjustes(boolean exitOnCancelled) {
+        if (acceso.isWConnected.get()) {
+            String wMsg = "No se permite acceder a los ajustes mientras el disco W se encuentre conectado.\n\n"
+                    + "¿Desea desconectarlo?";
+            Alert conf = new Alert(Alert.AlertType.CONFIRMATION, wMsg);
+            conf.setTitle("Disco W Conectado");
+            conf.setHeaderText(null);
+            Optional<ButtonType> res = conf.showAndWait();
+            if (res.isPresent() && res.get() == ButtonType.OK) {
+                LoadingTask task = new LoadingTask();
+                task.addCallable(task::disconnectW);
+                gotoLoadingScreen(task);
+                //Si después de intentar desconectarlo sigue conectado, se entiende que ha fallado y no continúa
+                if (acceso.isWConnected.get()) return;
+            } else return;
+        }
         try {    
             Stage stage = new Stage();
             FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/AjustesView.fxml"));
@@ -152,19 +168,52 @@ public class PrincipalController implements Initializable {
         task.addCallable(task::connectVPN);
         gotoLoadingScreen(task);
     }
+    /**
+     * Checks if the drive where W would be is already set up.
+     * @return Whether the execution should continue or not.
+     */
+    private boolean checkW() {
+        if (acceso.isDriveUsed()) {
+            String WARNING_W = 
+                    "La unidad definida para el disco W (" + acceso.getDrive() + ") ya contiene un disco asociado.\n\n"
+                    + "Antes de continuar, desconecte el disco asociado, o cambie la unidad para el disco W desde los ajustes.\n ";
+            Alert warning = new Alert(Alert.AlertType.WARNING);
+            warning.setHeaderText("Unidad " + acceso.getDrive() + " contiene disco");
+            warning.setContentText(WARNING_W);
+            ButtonType continuar = new ButtonType("Continuar");
+            ButtonType ajustes = new ButtonType("Ajustes", ButtonData.LEFT);
+            warning.getButtonTypes().setAll(continuar, ajustes, ButtonType.CANCEL);
+            Optional<ButtonType> result = warning.showAndWait();
+            if (!result.isPresent() || result.get() == ButtonType.CANCEL) { return false; }
+            else if (result.get() == ajustes) gotoAjustes(false);
+            else {
+                if (acceso.isDriveUsed()) {
+                    WARNING_W = "El disco aún no ha sido desconectado. Si se trata del disco W, puede continuar sin problemas.\n"
+                            + "Pero si no, el programa no funcionará correctamente.\n\n"
+                            + "¿Desea continuar?";
+                    warning.setContentText(WARNING_W);
+                    warning.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+                    result = warning.showAndWait();
+                    if (!result.isPresent() || result.get() == ButtonType.CANCEL) { return false; }
+                }
+            }
+        }
+        return !acceso.isDriveUsed();
+    }
     @FXML
     private void accessW(ActionEvent event) {
-        LoadingTask task;
-        if (!acceso.isWConnected()) {
-            task = new LoadingTask();
-            task.addCallable(task::accessW);
-            gotoLoadingScreen(task);
-        }
-        if (acceso.isWConnected()) {
-            try {
-                Desktop.getDesktop().open(new File(acceso.getDrive()));
-            } catch (IOException ex) {
-                new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
+        if (checkW()) {
+            if (!acceso.isDriveUsed()) {
+                LoadingTask task = new LoadingTask();
+                task.addCallable(task::accessW);
+                gotoLoadingScreen(task);
+            }
+            if (acceso.isDriveUsed()) {
+                try {
+                    Desktop.getDesktop().open(new File(acceso.getDrive()));
+                } catch (IOException ex) {
+                    new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
+                }
             }
         }
     }
@@ -206,36 +255,7 @@ public class PrincipalController implements Initializable {
         menuAjustes.setOnAction(e -> gotoAjustes(false));
         //Sets bindings
         buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.isWConnected));
-        //Checks if the drive where W would be is already set up.
-        if (acceso.isWConnected()) {
-            String WARNING_W = 
-                    "La unidad definida para el disco W (" + acceso.getDrive() + ") ya contiene un disco asociado.\n\n"
-                    + "Antes de continuar, desconecte el disco asociado, o cambie la unidad para el disco W desde los ajustes.\n ";
-            Alert warning = new Alert(Alert.AlertType.WARNING);
-            warning.setHeaderText("Unidad " + acceso.getDrive() + " contiene disco");
-            warning.setContentText(WARNING_W);
-            ButtonType continuar = new ButtonType("Continuar");
-            ButtonType ajustes = new ButtonType("Ajustes", ButtonData.LEFT);
-            ButtonType salir = new ButtonType("Salir", ButtonData.CANCEL_CLOSE);
-            warning.getButtonTypes().setAll(continuar, ajustes, salir);
-            Optional<ButtonType> result = warning.showAndWait();
-            if (result.isPresent()) {
-                if (result.get() == ajustes) gotoAjustes(true);
-                else if (result.get() == salir) { Platform.exit(); System.exit(0); }
-                else {
-                    if (acceso.isWConnected()) {
-                        WARNING_W = "El disco aún no ha sido desconectado. Si se trata del disco W, puede continuar sin problemas.\n"
-                                + "Pero si no, el programa no funcionará correctamente.\n\n"
-                                + "¿Desea continuar?";
-                        warning.setContentText(WARNING_W);
-                        warning.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-                        result = warning.showAndWait();
-                        if (!result.isPresent() || result.get() == ButtonType.CANCEL) { Platform.exit(); System.exit(0); }
-                    }
-                }
-            }
-        }
-        acceso.isWConnected(); //Updates the property
+        menuDisconnectW.disableProperty().bind(Bindings.not(acceso.isWConnected));
         connectVPN(); //Sets up the VPN connection
     }
 }
