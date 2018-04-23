@@ -7,6 +7,7 @@ package accesoupv;
 
 import accesoupv.controller.PrincipalController;
 import accesoupv.model.AccesoUPV;
+import accesoupv.model.LoadingScreen;
 import accesoupv.model.LoadingTask;
 import javafx.application.Application;
 import javafx.concurrent.Worker;
@@ -33,13 +34,12 @@ public class Launcher extends Application {
         stage.setTitle("Acceso UPV");
         stage.setScene(scene);
         stage.setOnCloseRequest((WindowEvent we) -> {
-            PrincipalController principal = myLoader.<PrincipalController>getController();
             LoadingTask task = new LoadingTask();
             if (acceso.isWConnected.get()) task.addCallable(task::disconnectW);
             task.addCallable(task::disconnectVPN);
             task.setExitOnFailed(true);
-            principal.gotoLoadingScreen(task);
-            if (task.getState() != Worker.State.SUCCEEDED) we.consume();
+            boolean succeeded = LoadingScreen.loadTask(task);
+            if (!succeeded) we.consume();
         });
         stage.show();
     }

@@ -8,6 +8,7 @@ package accesoupv.controller;
 import static accesoupv.Launcher.acceso;
 import accesoupv.model.AccesoUPV;
 import accesoupv.model.CodeFiller;
+import accesoupv.model.LoadingScreen;
 import accesoupv.model.LoadingTask;
 import java.awt.Desktop;
 import java.io.File;
@@ -19,8 +20,6 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.concurrent.Task;
-import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -74,21 +73,6 @@ public class PrincipalController implements Initializable {
     public static final String ERROR_FOLDER_MSG = "Ha habido un error al tratar de abrir la carpeta. Ábrala manualmente.";
     public static final String ERROR_DSIC_MSG = "No se ha podido acceder al servidor DSIC.";
     
-    public void gotoLoadingScreen(Task task) {
-        try {
-            Stage stage = new Stage();
-            FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/LoadingView.fxml"));
-            Parent root = (Parent) myLoader.load();
-            LoadingController dialogue = myLoader.<LoadingController>getController();
-            dialogue.init(stage, task);
-            Scene scene = new Scene(root);
-            
-            stage.setScene(scene);
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.showAndWait();
-        } catch (IOException ex) {}
-    }
-    
     private void createCMD() {
         try {
             //El usuario elige la ruta del output
@@ -129,9 +113,9 @@ public class PrincipalController implements Initializable {
             if (res.isPresent() && res.get() == ButtonType.OK) {
                 LoadingTask task = new LoadingTask();
                 task.addCallable(task::disconnectW);
-                gotoLoadingScreen(task);
+                boolean succeeded = LoadingScreen.loadTask(task);
                 //Si después de intentar desconectarlo sigue conectado, se entiende que ha fallado y no continúa
-                if (acceso.isWConnected.get()) return;
+                if (!succeeded) return;
             } else return;
         }
         try {    
@@ -168,9 +152,9 @@ public class PrincipalController implements Initializable {
     private void connectVPN() {
         LoadingTask task = new LoadingTask();
         task.addCallable(task::connectVPN);
-        gotoLoadingScreen(task);
+        boolean succeeded = LoadingScreen.loadTask(task);
         //Si la ejecución falló...
-        if (task.getState() == Worker.State.FAILED) {
+        if (!succeeded) {
             //y el nombre de la VPN no era válido...
             if (task.getException() instanceof IllegalArgumentException) {
                 acceso.setVPN("");
@@ -220,10 +204,11 @@ public class PrincipalController implements Initializable {
             if (!acceso.isDriveUsed()) {
                 LoadingTask task = new LoadingTask();
                 task.addCallable(task::accessW);
-                gotoLoadingScreen(task);
-                //Si la ejecución falló...
-                if (task.getState() == Worker.State.FAILED) {
-                    //y el nombre del usuario no era válido...
+                boolean succeeded = LoadingScreen.loadTask(task);
+                if (succeeded) {
+                    acceso.isWConnected.set(true);
+                } else {
+                    //Si la ejecución falló y el nombre del usuario no era válido...
                     if (task.getException() instanceof IllegalArgumentException) {
                         acceso.setUser("");
                         gotoAjustes(false);
@@ -249,7 +234,8 @@ public class PrincipalController implements Initializable {
     private void disconnectW(ActionEvent event) {
         LoadingTask task = new LoadingTask();
         task.addCallable(task::disconnectW);
-        gotoLoadingScreen(task);
+        boolean succeeded = LoadingScreen.loadTask(task);
+        acceso.isWConnected.set(!succeeded); //Si lo hizo bien, lo pone a false. Si no, a true
     }
     
     @Override

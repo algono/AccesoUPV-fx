@@ -7,6 +7,7 @@ package accesoupv.model;
 
 import static accesoupv.Launcher.acceso;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -49,19 +50,25 @@ public class LoadingTask extends Task<Void> {
         });
     }
     //Getters
-    public List<Callable<Void>> getCallables() { return callables; }
-    public String getOutputMessage() { return errorMsg; }
-    public Alert getOutputAlert() {
+    public synchronized List<Callable<Void>> getCallables() { return callables; }
+    public synchronized String getOutputMessage() { return errorMsg; }
+    public synchronized Alert getOutputAlert() {
         Alert errorAlert = new Alert(Alert.AlertType.ERROR, errorMsg);
         errorAlert.setHeaderText(null);
         return errorAlert;
     }
-    public boolean getExitOnFailed() { return exitOnFailed; }
+    public synchronized boolean getExitOnFailed() { return exitOnFailed; }
     //Setters
-    public void addCallable(Callable<Void> c) { callables.add(c); }
-    public void addCallables(Callable<Void>... c) { callables.addAll(Arrays.asList(c)); }
-    public void setErrorMessage(String msg) { errorMsg = msg; }
-    public void setExitOnFailed(boolean b) { exitOnFailed = b; }
+    public synchronized void addCallable(Callable<Void> c) { callables.add(c); }
+    public synchronized void addCallables(Callable<Void>... c) { callables.addAll(Arrays.asList(c)); }
+    public synchronized void setErrorMessage(String msg) { errorMsg = msg; }
+    public synchronized void setExitOnFailed(boolean b) { exitOnFailed = b; }
+    
+    @Override
+    protected synchronized Void call() throws Exception {
+        for (Callable c : callables) { c.call(); }
+        return null;
+    }
     
     protected void waitAndCheck(Process p) throws Exception {
         Thread.sleep(1000);
@@ -81,18 +88,14 @@ public class LoadingTask extends Task<Void> {
         }
         return res;
     }
-    
-    @Override
-    protected Void call() throws Exception {
-        for (Callable c : callables) { c.call(); }
-        return null;
-    }
     //Tareas posibles para LoadingTask
     public Void connectVPN() throws Exception {
         setErrorMessage(ERROR_VPN);
         updateMessage("Conectando con la UPV...");
+        //Si ya se puede acceder a la UPV, no se trata de hacer la conexión VPN
+        if (InetAddress.getByName("www.upv.es").isReachable(TIMEOUT)) return null;
+        
         Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial \"" + acceso.getVPN() + "\"").start();
-        Thread.sleep(1000);
         int exitValue = p.waitFor();
         if (exitValue != 0) {
             String err = getOutput(p);
@@ -123,7 +126,6 @@ public class LoadingTask extends Task<Void> {
                 throw new IOException();
             }
         }
-        acceso.isWConnected.set(true);
         return null;
     }
     //Desconectar Disco W (si estaba conectado)
@@ -139,7 +141,6 @@ public class LoadingTask extends Task<Void> {
         }
         int exitValue = p.waitFor();
         if (exitValue != 0) throw new IOException(getOutput(p));
-        acceso.isWConnected.set(false);
         return null;
     }
     //Desconectar VPN
