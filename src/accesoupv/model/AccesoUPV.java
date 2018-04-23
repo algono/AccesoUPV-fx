@@ -30,9 +30,9 @@ public class AccesoUPV {
     public AccesoUPV() {
         //Loads prefs
         Preferences prefs = Preferences.userNodeForPackage(AccesoUPV.class);
-        drive = prefs.get("drive", null);
-        vpn = prefs.get("vpn", null);
-        user = prefs.get("user", null);
+        drive = prefs.get("drive", "");
+        vpn = prefs.get("vpn", "");
+        user = prefs.get("user", "");
         isWConnected.set(false);
     }
     //Getters
@@ -48,7 +48,7 @@ public class AccesoUPV {
     public void setUser(String u) { user = u; }
     
     //Checks if any variable is not defined
-    public boolean isIncomplete() { return drive == null || vpn == null || user == null; }
+    public boolean isIncomplete() { return drive.isEmpty() || vpn.isEmpty() || user.isEmpty(); }
     //Updates the isWConnected property and returns the result
     public boolean isDriveUsed() {
         boolean res = new File(drive).exists();

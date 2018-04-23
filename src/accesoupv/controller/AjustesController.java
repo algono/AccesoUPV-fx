@@ -64,29 +64,26 @@ public class AjustesController implements Initializable {
     public static final String FOLDER_ERROR_MESSAGE = "Ha habido un error al abrir la carpeta. Ábrala manualmente.";
     
     private Stage primaryStage;
-    private boolean exitOnCancelled;
+    private boolean starting;
     private ObservableList<String> dataDrives;
     
-    public void init(Stage stage, boolean eOnCancel) {
+    public void init(Stage stage, boolean start) {
         primaryStage = stage;
         primaryStage.setTitle("Preferencias");
-        exitOnCancelled = eOnCancel;
-        if (exitOnCancelled) {
-            stage.setOnCloseRequest((evt) -> {
+        starting = start;
+        if (starting) {
+            primaryStage.setOnCloseRequest((evt) -> {
                 Platform.exit();
                 System.exit(0);
             });
-        }
+        } else { textVPN.setDisable(true); }
         String drive;
-        if (acceso.isIncomplete()) {
-            textWarning.setVisible(true);
-            drive = "W:"; //Por defecto, selecciona 'W:' como la unidad en comboDrive
-        } else {
-            //Escribe las preferencias guardadas
-            textUser.setText(acceso.getUser());
-            textVPN.setText(acceso.getVPN());
-            drive = acceso.getDrive();
-        }
+        if (acceso.isIncomplete()) textWarning.setVisible(true);
+        //Escribe las preferencias guardadas
+        textUser.setText(acceso.getUser());
+        textVPN.setText(acceso.getVPN());
+        //Si no tiene una asociada, selecciona 'W:' como la unidad por defecto
+        drive = (acceso.getDrive().isEmpty()) ? "W:" : acceso.getDrive();
         //Si la lista lo contiene, selecciona la unidad guardada (o 'W:' por defecto si no hay guardada ninguna unidad)
         if (dataDrives.contains(drive)) {
             comboDrive.getSelectionModel().select(drive);
@@ -142,7 +139,7 @@ public class AjustesController implements Initializable {
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.get() != ButtonType.OK) return;
         }
-        if (exitOnCancelled) {
+        if (starting) {
             Platform.exit();
             System.exit(0);
         }
@@ -162,7 +159,7 @@ public class AjustesController implements Initializable {
                     Bindings.isEmpty(textUser.textProperty()),
                     Bindings.isEmpty(textVPN.textProperty())
             )
-        );
+        );           
         menuAyuda.setOnAction((e) -> gotoAyuda(""));
         menuAyudaDSIC.setOnAction((e) -> gotoAyuda("DSIC"));
         menuAyudaVPN.setOnAction((e) -> gotoAyuda("VPN"));

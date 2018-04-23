@@ -17,8 +17,10 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.concurrent.Task;
+import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -167,12 +169,24 @@ public class PrincipalController implements Initializable {
         LoadingTask task = new LoadingTask();
         task.addCallable(task::connectVPN);
         gotoLoadingScreen(task);
+        //Si la ejecución falló...
+        if (task.getState() == Worker.State.FAILED) {
+            //y el nombre de la VPN no era válido...
+            if (task.getException() instanceof IllegalArgumentException) {
+                acceso.setVPN("");
+                gotoAjustes(true);
+                connectVPN();
+            } else {
+                Platform.exit();
+                System.exit(-1);
+            }
+        }
     }
     /**
      * Checks if the drive where W would be is already set up.
      * @return Whether the execution should continue or not.
      */
-    private boolean checkW() {
+    private boolean checkDrive() {
         if (acceso.isDriveUsed()) {
             String WARNING_W = 
                     "La unidad definida para el disco W (" + acceso.getDrive() + ") ya contiene un disco asociado.\n\n"
@@ -201,19 +215,26 @@ public class PrincipalController implements Initializable {
         return !acceso.isDriveUsed();
     }
     @FXML
-    private void accessW(ActionEvent event) {
-        if (checkW()) {
+    private void accessW(ActionEvent evt) {
+        if (checkDrive()) {
             if (!acceso.isDriveUsed()) {
                 LoadingTask task = new LoadingTask();
                 task.addCallable(task::accessW);
                 gotoLoadingScreen(task);
-            }
-            if (acceso.isDriveUsed()) {
-                try {
-                    Desktop.getDesktop().open(new File(acceso.getDrive()));
-                } catch (IOException ex) {
-                    new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
+                //Si la ejecución falló...
+                if (task.getState() == Worker.State.FAILED) {
+                    //y el nombre del usuario no era válido...
+                    if (task.getException() instanceof IllegalArgumentException) {
+                        acceso.setUser("");
+                        gotoAjustes(false);
+                    }
+                    return;
                 }
+            }
+            try {
+                Desktop.getDesktop().open(new File(acceso.getDrive()));
+            } catch (IOException ex) {
+                new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
             }
         }
     }

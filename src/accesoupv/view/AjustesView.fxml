@@ -45,7 +45,7 @@
    <bottom>
       <VBox alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
          <children>
-            <Text fx:id="textWarning" fill="RED" strokeType="OUTSIDE" strokeWidth="0.0" text="AVISO: No hay preferencias establecidas. Debe establecerlas para continuar." visible="false" />
+            <Text fx:id="textWarning" fill="RED" strokeType="OUTSIDE" strokeWidth="0.0" text="AVISO: Hay preferencias no establecidas. Debe establecerlas para continuar." visible="false" />
             <HBox alignment="BOTTOM_CENTER" spacing="30.0">
                <children>
                   <Button fx:id="buttonAccept" defaultButton="true" mnemonicParsing="false" onAction="#savePrefs" text="Aceptar" />
