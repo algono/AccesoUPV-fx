@@ -36,10 +36,12 @@ public class Launcher extends Application {
         stage.setOnCloseRequest((WindowEvent we) -> {
             LoadingTask task = new LoadingTask();
             if (acceso.isWConnected()) task.addCallable(task::disconnectW);
-            task.addCallable(task::disconnectVPN);
-            task.setExitOnFailed(true);
-            boolean succeeded = LoadingScreen.loadTask(task);
-            if (!succeeded) we.consume();
+            if (acceso.isVPNConnected()) task.addCallable(task::disconnectVPN);
+            if (!task.getCallables().isEmpty()) {
+                task.setExitOnFailed(true);
+                boolean succeeded = LoadingScreen.loadTask(task);
+                if (!succeeded) we.consume();
+            }
         });
         stage.show();
     }
