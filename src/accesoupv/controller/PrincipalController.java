@@ -10,14 +10,19 @@ import accesoupv.model.AccesoUPV;
 import accesoupv.model.CodeFiller;
 import accesoupv.model.LoadingScreen;
 import accesoupv.model.LoadingTask;
+import static accesoupv.model.LoadingTask.TIMEOUT;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
@@ -103,7 +108,7 @@ public class PrincipalController implements Initializable {
     }
     
     private void gotoAjustes(boolean exitOnCancelled) {
-        if (acceso.isWConnected.get()) {
+        if (acceso.isWConnected()) {
             String wMsg = "No se permite acceder a los ajustes mientras el disco W se encuentre conectado.\n\n"
                     + "¿Desea desconectarlo?";
             Alert conf = new Alert(Alert.AlertType.CONFIRMATION, wMsg);
@@ -150,14 +155,11 @@ public class PrincipalController implements Initializable {
     }
     
     private void connectVPN() {
-        LoadingTask task = new LoadingTask();
-        task.addCallable(task::connectVPN);
-        boolean succeeded = LoadingScreen.loadTask(task);
+        boolean succeeded = acceso.connectVPN();
         //Si la ejecución falló...
         if (!succeeded) {
-            //y el nombre de la VPN no era válido...
-            if (task.getException() instanceof IllegalArgumentException) {
-                acceso.setVPN("");
+            //Y la causó una variable inválida... accede a los ajustes para cambiarla
+            if (acceso.isIncomplete()) {
                 gotoAjustes(true);
                 connectVPN();
             } else {
@@ -171,7 +173,7 @@ public class PrincipalController implements Initializable {
      * @return Whether the execution should continue or not.
      */
     private boolean checkDrive() {
-        if (acceso.isDriveUsed()) {
+        if (!acceso.isWConnected() && acceso.isDriveUsed()) {
             String WARNING_W = 
                     "La unidad definida para el disco W (" + acceso.getDrive() + ") ya contiene un disco asociado.\n\n"
                     + "Antes de continuar, desconecte el disco asociado, o cambie la unidad para el disco W desde los ajustes.\n ";
@@ -196,23 +198,16 @@ public class PrincipalController implements Initializable {
                 }
             }
         }
-        return !acceso.isDriveUsed();
+        return true;
     }
     @FXML
     private void accessW(ActionEvent evt) {
         if (checkDrive()) {
-            if (!acceso.isDriveUsed()) {
-                LoadingTask task = new LoadingTask();
-                task.addCallable(task::accessW);
-                boolean succeeded = LoadingScreen.loadTask(task);
-                if (succeeded) {
-                    acceso.isWConnected.set(true);
-                } else {
-                    //Si la ejecución falló y el nombre del usuario no era válido...
-                    if (task.getException() instanceof IllegalArgumentException) {
-                        acceso.setUser("");
-                        gotoAjustes(false);
-                    }
+            if (!acceso.isWConnected()) {
+                //Si la ejecución falló...
+                if (!acceso.accessW()) {
+                    //...y el nombre del usuario no era válido... acceder a los ajustes para cambiarlo
+                    if (acceso.isIncomplete()) gotoAjustes(false);
                     return;
                 }
             }
@@ -230,13 +225,6 @@ public class PrincipalController implements Initializable {
             new Alert(Alert.AlertType.ERROR, ERROR_DSIC_MSG).show();
         }
     }
-    @FXML
-    private void disconnectW(ActionEvent event) {
-        LoadingTask task = new LoadingTask();
-        task.addCallable(task::disconnectW);
-        boolean succeeded = LoadingScreen.loadTask(task);
-        acceso.isWConnected.set(!succeeded); //Si lo hizo bien, lo pone a false. Si no, a true
-    }
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -247,6 +235,8 @@ public class PrincipalController implements Initializable {
         buttonLinuxDSIC.setOnAction(e -> accessDSIC(AccesoUPV.LINUX_DSIC));
         menuWinDSIC.setOnAction(e -> accessDSIC(AccesoUPV.WIN_DSIC));
         buttonWinDSIC.setOnAction(e -> accessDSIC(AccesoUPV.WIN_DSIC));
+        buttonDisconnectW.setOnAction(e -> acceso.disconnectW());
+        menuDisconnectW.setOnAction(e -> acceso.disconnectW());
         menuCMD.setOnAction((e) -> {
             String confMsg = "Se creará un script de comandos de Windows (.cmd), con las funciones de este programa, en la ubicación que elijas.\n\n"
                     + "No será tan completo, pero posee las funciones principales del programa.\n\n¿Desea continuar?";
@@ -261,8 +251,8 @@ public class PrincipalController implements Initializable {
         menuAyudaVPN.setOnAction(e -> gotoAyuda("VPN"));
         menuAjustes.setOnAction(e -> gotoAjustes(false));
         //Sets bindings
-        buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.isWConnected));
-        menuDisconnectW.disableProperty().bind(Bindings.not(acceso.isWConnected));
+        buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.WConnectedProperty()));
+        menuDisconnectW.disableProperty().bind(Bindings.not(acceso.WConnectedProperty()));
         connectVPN(); //Sets up the VPN connection
     }
 }

@@ -7,7 +7,6 @@ package accesoupv.model;
 
 import static accesoupv.Launcher.acceso;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -70,8 +69,8 @@ public class LoadingTask extends Task<Void> {
         return null;
     }
     
-    protected void waitAndCheck(Process p) throws Exception {
-        Thread.sleep(1000);
+    protected void waitAndCheck(Process p, int tMin) throws Exception {
+        Thread.sleep(tMin);
         int exitValue = p.waitFor();
         if (exitValue != 0) {
             throw new IOException(getOutput(p));
@@ -92,9 +91,6 @@ public class LoadingTask extends Task<Void> {
     public Void connectVPN() throws Exception {
         setErrorMessage(ERROR_VPN);
         updateMessage("Conectando con la UPV...");
-        //Si ya se puede acceder a la UPV, no se trata de hacer la conexión VPN
-        if (InetAddress.getByName("www.upv.es").isReachable(TIMEOUT)) return null;
-        
         Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial \"" + acceso.getVPN() + "\"").start();
         int exitValue = p.waitFor();
         if (exitValue != 0) {
@@ -148,7 +144,7 @@ public class LoadingTask extends Task<Void> {
         setErrorMessage(ERROR_DIS_VPN);
         updateMessage("Desconectando de la UPV...");
         Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial " + acceso.getVPN() + " /DISCONNECT").start();
-        waitAndCheck(p);
+        waitAndCheck(p, 1000);
         return null;
     }
 }

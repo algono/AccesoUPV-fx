@@ -26,8 +26,11 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -57,28 +60,36 @@ public class AjustesController implements Initializable {
     private MenuItem menuAyudaVPN;
     @FXML
     private MenuItem menuAyudaDSIC;
+    @FXML
+    private Hyperlink helpLinkVPN;
+    @FXML
+    private Hyperlink helpLinkUser;
     
     //Constants (Messages)
     public static final String SUCCESS_MESSAGE = "El archivo ha sido creado con éxito.\n¿Desea abrir la carpeta en la cual ha sido guardado?";
     public static final String ERROR_MESSAGE = "Ha habido un error al crear el programa. Vuelva a intentarlo.";
     public static final String FOLDER_ERROR_MESSAGE = "Ha habido un error al abrir la carpeta. Ábrala manualmente.";
+    public static final String HELP_TOOLTIP = 
+            "Formato:\n"
+            + "Siendo tu usuario completo: \"usuario@dominio.upv.es\"\n"
+            + "Escriba: \"usuario\"";
     
     private Stage primaryStage;
-    private boolean starting;
+    private boolean exitOnCancel;
     private ObservableList<String> dataDrives;
     
-    public void init(Stage stage, boolean start) {
+    public void init(Stage stage, boolean eOnCancel) {
         primaryStage = stage;
         primaryStage.setTitle("Preferencias");
-        starting = start;
-        if (starting) {
+        exitOnCancel = eOnCancel;
+        if (exitOnCancel) {
             primaryStage.setOnCloseRequest((evt) -> {
                 Platform.exit();
                 System.exit(0);
             });
-        } else { textVPN.setDisable(true); }
+        } 
+        if (acceso.isVPNConnected()) textVPN.setDisable(true);
         String drive;
-        if (acceso.isIncomplete()) textWarning.setVisible(true);
         //Escribe las preferencias guardadas
         textUser.setText(acceso.getUser());
         textVPN.setText(acceso.getVPN());
@@ -89,6 +100,11 @@ public class AjustesController implements Initializable {
             comboDrive.getSelectionModel().select(drive);
         } else {
             comboDrive.getSelectionModel().selectFirst();
+        }
+        if (acceso.isIncomplete()) {
+            textWarning.setVisible(true);
+            if (textUser.getText().isEmpty()) textUser.requestFocus();
+            else if (textVPN.getText().isEmpty()) textVPN.requestFocus();
         }
     }
     
@@ -139,7 +155,7 @@ public class AjustesController implements Initializable {
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.get() != ButtonType.OK) return;
         }
-        if (starting) {
+        if (exitOnCancel) {
             Platform.exit();
             System.exit(0);
         }
@@ -160,9 +176,20 @@ public class AjustesController implements Initializable {
                     Bindings.isEmpty(textVPN.textProperty())
             )
         );           
-        menuAyuda.setOnAction((e) -> gotoAyuda(""));
-        menuAyudaDSIC.setOnAction((e) -> gotoAyuda("DSIC"));
-        menuAyudaVPN.setOnAction((e) -> gotoAyuda("VPN"));
+        menuAyuda.setOnAction(e -> gotoAyuda(""));
+        menuAyudaDSIC.setOnAction(e -> gotoAyuda("DSIC"));
+        menuAyudaVPN.setOnAction(e -> gotoAyuda("VPN"));
+        
+        helpLinkVPN.setOnAction(e -> gotoAyuda("VPN"));
+        helpLinkVPN.setTooltip(new Tooltip("Click para ver cómo \"" + menuAyudaVPN.getText() + "\""));
+        //Evento para que si haces click, muestre directamente el Tooltip
+        helpLinkUser.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> { 
+            helpLinkUser.getTooltip().show(primaryStage);
+            e.consume();
+        });
+        //Evento para que siempre que quites el ratón del nodo, esconda el Tooltip
+        helpLinkUser.addEventHandler(MouseEvent.MOUSE_EXITED, e -> helpLinkUser.getTooltip().hide());
+        helpLinkUser.setTooltip(new Tooltip(HELP_TOOLTIP));
         
         Platform.runLater(() -> buttonClose.requestFocus());
     }    
