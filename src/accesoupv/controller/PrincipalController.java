@@ -10,19 +10,14 @@ import accesoupv.model.AccesoUPV;
 import accesoupv.model.CodeFiller;
 import accesoupv.model.LoadingScreen;
 import accesoupv.model.LoadingTask;
-import static accesoupv.model.LoadingTask.TIMEOUT;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
@@ -254,5 +249,6 @@ public class PrincipalController implements Initializable {
         buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.WConnectedProperty()));
         menuDisconnectW.disableProperty().bind(Bindings.not(acceso.WConnectedProperty()));
         connectVPN(); //Sets up the VPN connection
+        textState.setText(acceso.isVPNConnected() ? "(via VPN)" : "(via UPVNET)");
     }
 }

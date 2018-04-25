@@ -7,6 +7,7 @@ package accesoupv.model;
 
 import static accesoupv.Launcher.acceso;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -102,6 +103,14 @@ public class LoadingTask extends Task<Void> {
             } else {
                 throw new IOException();
             }
+        } else {
+            //Si desde la VPN a la que se conectó no se puede acceder a la UPV, se entiende que ha elegido una incorrecta.
+            try {
+                if (!InetAddress.getByName("www.upv.es").isReachable(TIMEOUT)) {
+                    disconnectVPN();
+                    throw new IllegalArgumentException();
+                }
+            } catch (IOException ex) {}
         }
         return null;
     }

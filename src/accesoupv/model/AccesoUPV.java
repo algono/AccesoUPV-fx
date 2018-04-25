@@ -5,7 +5,6 @@
  */
 package accesoupv.model;
 
-import static accesoupv.Launcher.acceso;
 import static accesoupv.model.LoadingTask.TIMEOUT;
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +12,6 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.prefs.Preferences;
-import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
