@@ -31,7 +31,7 @@ public class LoadingTask extends Task<Void> {
     public static final String ERROR_INVALID_VPN = "No existe ninguna VPN creada con el nombre registrado.\nDebe establecer un nombre válido.";
     public static final String ERROR_INVALID_USER = "No existe el usuario especificado.\nDebe establecer un usuario válido.";
     //Timeout
-    public static final int TIMEOUT = 3000;
+    public static final int TIMEOUT = 500;
     //Callable method
     private final List<Callable<Void>> callables;
     private String errorMsg;
@@ -93,6 +93,7 @@ public class LoadingTask extends Task<Void> {
         setErrorMessage(ERROR_VPN);
         updateMessage("Conectando con la UPV...");
         Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial \"" + acceso.getVPN() + "\"").start();
+        Thread.sleep(1000);
         int exitValue = p.waitFor();
         if (exitValue != 0) {
             String err = getOutput(p);

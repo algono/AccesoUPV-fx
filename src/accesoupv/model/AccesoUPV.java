@@ -5,7 +5,6 @@
  */
 package accesoupv.model;
 
-import static accesoupv.model.LoadingTask.TIMEOUT;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -80,7 +79,7 @@ public class AccesoUPV {
     public boolean connectVPN() {
         //Si ya se puede acceder a la UPV, no hace falta hacer la conexión VPN
         try {
-            if (InetAddress.getByName("www.upv.es").isReachable(TIMEOUT)) {
+            if (InetAddress.getByName("www.upv.es").isReachable(LoadingTask.TIMEOUT)) {
                 VPNConnected = false;
                 return true;
             }

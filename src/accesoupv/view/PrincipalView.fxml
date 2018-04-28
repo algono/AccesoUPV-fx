@@ -56,11 +56,6 @@
                      </accelerator></MenuItem>
             </items>
           </Menu>
-            <Menu mnemonicParsing="false" text="Avanzado">
-               <items>
-                  <MenuItem fx:id="menuCMD" mnemonicParsing="false" text="Exportar a CMD" />
-               </items>
-            </Menu>
           <Menu mnemonicParsing="false" text="Ayuda">
             <items>
                   <MenuItem fx:id="menuAyuda" mnemonicParsing="false" text="Índice de ayuda" />

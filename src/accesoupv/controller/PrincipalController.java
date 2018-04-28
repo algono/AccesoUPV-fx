@@ -7,14 +7,11 @@ package accesoupv.controller;
 
 import static accesoupv.Launcher.acceso;
 import accesoupv.model.AccesoUPV;
-import accesoupv.model.CodeFiller;
 import accesoupv.model.LoadingScreen;
 import accesoupv.model.LoadingTask;
 import java.awt.Desktop;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -32,7 +29,6 @@ import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
-import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -53,8 +49,6 @@ public class PrincipalController implements Initializable {
     @FXML
     private MenuItem menuAjustes;
     @FXML
-    private MenuItem menuCMD;
-    @FXML
     private MenuItem menuAyuda;
     @FXML
     private MenuItem menuAyudaVPN;
@@ -72,35 +66,6 @@ public class PrincipalController implements Initializable {
     public static final String ERROR_CMD_MSG = "Ha habido un error al crear el programa. Vuelva a intentarlo.";
     public static final String ERROR_FOLDER_MSG = "Ha habido un error al tratar de abrir la carpeta. Ábrala manualmente.";
     public static final String ERROR_DSIC_MSG = "No se ha podido acceder al servidor DSIC.";
-    
-    private void createCMD() {
-        try {
-            //El usuario elige la ruta del output
-            FileChooser fc = new FileChooser();
-            fc.setInitialFileName("Programa.cmd");
-            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivo de comandos(*.cmd)", "*.cmd"));
-            File output = fc.showSaveDialog(textState.getScene().getWindow());
-            if (output != null) {
-                output.createNewFile();
-                InputStream in = getClass().getResourceAsStream("/accesoupv/resources/code.txt");
-                CodeFiller filler = new CodeFiller(in, acceso.createMap(), new FileOutputStream(output));
-                filler.transcript();
-                //Si todo ha ido bien, muestra un mensaje de éxito, y da al usuario la opción de acceder a la carpeta donde se encuentra el output
-                Alert success = new Alert(Alert.AlertType.CONFIRMATION, SUCCESS_CMD_MSG);
-                success.setHeaderText(null);
-                Optional<ButtonType> result = success.showAndWait();
-                if (result.get() == ButtonType.OK) {
-                    try {
-                        Desktop.getDesktop().open(output.getParentFile());
-                    } catch (IOException ex) {
-                        new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
-                    }
-                }
-            }
-        } catch (IOException ex) {
-            new Alert(Alert.AlertType.ERROR, ERROR_CMD_MSG).show();
-        }
-    }
     
     private void gotoAjustes(boolean exitOnCancelled) {
         if (acceso.isWConnected()) {
@@ -232,15 +197,6 @@ public class PrincipalController implements Initializable {
         buttonWinDSIC.setOnAction(e -> accessDSIC(AccesoUPV.WIN_DSIC));
         buttonDisconnectW.setOnAction(e -> acceso.disconnectW());
         menuDisconnectW.setOnAction(e -> acceso.disconnectW());
-        menuCMD.setOnAction((e) -> {
-            String confMsg = "Se creará un script de comandos de Windows (.cmd), con las funciones de este programa, en la ubicación que elijas.\n\n"
-                    + "No será tan completo, pero posee las funciones principales del programa.\n\n¿Desea continuar?";
-            Alert conf = new Alert(Alert.AlertType.CONFIRMATION, confMsg);
-            conf.setTitle("Exportar a CMD");
-            conf.setHeaderText(null);
-            Optional<ButtonType> result = conf.showAndWait();
-            if (result.isPresent() && result.get() == ButtonType.OK) createCMD();
-        });
         menuAyuda.setOnAction(e -> gotoAyuda(""));
         menuAyudaDSIC.setOnAction(e -> gotoAyuda("DSIC"));
         menuAyudaVPN.setOnAction(e -> gotoAyuda("VPN"));
@@ -249,6 +205,6 @@ public class PrincipalController implements Initializable {
         buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.WConnectedProperty()));
         menuDisconnectW.disableProperty().bind(Bindings.not(acceso.WConnectedProperty()));
         connectVPN(); //Sets up the VPN connection
-        textState.setText(acceso.isVPNConnected() ? "(via VPN)" : "(via UPVNET)");
+        textState.setText(acceso.isVPNConnected() ? "(vía VPN)" : "(vía UPVNET)");
     }
 }
