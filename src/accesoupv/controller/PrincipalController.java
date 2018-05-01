@@ -7,7 +7,7 @@ package accesoupv.controller;
 
 import static accesoupv.Launcher.acceso;
 import accesoupv.model.AccesoUPV;
-import accesoupv.model.LoadingScreen;
+import javafx.LoadingScreen;
 import accesoupv.model.LoadingTask;
 import java.awt.Desktop;
 import java.io.File;
@@ -78,7 +78,7 @@ public class PrincipalController implements Initializable {
             if (res.isPresent() && res.get() == ButtonType.OK) {
                 LoadingTask task = new LoadingTask();
                 task.addCallable(task::disconnectW);
-                boolean succeeded = LoadingScreen.loadTask(task);
+                boolean succeeded = new LoadingScreen(task).load();
                 //Si después de intentar desconectarlo sigue conectado, se entiende que ha fallado y no continúa
                 if (!succeeded) return;
             } else return;

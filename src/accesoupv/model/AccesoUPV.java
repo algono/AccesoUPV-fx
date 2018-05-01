@@ -11,6 +11,7 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.prefs.Preferences;
+import javafx.LoadingScreen;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
@@ -86,7 +87,7 @@ public class AccesoUPV {
         } catch (IOException ex) {}
         LoadingTask task = new LoadingTask();
         task.addCallable(task::connectVPN);
-        VPNConnected = LoadingScreen.loadTask(task);
+        VPNConnected = new LoadingScreen(task).load();
         if (!VPNConnected && task.getException() instanceof IllegalArgumentException) vpn = "";
         return VPNConnected;
     }
@@ -94,7 +95,7 @@ public class AccesoUPV {
     public boolean accessW() {
         LoadingTask task = new LoadingTask();
         task.addCallable(task::accessW);
-        boolean succeeded = LoadingScreen.loadTask(task);
+        boolean succeeded = new LoadingScreen(task).load();
         WConnected.set(succeeded);
         if (!succeeded && task.getException() instanceof IllegalArgumentException) user = "";
         return succeeded;
@@ -103,7 +104,7 @@ public class AccesoUPV {
     public void disconnectW() {
         LoadingTask task = new LoadingTask();
         task.addCallable(task::disconnectW);
-        WConnected.set(!LoadingScreen.loadTask(task)); //Si lo hizo bien, lo pone a false. Si no, a true
+        WConnected.set(!new LoadingScreen(task).load()); //Si lo hizo bien, lo pone a false. Si no, a true
     }
     
     //Guardar las preferencias

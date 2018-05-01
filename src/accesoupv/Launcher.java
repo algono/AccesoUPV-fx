@@ -6,7 +6,7 @@
 package accesoupv;
 
 import accesoupv.model.AccesoUPV;
-import accesoupv.model.LoadingScreen;
+import javafx.LoadingScreen;
 import accesoupv.model.LoadingTask;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -39,7 +39,7 @@ public class Launcher extends Application {
             if (acceso.isVPNConnected()) task.addCallable(task::disconnectVPN);
             if (!task.getCallables().isEmpty()) {
                 task.setExitOnFailed(true);
-                boolean succeeded = LoadingScreen.loadTask(task);
+                boolean succeeded = new LoadingScreen(task).load();
                 if (!succeeded) we.consume();
             }
         });
