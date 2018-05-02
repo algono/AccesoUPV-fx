@@ -5,13 +5,13 @@
  */
 package accesoupv.model;
 
+import accesoupv.model.tasks.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.prefs.Preferences;
-import javafx.LoadingScreen;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
@@ -22,9 +22,9 @@ import javafx.beans.property.SimpleBooleanProperty;
 public class AccesoUPV {
     
     //Variables
-    protected String drive, vpn, user;
-    protected boolean VPNConnected;
-    protected final BooleanProperty WConnected = new SimpleBooleanProperty();
+    private String drive, vpn, user;
+    private boolean VPNConnected;
+    private final BooleanProperty WConnected = new SimpleBooleanProperty();
     //Servers
     public static final String LINUX_DSIC = "linuxdesktop.dsic.upv.es";
     public static final String WIN_DSIC = "windesktop.dsic.upv.es";
@@ -63,7 +63,11 @@ public class AccesoUPV {
     public BooleanProperty WConnectedProperty() { return WConnected; }
     
     public boolean isVPNConnected() { return VPNConnected; }
-    public boolean isWConnected() { return WConnected.get(); }
+    public boolean isWConnected() {
+        boolean res = new File(drive).exists();
+        WConnected.set(res);
+        return res;
+    }
     
     public Map<String,String> createMap() {
         Map<String,String> map = new HashMap<>();
@@ -78,33 +82,61 @@ public class AccesoUPV {
      * @return If the operation completed successfully.
      */
     public boolean connectVPN() {
-        //Si ya se puede acceder a la UPV, no hace falta hacer la conexión VPN
-        try {
-            if (InetAddress.getByName("www.upv.es").isReachable(LoadingTask.TIMEOUT)) {
-                VPNConnected = false;
-                return true;
-            }
-        } catch (IOException ex) {}
-        LoadingTask task = new LoadingTask();
-        task.addCallable(task::connectVPN);
+        AccesoTask task = new ConnectTask("VPN", false);
         VPNConnected = new LoadingScreen(task).load();
-        if (!VPNConnected && task.getException() instanceof IllegalArgumentException) vpn = "";
+        if (!VPNConnected) {
+            if (task.getException() instanceof IllegalArgumentException) {
+                vpn = "";
+                task.getErrorAlert().showAndWait();
+            } else {
+                //Si no se pudo hacer la VPN y aun así es posible acceder a la UPV, entendemos que estamos en la UPVNET
+                try {
+                    if (InetAddress.getByName("www.upv.es").isReachable(AccesoTask.PING_TIMEOUT)) {
+                        VPNConnected = false;
+                        return true;
+                    }
+                } catch (IOException ex) {}
+            }
+        }
         return VPNConnected;
     }
     
     public boolean accessW() {
-        LoadingTask task = new LoadingTask();
-        task.addCallable(task::accessW);
+        AccesoTask task = new ConnectTask("W");
         boolean succeeded = new LoadingScreen(task).load();
         WConnected.set(succeeded);
         if (!succeeded && task.getException() instanceof IllegalArgumentException) user = "";
         return succeeded;
     }
     
-    public void disconnectW() {
-        LoadingTask task = new LoadingTask();
-        task.addCallable(task::disconnectW);
-        WConnected.set(!new LoadingScreen(task).load()); //Si lo hizo bien, lo pone a false. Si no, a true
+    public boolean disconnectAll() {
+        boolean succeeded;
+        if (isVPNConnected() && isWConnected()) {
+            AccesoTask task = new DisconnectTask("ALL");
+            succeeded = new LoadingScreen(task).load();
+        } else {
+            succeeded = disconnectW();
+            if (succeeded) succeeded = disconnectVPN();
+        }
+        return succeeded;
+    }
+    public boolean disconnectW() {
+        boolean succeeded = true;
+        if (isWConnected()) {
+            AccesoTask task = new DisconnectTask("W");
+            succeeded = new LoadingScreen(task).load();
+            WConnected.set(!succeeded); //Si lo hizo bien, lo pone a false. Si no, a true
+        }
+        return succeeded;
+    }
+    
+    public boolean disconnectVPN() {
+        boolean succeeded = true;
+        if (isVPNConnected()) {
+            AccesoTask task = new DisconnectTask("VPN");
+            succeeded = new LoadingScreen(task).load();
+        }
+        return succeeded;
     }
     
     //Guardar las preferencias

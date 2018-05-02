@@ -7,15 +7,12 @@ package accesoupv.controller;
 
 import static accesoupv.Launcher.acceso;
 import accesoupv.model.AccesoUPV;
-import javafx.LoadingScreen;
-import accesoupv.model.LoadingTask;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -62,8 +59,6 @@ public class PrincipalController implements Initializable {
     private Button buttonWinDSIC;
     
     //Messages
-    public static final String SUCCESS_CMD_MSG = "El archivo ha sido creado con éxito.\n¿Desea abrir la carpeta en la cual ha sido guardado?";
-    public static final String ERROR_CMD_MSG = "Ha habido un error al crear el programa. Vuelva a intentarlo.";
     public static final String ERROR_FOLDER_MSG = "Ha habido un error al tratar de abrir la carpeta. Ábrala manualmente.";
     public static final String ERROR_DSIC_MSG = "No se ha podido acceder al servidor DSIC.";
     
@@ -76,11 +71,9 @@ public class PrincipalController implements Initializable {
             conf.setHeaderText(null);
             Optional<ButtonType> res = conf.showAndWait();
             if (res.isPresent() && res.get() == ButtonType.OK) {
-                LoadingTask task = new LoadingTask();
-                task.addCallable(task::disconnectW);
-                boolean succeeded = new LoadingScreen(task).load();
+                acceso.disconnectW();
                 //Si después de intentar desconectarlo sigue conectado, se entiende que ha fallado y no continúa
-                if (!succeeded) return;
+                if (acceso.isWConnected()) return;
             } else return;
         }
         try {    
@@ -110,7 +103,7 @@ public class PrincipalController implements Initializable {
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.show();
         } catch (IOException ex) {
-            new Alert(Alert.AlertType.ERROR, ERROR_CMD_MSG).show();
+            new Alert(Alert.AlertType.ERROR, "Ha habido un error inesperado al tratar de abrir la ventana.").show();
         }
     }
     
@@ -120,10 +113,10 @@ public class PrincipalController implements Initializable {
         if (!succeeded) {
             //Y la causó una variable inválida... accede a los ajustes para cambiarla
             if (acceso.isIncomplete()) {
+                if (acceso.isVPNConnected()) acceso.disconnectVPN();
                 gotoAjustes(true);
                 connectVPN();
             } else {
-                Platform.exit();
                 System.exit(-1);
             }
         }
@@ -165,7 +158,8 @@ public class PrincipalController implements Initializable {
         if (checkDrive()) {
             if (!acceso.isWConnected()) {
                 //Si la ejecución falló...
-                if (!acceso.accessW()) {
+                boolean succeeded = acceso.accessW();
+                if (!succeeded) {
                     //...y el nombre del usuario no era válido... acceder a los ajustes para cambiarlo
                     if (acceso.isIncomplete()) gotoAjustes(false);
                     return;

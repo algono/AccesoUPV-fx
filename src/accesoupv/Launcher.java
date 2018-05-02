@@ -6,8 +6,6 @@
 package accesoupv;
 
 import accesoupv.model.AccesoUPV;
-import javafx.LoadingScreen;
-import accesoupv.model.LoadingTask;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -34,14 +32,7 @@ public class Launcher extends Application {
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/icon.png")));
         stage.setScene(scene);
         stage.setOnCloseRequest((WindowEvent we) -> {
-            LoadingTask task = new LoadingTask();
-            if (acceso.isWConnected()) task.addCallable(task::disconnectW);
-            if (acceso.isVPNConnected()) task.addCallable(task::disconnectVPN);
-            if (!task.getCallables().isEmpty()) {
-                task.setExitOnFailed(true);
-                boolean succeeded = new LoadingScreen(task).load();
-                if (!succeeded) we.consume();
-            }
+            if (!acceso.disconnectAll()) we.consume();
         });
         stage.show();
     }
