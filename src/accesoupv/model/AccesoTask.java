@@ -42,9 +42,12 @@ public abstract class AccesoTask extends Task<Void> {
     public Alert getErrorAlert() {
         Alert errorAlert = new Alert(Alert.AlertType.ERROR, errorMsg);
         errorAlert.setHeaderText(null);
-        TextArea errorContent = new TextArea(getException().getMessage());
-        errorContent.setEditable(false);
-        errorAlert.getDialogPane().setExpandableContent(new VBox(errorContent));
+        String errorOutput = getException().getMessage();
+        if (!errorOutput.isEmpty()) {
+            TextArea errorContent = new TextArea();
+            errorContent.setEditable(false);
+            errorAlert.getDialogPane().setExpandableContent(new VBox(errorContent));
+        }
         return errorAlert;
     }
     public boolean getExitOnFailed() { return exitOnFailed; }
@@ -52,24 +55,22 @@ public abstract class AccesoTask extends Task<Void> {
     protected void setErrorMessage(String errMsg) { errorMsg = errMsg; }
     
     //Métodos estáticos de utilidad para tratar procesos
+    
     protected static void waitAndCheck(Process p, int tMin) throws Exception {
+        waitAndCheck(p, tMin, true);
+    }
+    protected static void waitAndCheck(Process p, int tMin, boolean showMsg) throws Exception {
         Thread.sleep(tMin);
         boolean terminated = p.waitFor(PROCESS_TIMEOUT, TimeUnit.MILLISECONDS);
         if (!terminated || p.exitValue() != 0) {
-            throw new IOException(getOutput(p));
+            String msg = showMsg ? getOutput(p) : "";
+            throw new IOException(msg);
         }
     }
     protected static String getOutput(Process p) throws IOException {
         String res = "";
         try (Scanner out = new Scanner(p.getInputStream())) {
             while (out.hasNext()) { res += out.nextLine() + "\n"; }
-        }
-        return res;
-    }
-    protected static String getError(Process p) throws IOException {
-        String res = "";
-        try (Scanner err = new Scanner(p.getErrorStream())) {
-            while (err.hasNext()) { res += err.nextLine() + "\n"; }
         }
         return res;
     }

@@ -46,7 +46,7 @@ public class DisconnectTask extends AccesoTask {
         setErrorMessage(ERROR_DIS_W);
         updateMessage("Desconectando Disco W...");
         Process p = startProcess("cmd.exe", "/c", "net use " + acceso.getDrive() + " /delete");
-        waitAndCheck(p, 1000);
+        waitAndCheck(p, 1000, false);
         return null;
     }
     //Desconectar VPN
