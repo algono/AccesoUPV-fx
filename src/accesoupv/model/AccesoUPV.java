@@ -85,17 +85,18 @@ public class AccesoUPV {
         AccesoTask task = new ConnectTask("VPN", false);
         VPNConnected = new LoadingScreen(task).load();
         if (!VPNConnected) {
+            //Si no se pudo hacer la VPN y aun así es posible acceder a la UPV, entendemos que estamos en la UPVNET
+            try {
+                if (InetAddress.getByName("www.upv.es").isReachable(AccesoTask.PING_TIMEOUT)) {
+                    VPNConnected = false;
+                    return true;
+                }
+            } catch (IOException ex) {}
+            //Si no se puede acceder a la UPV sin la VPN, se trata de un error, así que debe mostrarlo
+            task.getErrorAlert().showAndWait();
+            //Si el error se debió a que la VPN fue inválida, borra el valor asociado a esta.
             if (task.getException() instanceof IllegalArgumentException) {
                 vpn = "";
-                task.getErrorAlert().showAndWait();
-            } else {
-                //Si no se pudo hacer la VPN y aun así es posible acceder a la UPV, entendemos que estamos en la UPVNET
-                try {
-                    if (InetAddress.getByName("www.upv.es").isReachable(AccesoTask.PING_TIMEOUT)) {
-                        VPNConnected = false;
-                        return true;
-                    }
-                } catch (IOException ex) {}
             }
         }
         return VPNConnected;

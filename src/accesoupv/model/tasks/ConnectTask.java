@@ -20,6 +20,9 @@ public class ConnectTask extends AccesoTask {
     public static final String ERROR_W = "Ha habido un error al tratar de conectarse al disco W. Inténtelo de nuevo más tarde.";
     public static final String ERROR_INVALID_VPN = "No existe ninguna VPN creada con el nombre registrado.\nDebe establecer un nombre válido.";
     public static final String ERROR_INVALID_USER = "No existe el usuario especificado.\nDebe establecer un usuario válido.";
+    public static final String ERROR_CONFIG_VPN = 
+            "La VPN no se encuentra configurada correctamente.\n\n"
+            + "Compruebe manualmente que la VPN se conecta correctamente recordando tus datos, y vuelva a intentarlo.";
     //Decides if connecting to VPN, W, or both
     private final String destination;
     
@@ -54,6 +57,10 @@ public class ConnectTask extends AccesoTask {
             if (err.contains("623")) {
                 setErrorMessage(ERROR_INVALID_VPN);
                 throw new IllegalArgumentException();
+            //703 - Código de error "A la VPN le faltan datos"
+            } else if (err.contains("703")) {
+                setErrorMessage(ERROR_CONFIG_VPN);
+                throw new IllegalStateException();
             } else {
                 throw new IOException();
             }

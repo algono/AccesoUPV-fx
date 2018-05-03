@@ -21,7 +21,7 @@ public abstract class AccesoTask extends Task<Void> {
     public static final int PING_TIMEOUT = 500; //500 miliseconds
     public static final int PROCESS_TIMEOUT = 5000; //5 seconds
     
-    protected String errorMsg;
+    private String errorMsg;
     private boolean showError;
     protected boolean exitOnFailed = false;
     

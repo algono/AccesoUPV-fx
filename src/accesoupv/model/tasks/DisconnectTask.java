@@ -43,7 +43,7 @@ public class DisconnectTask extends AccesoTask {
     
     //Desconectar Disco W (si estaba conectado)
     public Void disconnectW() throws Exception {
-        errorMsg = ERROR_DIS_W;
+        setErrorMessage(ERROR_DIS_W);
         updateMessage("Desconectando Disco W...");
         Process p = new ProcessBuilder("cmd.exe", "/c", "net use " + acceso.getDrive() + " /delete").start();
         waitAndCheck(p, 1000);
@@ -51,7 +51,7 @@ public class DisconnectTask extends AccesoTask {
     }
     //Desconectar VPN
     public Void disconnectVPN() throws Exception {
-        errorMsg = ERROR_DIS_VPN;
+        setErrorMessage(ERROR_DIS_VPN);
         exitOnFailed = true;
         updateMessage("Desconectando de la UPV...");
         Process p = new ProcessBuilder("cmd.exe", "/c", "rasdial " + acceso.getVPN() + " /DISCONNECT").start();
