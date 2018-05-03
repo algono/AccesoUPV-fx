@@ -26,6 +26,7 @@ import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -85,6 +86,7 @@ public class PrincipalController implements Initializable {
             Scene scene = new Scene(root);
 
             stage.setScene(scene);
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/preferences-icon.png")));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
         } catch (IOException ex) {}
@@ -100,6 +102,7 @@ public class PrincipalController implements Initializable {
             Scene scene = new Scene(root);
 
             stage.setScene(scene);
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/help-icon.png")));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.show();
         } catch (IOException ex) {

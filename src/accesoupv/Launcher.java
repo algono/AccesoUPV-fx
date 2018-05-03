@@ -29,7 +29,7 @@ public class Launcher extends Application {
         Parent root = (Parent) myLoader.load();
         Scene scene = new Scene(root);
         stage.setTitle("Acceso UPV");
-        stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/icon.png")));
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/app-icon.png")));
         stage.setScene(scene);
         stage.setOnCloseRequest((WindowEvent we) -> {
             if (!acceso.disconnectAll()) we.consume();
