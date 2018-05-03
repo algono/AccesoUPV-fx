@@ -6,14 +6,21 @@
 package accesoupv.model;
 
 import accesoupv.model.tasks.*;
+import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.prefs.Preferences;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.VBox;
 
 /**
  *
@@ -92,12 +99,40 @@ public class AccesoUPV {
                     return true;
                 }
             } catch (IOException ex) {}
-            //Si no se puede acceder a la UPV sin la VPN, se trata de un error, así que debe mostrarlo
-            task.getErrorAlert().showAndWait();
+            //Al tratarse claramente de un error, obtiene su mensaje de error (lo siguiente decidirá su contenido exacto)
+            Alert errorAlert = task.getErrorAlert();
+            Throwable exception = task.getException();
+            /**
+             * Si el error se debió a algo conocido, no hace falta que muestre un link a posibles errores
+             * (puesto que ya se sabe a qué se debe).
+             */
+            
             //Si el error se debió a que la VPN fue inválida, borra el valor asociado a esta.
-            if (task.getException() instanceof IllegalArgumentException) {
+            if (exception instanceof IllegalArgumentException) {
                 vpn = "";
+            
+            } else if (exception instanceof IllegalStateException) {
+            } else {
+                /** Si se trata de un error no conocido por el programa, 
+                 * muestra también un link a una web de la UPV
+                 * donde muestra posibles errores y cómo solucionarlos.
+                 */
+                Hyperlink helpLink = new Hyperlink("Para más información acerca de posibles errores, pulse aquí");
+                helpLink.setOnAction(e -> {
+                    try {
+                        Desktop desktop = Desktop.getDesktop();
+                        URI oURL = new URI(ConnectTask.WEB_ERROR_VPN);
+                        desktop.browse(oURL);
+                    } catch (IOException | URISyntaxException ex) {
+                        new Alert(Alert.AlertType.ERROR, "Ha ocurrido un error al tratar de abrir el navegador.").show();
+                    }
+                });
+                TextArea errorContent = new TextArea(task.getException().getMessage());
+                errorContent.setEditable(false);
+                VBox errorVPNBox = new VBox(helpLink, errorContent);
+                errorAlert.getDialogPane().setExpandableContent(errorVPNBox);
             }
+            errorAlert.showAndWait();
         }
         return VPNConnected;
     }

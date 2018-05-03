@@ -10,6 +10,8 @@ import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.VBox;
 
 /**
  *
@@ -40,6 +42,9 @@ public abstract class AccesoTask extends Task<Void> {
     public Alert getErrorAlert() {
         Alert errorAlert = new Alert(Alert.AlertType.ERROR, errorMsg);
         errorAlert.setHeaderText(null);
+        TextArea errorContent = new TextArea(getException().getMessage());
+        errorContent.setEditable(false);
+        errorAlert.getDialogPane().setExpandableContent(new VBox(errorContent));
         return errorAlert;
     }
     public boolean getExitOnFailed() { return exitOnFailed; }
@@ -67,5 +72,10 @@ public abstract class AccesoTask extends Task<Void> {
             while (err.hasNext()) { res += err.nextLine() + "\n"; }
         }
         return res;
+    }
+    protected static Process startProcess(String... args) throws IOException {
+        ProcessBuilder builder = new ProcessBuilder(args);
+        builder.redirectErrorStream();
+        return builder.start();
     }
 }

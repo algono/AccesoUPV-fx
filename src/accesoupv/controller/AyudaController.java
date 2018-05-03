@@ -49,7 +49,7 @@ public class AyudaController implements Initializable {
     private Label copiedWindows;
     
     //Constants
-    public static final String VPN_WEB = "https://www.upv.es/contenidos/INFOACCESO/infoweb/infoacceso/dat/934950normalc.html";
+    public static final String VPN_WEB = "https://www.upv.es/contenidos/INFOACCESO/infoweb/infoacceso/dat/697481normalc.html";
     public static final String EVIR_ERROR_MESSAGE = "Hubo un error al tratar de abrir el Escritorio Remoto.";
     public static final String EVIR_LINUX = "linuxdesktop.dsic.upv.es";
     public static final String EVIR_WINDOWS = "windesktop.dsic.upv.es";
