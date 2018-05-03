@@ -23,5 +23,3 @@ hs_err_pid*
 /dist/
 /build/
 /nbproject/private/
-!/src/lib/myLibrary.jar
-!/src/accesoupv/lib/myLibrary.jar
