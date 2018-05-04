@@ -5,6 +5,7 @@
  */
 package accesoupv.controller;
 
+import accesoupv.model.MyAlert;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -86,7 +87,7 @@ public class AyudaController implements Initializable {
         vpnLink.setOnAction(e -> vpnWeb.getEngine().load(VPN_WEB));
         evirLink.setOnAction(e -> {
             try { Runtime.getRuntime().exec("mstsc");
-            } catch (IOException ex) { new Alert(Alert.AlertType.ERROR, EVIR_ERROR_MESSAGE).show(); }
+            } catch (IOException ex) { new MyAlert(Alert.AlertType.ERROR, EVIR_ERROR_MESSAGE).show(); }
         });
         clipLinux.setOnAction((e) -> { 
             addToClipboard(EVIR_LINUX); 

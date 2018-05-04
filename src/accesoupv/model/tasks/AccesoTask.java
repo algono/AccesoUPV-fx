@@ -5,6 +5,7 @@
  */
 package accesoupv.model.tasks;
 
+import accesoupv.model.MyAlert;
 import java.io.IOException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +41,7 @@ public abstract class AccesoTask extends Task<Void> {
     //Getters
     public String getErrorMessage() { return errorMsg; }
     public Alert getErrorAlert() {
-        Alert errorAlert = new Alert(Alert.AlertType.ERROR, errorMsg);
+        Alert errorAlert = new MyAlert(Alert.AlertType.ERROR, errorMsg);
         errorAlert.setHeaderText(null);
         String errorOutput = getException().getMessage();
         if (!errorOutput.isEmpty()) {

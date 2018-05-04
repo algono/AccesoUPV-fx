@@ -6,6 +6,7 @@
 package accesoupv.controller;
 
 import static accesoupv.Launcher.acceso;
+import accesoupv.model.MyAlert;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -152,7 +153,7 @@ public class AjustesController implements Initializable {
         if (!textVPN.getText().equals(acceso.getVPN())
                 || !textUser.getText().equals(acceso.getUser())
                 || !comboDrive.getSelectionModel().getSelectedItem().equals(acceso.getDrive())) {
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Desea salir sin guardar los cambios?");
+            Alert confirm = new MyAlert(Alert.AlertType.CONFIRMATION, "¿Desea salir sin guardar los cambios?");
             confirm.setHeaderText(null);
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.get() != ButtonType.OK) return;
