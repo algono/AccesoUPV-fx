@@ -72,9 +72,7 @@ public class PrincipalController implements Initializable {
             conf.setHeaderText(null);
             Optional<ButtonType> res = conf.showAndWait();
             if (res.isPresent() && res.get() == ButtonType.OK) {
-                acceso.disconnectW();
-                //Si después de intentar desconectarlo sigue conectado, se entiende que ha fallado y no continúa
-                if (acceso.isWConnected()) return;
+                if (!acceso.disconnectW()) return;
             } else return;
         }
         try {    

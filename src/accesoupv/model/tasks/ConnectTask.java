@@ -6,7 +6,6 @@
 package accesoupv.model.tasks;
 
 import static accesoupv.Launcher.acceso;
-import accesoupv.model.AccesoTask;
 import java.io.IOException;
 import java.net.InetAddress;
 

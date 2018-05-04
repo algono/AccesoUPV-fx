@@ -61,20 +61,12 @@ public class AccesoUPV {
     
     //Checks if any variable is not defined
     public boolean isIncomplete() { return drive.isEmpty() || vpn.isEmpty() || user.isEmpty(); }
-    //Updates the isWConnected property and returns the result
-    public boolean isDriveUsed() {
-        boolean res = new File(drive).exists();
-        return res;
-    }
-    
-    public BooleanProperty WConnectedProperty() { return WConnected; }
-    
+    //Checks if the drive letter is currently being used
+    public boolean isDriveUsed() { return new File(drive).exists(); }
+    //Gets the boolean values
     public boolean isVPNConnected() { return VPNConnected; }
-    public boolean isWConnected() {
-        boolean res = new File(drive).exists();
-        WConnected.set(res);
-        return res;
-    }
+    public boolean isWConnected() { return WConnected.get(); }
+    public BooleanProperty WConnectedProperty() { return WConnected; }
     
     public Map<String,String> createMap() {
         Map<String,String> map = new HashMap<>();

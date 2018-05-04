@@ -6,7 +6,6 @@
 package accesoupv.model.tasks;
 
 import static accesoupv.Launcher.acceso;
-import accesoupv.model.AccesoTask;
 
 /**
  *
