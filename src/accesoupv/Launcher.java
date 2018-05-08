@@ -32,7 +32,7 @@ public class Launcher extends Application {
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/app-icon.png")));
         stage.setScene(scene);
         stage.setOnCloseRequest((WindowEvent we) -> {
-            if (!acceso.disconnectAll()) we.consume();
+            if (!acceso.shutdown()) we.consume();
         });
         stage.show();
     }

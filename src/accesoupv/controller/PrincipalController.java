@@ -7,7 +7,6 @@ package accesoupv.controller;
 
 import static accesoupv.Launcher.acceso;
 import accesoupv.model.AccesoUPV;
-import accesoupv.model.MyAlert;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
@@ -68,7 +67,7 @@ public class PrincipalController implements Initializable {
         if (acceso.isWConnected()) {
             String wMsg = "No se permite acceder a los ajustes mientras el disco W se encuentre conectado.\n\n"
                     + "¿Desea desconectarlo?";
-            Alert warningW = new MyAlert(Alert.AlertType.WARNING, wMsg);
+            Alert warningW = new Alert(Alert.AlertType.WARNING, wMsg);
             warningW.setTitle("Disco W Conectado");
             warningW.setHeaderText(null);
             warningW.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
@@ -106,7 +105,7 @@ public class PrincipalController implements Initializable {
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.show();
         } catch (IOException ex) {
-            new MyAlert(Alert.AlertType.ERROR, "Ha habido un error inesperado al tratar de abrir la ventana.").show();
+            new Alert(Alert.AlertType.ERROR, "Ha habido un error inesperado al tratar de abrir la ventana.").show();
         }
     }
     
@@ -133,7 +132,7 @@ public class PrincipalController implements Initializable {
             String WARNING_W = 
                     "La unidad definida para el disco W (" + acceso.getDrive() + ") ya contiene un disco asociado.\n\n"
                     + "Antes de continuar, desconecte el disco asociado, o cambie la unidad para el disco W desde los ajustes.\n ";
-            Alert warning = new MyAlert(Alert.AlertType.WARNING);
+            Alert warning = new Alert(Alert.AlertType.WARNING);
             warning.setHeaderText("Unidad " + acceso.getDrive() + " contiene disco");
             warning.setContentText(WARNING_W);
             ButtonType continuar = new ButtonType("Continuar");
@@ -161,7 +160,7 @@ public class PrincipalController implements Initializable {
         if (checkDrive()) {
             if (!acceso.isWConnected()) {
                 //Si la ejecución falló...
-                boolean succeeded = acceso.accessW();
+                boolean succeeded = acceso.connectW();
                 if (!succeeded) {
                     //...y el nombre del usuario no era válido... acceder a los ajustes para cambiarlo
                     if (acceso.isIncomplete()) gotoAjustes(false);
@@ -171,7 +170,7 @@ public class PrincipalController implements Initializable {
             try {
                 Desktop.getDesktop().open(new File(acceso.getDrive()));
             } catch (IOException ex) {
-                new MyAlert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
+                new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
             }
         }
     }
@@ -179,7 +178,7 @@ public class PrincipalController implements Initializable {
         try {
             new ProcessBuilder("cmd.exe", "/c", "mstsc /v:" + server).start();
         } catch (IOException ex) {
-            new MyAlert(Alert.AlertType.ERROR, ERROR_DSIC_MSG).show();
+            new Alert(Alert.AlertType.ERROR, ERROR_DSIC_MSG).show();
         }
     }
     
