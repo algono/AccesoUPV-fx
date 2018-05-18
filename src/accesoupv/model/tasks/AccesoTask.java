@@ -21,25 +21,18 @@ import javafx.scene.layout.VBox;
 public abstract class AccesoTask extends Task<Void> {
     
     //Timeout
-    public static final int PING_TIMEOUT = 500; //500 miliseconds
     public static final int PROCESS_TIMEOUT = 5000; //5 seconds
     
     private String errorMsg;
-    private boolean showError;
-    protected boolean exitOnFailed = false;
+    private boolean showError = false;
     //Whether the thing it is accessing to should be connected or disconnected after the execution of the task.
     protected final boolean newState;
     
-    public AccesoTask(boolean nState) {
-        this(nState, true);
-    }
-    public AccesoTask(boolean nState, boolean showErr) {
-        newState = nState;
-        showError = showErr;
+    public AccesoTask(boolean state) {
+        newState = state;
         setOnFailed((e) -> {
             //Platform.runLater() ensures that the Alert is being shown by the JavaFX Application Thread (avoiding possible errors).
             if (showError) Platform.runLater(() -> getErrorAlert().showAndWait());
-            if (exitOnFailed) System.exit(-1);
         });
     }
     
@@ -58,16 +51,16 @@ public abstract class AccesoTask extends Task<Void> {
     public Alert getErrorAlert() {
         Alert errorAlert = new Alert(Alert.AlertType.ERROR, errorMsg);
         errorAlert.setHeaderText(null);
-        String errorOutput = getException().getMessage();
-        if (!errorOutput.isEmpty()) {
-            TextArea errorContent = new TextArea();
+        Throwable exception = getException();
+        String errorOutput = (exception == null) ? null : exception.getMessage();
+        if (errorOutput != null && !errorOutput.isEmpty()) {
+            TextArea errorContent = new TextArea(errorOutput);
             errorContent.setEditable(false);
             errorAlert.getDialogPane().setExpandableContent(new VBox(errorContent));
         }
         return errorAlert;
     }
-    public boolean getExitOnFailed() { return exitOnFailed; }
-    
+    public void showErrorMessage(boolean show) { showError = show; }
     protected void setErrorMessage(String errMsg) { errorMsg = errMsg; }
     
     //Métodos estáticos de utilidad para tratar procesos
@@ -92,7 +85,7 @@ public abstract class AccesoTask extends Task<Void> {
     }
     protected static Process startProcess(String... args) throws IOException {
         ProcessBuilder builder = new ProcessBuilder(args);
-        builder.redirectErrorStream();
+        builder.redirectErrorStream(true);
         return builder.start();
     }
 }

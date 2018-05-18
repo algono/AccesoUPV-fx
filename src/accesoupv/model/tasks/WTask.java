@@ -5,7 +5,6 @@
  */
 package accesoupv.model.tasks;
 
-import static accesoupv.Launcher.acceso;
 import java.io.IOException;
 
 /**
@@ -14,26 +13,30 @@ import java.io.IOException;
  */
 public class WTask extends AccesoTask {
     //Error messages
-    public static final String ERROR_W = "Ha habido un error al tratar de conectarse al disco W. Inténtelo de nuevo más tarde.";
-    public static final String ERROR_INVALID_USER = "No existe el usuario especificado.\nDebe establecer un usuario válido.";
+    public static final String ERROR_W = "Ha habido un error al tratar de conectarse al disco W. Pulse en 'Mostrar detalles' para más información.";
+    public static final String ERROR_INVALID_USER = "El usuario especificado no existe.";
     public static final String ERROR_DIS_W = 
             "Ha habido un error al desconectar el disco W.\n\n"
             + "Compruebe que no tenga abierto un archivo/carpeta del disco e inténtelo de nuevo.\n\n"
             + "Si el error persiste, desconéctelo manualmente.";
     
-    public WTask(boolean nState) {
-        super(nState);
+    private final String user, drive;
+    
+    public WTask(String wUser, String wDrive, boolean connecting) {
+        super(connecting);
+        user = wUser;
+        drive = wDrive;
     }
-    public WTask(boolean nState, boolean showErr) {
-        super(nState, showErr);
+    
+    public String getDirW() {
+        return "\\\\nasupv.upv.es\\alumnos\\" + user.charAt(0) + "\\" + user;
     }
-
+    
     @Override
     protected void connect() throws Exception {
         setErrorMessage(ERROR_W);
         updateMessage("Accediendo al disco W...");
-        String drive = acceso.getDrive();
-        Process p = startProcess("cmd.exe", "/c", "net use " + drive + " " + acceso.getDirW());
+        Process p = startProcess("cmd.exe", "/c", "net use " + drive + " " + getDirW());
         Thread.sleep(1000);
         int exitValue = p.waitFor();
         if (exitValue != 0) {
@@ -41,7 +44,7 @@ public class WTask extends AccesoTask {
             // 55 - Error del sistema "El recurso no se encuentra disponible" (es decir, la dirW no existe, por tanto, el usuario no es válido).
             if (out.contains("55")) {
                 setErrorMessage(ERROR_INVALID_USER);
-                throw new IllegalArgumentException(out);
+                throw new IllegalArgumentException();
             } else {
                 throw new IOException(out);
             }
@@ -52,7 +55,7 @@ public class WTask extends AccesoTask {
     protected void disconnect() throws Exception {
         setErrorMessage(ERROR_DIS_W);
         updateMessage("Desconectando Disco W...");
-        Process p = startProcess("cmd.exe", "/c", "net use " + acceso.getDrive() + " /delete");
+        Process p = startProcess("cmd.exe", "/c", "net use " + drive + " /delete");
         waitAndCheck(p, 1000, false);
     }
     

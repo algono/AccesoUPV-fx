@@ -12,11 +12,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.prefs.Preferences;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Hyperlink;
@@ -32,67 +30,91 @@ public class AccesoUPV {
     
     //Variables
     private String drive, vpn, user;
-    private boolean VPNConnected;
-    private final BooleanProperty WConnected = new SimpleBooleanProperty();
+    private String connectedVPN, connectedUser, connectedDrive;
     //Servers
     public static final String LINUX_DSIC = "linuxdesktop.dsic.upv.es";
     public static final String WIN_DSIC = "windesktop.dsic.upv.es";
     public static final String UPV_SERVER = "www.upv.es";
+    //Timeout
+    public static final int PING_TIMEOUT = 500; //500 miliseconds
     
+    // Singleton patron (only 1 instance of this object stored at a time)
+    private static AccesoUPV acceso;
     
+    //Creating a new object loads again all prefs
     public AccesoUPV() {
         //Loads prefs
         Preferences prefs = Preferences.userNodeForPackage(AccesoUPV.class);
-        drive = prefs.get("drive", "");
-        vpn = prefs.get("vpn", "");
-        user = prefs.get("user", "");
-        WConnected.set(false);
-        VPNConnected = false;
+        drive = prefs.get("drive", null);
+        vpn = prefs.get("vpn", null);
+        user = prefs.get("user", null);
+        //Stores this object
+        acceso = this;
     }
+    // Returns the object instance stored here
+    public static AccesoUPV getInstance() {
+        if (acceso == null) acceso = new AccesoUPV();
+        return acceso;
+    }
+    
     //Getters
     public String getDrive() { return drive; }
     public String getVPN() { return vpn; }
     public String getUser() { return user; }
-    public String getDirW() {
-        return "\\\\nasupv.upv.es\\alumnos\\" + user.charAt(0) + "\\" + user;
-    }
     //Setters
     public void setDrive(String d) { drive = d; }
     public void setVPN(String v) { vpn = v; }
     public void setUser(String u) { user = u; }
     
     //Checks if any variable is not defined
-    public boolean isIncomplete() { return drive.isEmpty() || vpn.isEmpty() || user.isEmpty(); }
+    public boolean isIncomplete() { return drive == null || vpn == null || user == null; }
     //Checks if the drive letter is currently being used
     public boolean isDriveUsed() { return new File(drive).exists(); }
     //Gets the boolean values
-    public boolean isVPNConnected() { return VPNConnected; }
-    public boolean isWConnected() { return WConnected.get(); }
-    public BooleanProperty WConnectedProperty() { return WConnected; }
+    public boolean isVPNConnected() { return connectedVPN != null; }
+    public boolean isWConnected() { return connectedDrive != null; }
     
-    public Map<String,String> createMap() {
-        Map<String,String> map = new HashMap<>();
-        map.put("drive", drive);
-        map.put("vpn", vpn);
-        map.put("letter", user.charAt(0)+ "");
-        map.put("user", user);
-        return map;
+    public static List<String> getAvailableDrives() {
+        List<String> drives = new ArrayList<>();
+        char letter = 'Z';
+        while (letter >= 'D') {
+            String d = letter + ":";
+            if (!new File(d).exists()) drives.add(d);
+            letter--;
+        }
+        return drives;
     }
+    
+    public boolean connectUPV() {
+        //Si ya es posible acceder a la UPV, estamos conectados
+        try {
+            if (InetAddress.getByName("www.upv.es").isReachable(PING_TIMEOUT)) {
+                return true;
+            }
+        } catch (IOException ex) {}
+        //Si no, trata de conectarse a la VPN
+        return connectVPN();
+    }
+    
     /**
      * 
      * @return If the operation completed successfully.
      */
-    public boolean connectVPN() {
-        AccesoTask task = new VPNTask(true, false);
-        VPNConnected = new LoadingScreen(task).load();
-        if (!VPNConnected) {
-            //Si no se pudo hacer la VPN y aun así es posible acceder a la UPV, entendemos que estamos en la UPVNET
+    private boolean connectVPN() {
+        if (vpn == null) return false;
+        AccesoTask task = new VPNTask(vpn, true);
+        boolean VPNConnected = new LoadingScreen(task).load();
+        if (VPNConnected) {
+            //Si desde la VPN a la que se conectó no se puede acceder a la UPV, se entiende que ha elegido una incorrecta.
             try {
-                if (InetAddress.getByName("www.upv.es").isReachable(AccesoTask.PING_TIMEOUT)) {
-                    VPNConnected = false;
-                    return true;
+                if (!InetAddress.getByName("www.upv.es").isReachable(PING_TIMEOUT)) {
+                    disconnectVPN();
+                    return false;
                 }
             } catch (IOException ex) {}
+            //Almacena el nombre de la VPN a la que se ha conectado
+            connectedVPN = vpn;
+        } else {
             //Al tratarse claramente de un error, obtiene su mensaje de error (lo siguiente decidirá su contenido exacto)
             Alert errorAlert = task.getErrorAlert();
             Throwable exception = task.getException();
@@ -100,14 +122,12 @@ public class AccesoUPV {
              * Si el error se debió a algo conocido, no hace falta que muestre un link a posibles errores
              * (puesto que ya se sabe a qué se debe).
              */
-            
             //Si el error se debió a que la VPN fue inválida, borra el valor asociado a esta.
             if (exception instanceof IllegalArgumentException) {
-                vpn = "";
-            
+                vpn = null;
             } else if (exception instanceof IllegalStateException) {
             } else {
-                /** Si se trata de un error no conocido por el programa, 
+                /** Si se trata de un error no conocido por el programa,
                  * muestra también un link a una web de la UPV
                  * donde muestra posibles errores y cómo solucionarlos.
                  */
@@ -132,10 +152,21 @@ public class AccesoUPV {
     }
     
     public boolean connectW() {
-        AccesoTask task = new WTask(true);
+        if (user == null) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "No ha especificado ningún usuario. Establezca uno.");
+            alert.setHeaderText(null);
+            alert.showAndWait();
+            return false;
+        }
+        AccesoTask task = new WTask(user, drive, true);
         boolean succeeded = new LoadingScreen(task).load();
-        WConnected.set(succeeded);
-        if (!succeeded && task.getException() instanceof IllegalArgumentException) user = "";
+        if (succeeded) {
+            connectedUser = user;
+            connectedDrive = drive;
+        } else {
+            if (task.getException() instanceof IllegalArgumentException) user = null; 
+            task.getErrorAlert().showAndWait();
+        }
         return succeeded;
     }
     
@@ -145,16 +176,20 @@ public class AccesoUPV {
             Task task = new Task<Void>() {
                 @Override
                 protected Void call() throws Exception {
-                    Task task = new WTask(false);
-                    task.messageProperty().addListener((obs, oldVal, newVal) -> {
+                    AccesoTask Wtask = new WTask(connectedUser, connectedDrive, false);
+                    Wtask.messageProperty().addListener((obs, oldVal, newVal) -> {
                         updateMessage(newVal);
                     });
-                    task.run();
-                    task = new VPNTask(false);
-                    task.messageProperty().addListener((obs, oldVal, newVal) -> {
+                    Wtask.run();
+                    AccesoTask VPNtask = new VPNTask(connectedVPN, false);
+                    VPNtask.messageProperty().addListener((obs, oldVal, newVal) -> {
                         updateMessage(newVal);
                     });
-                    task.run();
+                    VPNtask.setOnFailed((evt) -> {
+                        VPNtask.getErrorAlert().showAndWait();
+                        System.exit(-1);
+                    });
+                    VPNtask.run();
                     return null;
                 }
             };
@@ -171,9 +206,10 @@ public class AccesoUPV {
     public boolean disconnectW() {
         boolean succeeded = true;
         if (isWConnected()) {
-            AccesoTask task = new WTask(false);
+            AccesoTask task = new WTask(connectedUser, connectedDrive, false);
+            task.showErrorMessage(true);
             succeeded = new LoadingScreen(task).load();
-            WConnected.set(!succeeded); //Si lo hizo bien, lo pone a false. Si no, a true
+            if (succeeded) connectedDrive = null;
         }
         return succeeded;
     }
@@ -181,7 +217,11 @@ public class AccesoUPV {
     public boolean disconnectVPN() {
         boolean succeeded = true;
         if (isVPNConnected()) {
-            AccesoTask task = new VPNTask(false);
+            AccesoTask task = new VPNTask(connectedVPN, false);
+            task.setOnFailed((evt) -> {
+                task.getErrorAlert().showAndWait();
+                System.exit(-1);
+            });
             succeeded = new LoadingScreen(task).load();
         }
         return succeeded;

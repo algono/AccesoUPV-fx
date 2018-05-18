@@ -37,7 +37,7 @@
             <Label text="Unidad de tu PC para Disco W:" GridPane.rowIndex="2" />
             <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1">
                <children>
-                  <TextField fx:id="textVPN" prefHeight="31.0" prefWidth="211.0" />
+                  <TextField fx:id="textVPN" prefWidth="211.0" />
                   <Hyperlink fx:id="helpLinkVPN" text="?">
                      <font>
                         <Font name="System Bold" size="18.0" />
@@ -47,7 +47,7 @@
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                <children>
-                  <TextField fx:id="textUser" prefHeight="31.0" prefWidth="211.0" />
+                  <TextField fx:id="textUser" prefWidth="211.0" />
                   <Hyperlink fx:id="helpLinkUser" text="?">
                      <font>
                         <Font name="System Bold" size="18.0" />
@@ -55,7 +55,7 @@
                   </Hyperlink>
                </children>
             </HBox>
-            <ComboBox fx:id="comboDrive" prefHeight="25.0" prefWidth="77.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <ComboBox fx:id="comboDrive" prefWidth="66.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
          </children>
          <BorderPane.margin>
             <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
@@ -65,7 +65,7 @@
    <bottom>
       <VBox alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
          <children>
-            <Text fx:id="textWarning" fill="RED" strokeType="OUTSIDE" strokeWidth="0.0" text="AVISO: Hay preferencias no establecidas. Debe establecerlas para continuar." visible="false" />
+            <Text fx:id="textWarningVPN" fill="GREY" strokeType="OUTSIDE" strokeWidth="0.0" text="El cambio a la VPN se realizará la próxima vez que accedas a la aplicación." visible="false" />
             <HBox alignment="BOTTOM_CENTER" spacing="30.0">
                <children>
                   <Button fx:id="buttonAccept" defaultButton="true" mnemonicParsing="false" onAction="#savePrefs" text="Aceptar" />

@@ -5,9 +5,7 @@
  */
 package accesoupv.model.tasks;
 
-import static accesoupv.Launcher.acceso;
 import java.io.IOException;
-import java.net.InetAddress;
 
 /**
  *
@@ -18,7 +16,7 @@ public class VPNTask extends AccesoTask {
     //Webpage for possible VPN errors
     public static final String WEB_ERROR_VPN = "https://www.upv.es/contenidos/INFOACCESO/infoweb/infoacceso/dat/723787normalc.html";
     //Error messages
-    public static final String ERROR_VPN
+    public static final String ERROR_CON_VPN
             = "Ha habido un error desconocido al tratar de conectarse a la VPN.\n\n"
             + "Para más información, pulse 'Mostrar detalles'.";
     
@@ -32,22 +30,23 @@ public class VPNTask extends AccesoTask {
     
     public static final String ERROR_MISSING_DATA_VPN
             = "La VPN requiere datos que no le han sido proporcionados.\n\n"
-            + "Compruebe manualmente que la VPN se conecta correctamente recordando tus datos, y vuelva a intentarlo.";
+            + "Compruebe manualmente que la VPN se conecta correctamente recordando tus datos, y vuelva a intentarlo."
+            + "Para más información, pulse 'Mostrar detalles'.";
     
     public static final String ERROR_DIS_VPN = "No ha podido desconectarse la VPN. Deberá desconectarla manualmente.";   
     
-    public VPNTask(boolean nState) {
-        super(nState);
-    }
-    public VPNTask(boolean nState, boolean showErr) {
-        super(nState, showErr);
+    private final String VPN;
+    
+    public VPNTask(String vpn, boolean connecting) {
+        super(connecting);
+        VPN = vpn;
     }
     
     @Override
     protected void connect() throws Exception {
-        setErrorMessage(ERROR_VPN);
+        setErrorMessage(ERROR_CON_VPN);
         updateMessage("Conectando con la UPV...");
-        Process p = startProcess("cmd.exe", "/c", "rasdial \"" + acceso.getVPN() + "\"");
+        Process p = startProcess("cmd.exe", "/c", "rasdial \"" + VPN + "\"");
         Thread.sleep(1000);
         int exitValue = p.waitFor();
         if (exitValue != 0) {
@@ -55,31 +54,21 @@ public class VPNTask extends AccesoTask {
             //623 - Código de error "No se encontró una VPN con ese nombre".
             if (out.contains("623")) {
                 setErrorMessage(ERROR_NONEXISTANT_VPN);
-                throw new IllegalArgumentException(out);
+                throw new IllegalArgumentException();
                 //703 - Código de error "A la VPN le faltan datos"
             } else if (out.contains("703")) {
                 setErrorMessage(ERROR_MISSING_DATA_VPN);
-                throw new IllegalStateException(out);
-            } else {
-                throw new IOException(out);
             }
-        } else {
-            //Si desde la VPN a la que se conectó no se puede acceder a la UPV, se entiende que ha elegido una incorrecta.
-            try {
-                if (!InetAddress.getByName("www.upv.es").isReachable(PING_TIMEOUT)) {
-                    setErrorMessage(ERROR_INVALID_VPN);
-                    throw new IllegalArgumentException();
-                }
-            } catch (IOException ex) {}
+            throw new IOException(out);
+            
         }
     }
     
     @Override
     protected void disconnect() throws Exception {
         setErrorMessage(ERROR_DIS_VPN);
-        exitOnFailed = true;
         updateMessage("Desconectando de la UPV...");
-        Process p = startProcess("cmd.exe", "/c", "rasdial " + acceso.getVPN() + " /DISCONNECT");
+        Process p = startProcess("cmd.exe", "/c", "rasdial " + VPN + " /DISCONNECT");
         waitAndCheck(p, 1000);
     }
     

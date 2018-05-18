@@ -5,7 +5,6 @@
  */
 package accesoupv.controller;
 
-import static accesoupv.Launcher.acceso;
 import accesoupv.model.AccesoUPV;
 import java.awt.Desktop;
 import java.io.File;
@@ -24,7 +23,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.stage.Modality;
@@ -36,8 +34,6 @@ import javafx.stage.Stage;
  */
 public class PrincipalController implements Initializable {
     
-    @FXML
-    private Label textState;
     @FXML
     private MenuItem menuDisconnectW;
     @FXML
@@ -62,7 +58,10 @@ public class PrincipalController implements Initializable {
     //Messages
     public static final String ERROR_FOLDER_MSG = "Ha habido un error al tratar de abrir la carpeta. Ábrala manualmente.";
     public static final String ERROR_DSIC_MSG = "No se ha podido acceder al servidor DSIC.";
+    //AccesoUPV Instance
+    private static final AccesoUPV acceso = AccesoUPV.getInstance();
     
+    private void gotoAjustes() { gotoAjustes(false); }
     private void gotoAjustes(boolean exitOnCancelled) {
         if (acceso.isWConnected()) {
             String wMsg = "No se permite acceder a los ajustes mientras el disco W se encuentre conectado.\n\n"
@@ -109,15 +108,14 @@ public class PrincipalController implements Initializable {
         }
     }
     
-    private void connectVPN() {
-        boolean succeeded = acceso.connectVPN();
+    private void connectUPV() {
+        boolean succeeded = acceso.connectUPV();
         //Si la ejecución falló...
         if (!succeeded) {
             //Y la causó una variable inválida... accede a los ajustes para cambiarla
             if (acceso.isIncomplete()) {
-                if (acceso.isVPNConnected()) acceso.disconnectVPN();
                 gotoAjustes(true);
-                connectVPN();
+                connectUPV();
             } else {
                 System.exit(-1);
             }
@@ -128,7 +126,7 @@ public class PrincipalController implements Initializable {
      * @return Whether the execution should continue or not.
      */
     private boolean checkDrive() {
-        if (!acceso.isWConnected() && acceso.isDriveUsed()) {
+        if (acceso.isDriveUsed()) {
             String WARNING_W = 
                     "La unidad definida para el disco W (" + acceso.getDrive() + ") ya contiene un disco asociado.\n\n"
                     + "Antes de continuar, desconecte el disco asociado, o cambie la unidad para el disco W desde los ajustes.\n ";
@@ -140,7 +138,7 @@ public class PrincipalController implements Initializable {
             warning.getButtonTypes().setAll(continuar, ajustes, ButtonType.CANCEL);
             Optional<ButtonType> result = warning.showAndWait();
             if (!result.isPresent() || result.get() == ButtonType.CANCEL) { return false; }
-            else if (result.get() == ajustes) gotoAjustes(false);
+            else if (result.get() == ajustes) gotoAjustes();
             else {
                 if (acceso.isDriveUsed()) {
                     WARNING_W = "El disco aún no ha sido desconectado. Si se trata del disco W, puede continuar sin problemas.\n"
@@ -157,23 +155,30 @@ public class PrincipalController implements Initializable {
     }
     @FXML
     private void accessW(ActionEvent evt) {
-        if (checkDrive()) {
-            if (!acceso.isWConnected()) {
-                //Si la ejecución falló...
-                boolean succeeded = acceso.connectW();
-                if (!succeeded) {
-                    //...y el nombre del usuario no era válido... acceder a los ajustes para cambiarlo
-                    if (acceso.isIncomplete()) gotoAjustes(false);
-                    return;
-                }
-            }
-            try {
-                Desktop.getDesktop().open(new File(acceso.getDrive()));
-            } catch (IOException ex) {
-                new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
-            }
+        if (!acceso.isWConnected() && checkDrive()) {
+            //Si la ejecución falló...
+            boolean succeeded = acceso.connectW();
+            buttonDisconnectW.setDisable(!succeeded);
+            menuDisconnectW.setDisable(!succeeded);
+            if (!succeeded) {
+                //...y el nombre del usuario no era válido... acceder a los ajustes para cambiarlo
+                if (acceso.isIncomplete()) gotoAjustes();
+                return;
+            } 
+        }
+        try {
+            Desktop.getDesktop().open(new File(acceso.getDrive()));
+        } catch (IOException ex) {
+            new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
         }
     }
+    @FXML
+    private void disconnectW(ActionEvent evt) {
+        boolean succeeded = acceso.disconnectW();
+        buttonDisconnectW.setDisable(succeeded);
+        menuDisconnectW.setDisable(succeeded);
+    }
+    
     private void accessDSIC(String server) {
         try {
             new ProcessBuilder("cmd.exe", "/c", "mstsc /v:" + server).start();
@@ -184,23 +189,15 @@ public class PrincipalController implements Initializable {
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        //If prefs are incomplete, go to Preferences
-        if (acceso.isIncomplete()) { gotoAjustes(true); }
         //Assigns buttons' actions
         menuLinuxDSIC.setOnAction(e -> accessDSIC(AccesoUPV.LINUX_DSIC));
         buttonLinuxDSIC.setOnAction(e -> accessDSIC(AccesoUPV.LINUX_DSIC));
         menuWinDSIC.setOnAction(e -> accessDSIC(AccesoUPV.WIN_DSIC));
         buttonWinDSIC.setOnAction(e -> accessDSIC(AccesoUPV.WIN_DSIC));
-        buttonDisconnectW.setOnAction(e -> acceso.disconnectW());
-        menuDisconnectW.setOnAction(e -> acceso.disconnectW());
         menuAyuda.setOnAction(e -> gotoAyuda(""));
         menuAyudaDSIC.setOnAction(e -> gotoAyuda("DSIC"));
         menuAyudaVPN.setOnAction(e -> gotoAyuda("VPN"));
-        menuAjustes.setOnAction(e -> gotoAjustes(false));
-        //Sets bindings
-        buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.WConnectedProperty()));
-        menuDisconnectW.disableProperty().bind(Bindings.not(acceso.WConnectedProperty()));
-        connectVPN(); //Sets up the VPN connection
-        textState.setText(acceso.isVPNConnected() ? "(vía VPN)" : "(vía UPVNET)");
+        menuAjustes.setOnAction(e -> gotoAjustes());
+        connectUPV();
     }
 }

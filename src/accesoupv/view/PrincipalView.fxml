@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
@@ -14,7 +14,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<BorderPane prefHeight="334.0" prefWidth="507.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="accesoupv.controller.PrincipalController">
+<BorderPane xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="accesoupv.controller.PrincipalController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
@@ -27,7 +27,7 @@
                               <KeyCodeCombination alt="UP" code="A" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator>
                         </MenuItem>
-                        <MenuItem fx:id="menuDisconnectW" mnemonicParsing="false" text="Desconectar">
+                        <MenuItem fx:id="menuDisconnectW" disable="true" mnemonicParsing="false" onAction="#disconnectW" text="Desconectar">
                            <accelerator>
                               <KeyCodeCombination alt="UP" code="D" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator>
@@ -68,7 +68,7 @@
       </MenuBar>
    </top>
    <center>
-      <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+      <HBox alignment="CENTER" BorderPane.alignment="CENTER">
          <children>
             <VBox alignment="CENTER" spacing="30.0">
                <children>
@@ -82,7 +82,7 @@
                         <Font size="18.0" />
                      </font>
                   </Button>
-                  <Button fx:id="buttonDisconnectW" mnemonicParsing="false" text="Desconectar" textFill="#b22828">
+                  <Button fx:id="buttonDisconnectW" disable="true" mnemonicParsing="false" onAction="#disconnectW" text="Desconectar" textFill="#b22828">
                      <font>
                         <Font size="14.0" />
                      </font>
@@ -93,20 +93,6 @@
                <children>
                   <Text fill="#615f5f" strokeType="OUTSIDE" strokeWidth="0.0" text="¿Qué desea hacer?" />
                   <Separator orientation="VERTICAL" prefHeight="200.0" prefWidth="9.0" />
-                  <HBox alignment="CENTER" spacing="5.0">
-                     <children>
-                        <Label text="Estado: Conectado" textFill="#44803a">
-                           <font>
-                              <Font size="13.0" />
-                           </font>
-                        </Label>
-                        <Label fx:id="textState" layoutX="200.0" layoutY="10.0" text="(via X)" textFill="#44803a">
-                           <font>
-                              <Font size="13.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </HBox>
                </children>
             </VBox>
             <VBox alignment="CENTER" spacing="30.0">
@@ -129,6 +115,9 @@
                </children>
             </VBox>
          </children>
+         <BorderPane.margin>
+            <Insets bottom="15.0" left="40.0" right="40.0" top="15.0" />
+         </BorderPane.margin>
       </HBox>
    </center>
 </BorderPane>

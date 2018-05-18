@@ -5,7 +5,7 @@
  */
 package accesoupv.controller;
 
-import static accesoupv.Launcher.acceso;
+import accesoupv.model.AccesoUPV;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -44,7 +44,7 @@ import javafx.stage.Stage;
 public class AjustesController implements Initializable {
     
     @FXML
-    private Text textWarning;
+    private Text textWarningVPN;
     @FXML
     private Button buttonAccept;
     @FXML
@@ -78,34 +78,39 @@ public class AjustesController implements Initializable {
     private Stage primaryStage;
     private boolean exitOnCancel;
     private ObservableList<String> dataDrives;
+    //AccesoUPV Instance
+    private static final AccesoUPV acceso = AccesoUPV.getInstance();
     
-    public void init(Stage stage, boolean eOnCancel) {
+    public void init(Stage stage, boolean exOnCancel) {
         primaryStage = stage;
         primaryStage.setTitle("Preferencias");
-        exitOnCancel = eOnCancel;
+        exitOnCancel = exOnCancel;
         if (exitOnCancel) {
             primaryStage.setOnCloseRequest((evt) -> {
                 Platform.exit();
                 System.exit(0);
             });
-        } 
-        if (acceso.isVPNConnected()) textVPN.setDisable(true);
-        String drive;
+        }
         //Escribe las preferencias guardadas
-        textUser.setText(acceso.getUser());
-        textVPN.setText(acceso.getVPN());
+        String user = acceso.getUser();
+        if (user == null) {
+            Platform.runLater(() -> textUser.requestFocus());
+            user = "";
+        }
+        textUser.setText(user);
+        String vpn = acceso.getVPN();
+        if (vpn == null) {
+            Platform.runLater(() -> textVPN.requestFocus());
+            vpn = "";
+        }
+        textVPN.setText(vpn);
         //Si no tiene una asociada, selecciona 'W:' como la unidad por defecto
-        drive = (acceso.getDrive().isEmpty()) ? "W:" : acceso.getDrive();
+        String drive = (acceso.getDrive().isEmpty()) ? "W:" : acceso.getDrive();
         //Si la lista lo contiene, selecciona la unidad guardada (o 'W:' por defecto si no hay guardada ninguna unidad)
         if (dataDrives.contains(drive)) {
             comboDrive.getSelectionModel().select(drive);
         } else {
             comboDrive.getSelectionModel().selectFirst();
-        }
-        if (acceso.isIncomplete()) {
-            textWarning.setVisible(true);
-            if (textUser.getText().isEmpty()) textUser.requestFocus();
-            else if (textVPN.getText().isEmpty()) textVPN.requestFocus();
         }
     }
     
@@ -117,17 +122,6 @@ public class AjustesController implements Initializable {
             acceso.savePrefs();
             //Cierra la ventana de ajustes
             primaryStage.hide();
-    }
-    
-    private void createDriveList() {
-        ArrayList<String> drives = new ArrayList<>();
-        char letter = 'Z';
-        while (letter >= 'D') {
-            String drive = letter + ":";
-            if (!new File(drive).exists()) drives.add(drive);
-            letter--;
-        }
-        dataDrives = FXCollections.observableList(drives);
     }
     
     private void gotoAyuda(String page) {
@@ -166,11 +160,19 @@ public class AjustesController implements Initializable {
     
     /**
      * Initializes the controller class.
+     * @param url
+     * @param rb
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        createDriveList();
+        dataDrives = FXCollections.observableList(AccesoUPV.getAvailableDrives());
         comboDrive.setItems(dataDrives);
+        //Si se ha cambiado el valor de la VPN y se encuentra conectada, muestra un mensaje.
+        if (acceso.isVPNConnected()) {
+            textVPN.textProperty().addListener((obs, oldValue, newValue) -> {
+                textWarningVPN.setVisible(!newValue.equals(acceso.getVPN()));
+            });
+        }
         
         buttonAccept.disableProperty().bind(
             Bindings.or(
@@ -192,7 +194,5 @@ public class AjustesController implements Initializable {
         //Evento para que siempre que quites el ratón del nodo, esconda el Tooltip
         helpLinkUser.addEventHandler(MouseEvent.MOUSE_EXITED, e -> helpLinkUser.getTooltip().hide());
         helpLinkUser.setTooltip(new Tooltip(HELP_TOOLTIP));
-        
-        Platform.runLater(() -> buttonClose.requestFocus());
     }    
 }

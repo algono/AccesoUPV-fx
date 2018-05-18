@@ -20,8 +20,6 @@ import javafx.stage.WindowEvent;
  */
 public class Launcher extends Application {
     
-    public static AccesoUPV acceso = new AccesoUPV();
-    
     @Override
     public void start(Stage stage) throws Exception {
         
@@ -32,7 +30,7 @@ public class Launcher extends Application {
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/app-icon.png")));
         stage.setScene(scene);
         stage.setOnCloseRequest((WindowEvent we) -> {
-            if (!acceso.shutdown()) we.consume();
+            if (!AccesoUPV.getInstance().shutdown()) we.consume();
         });
         stage.show();
     }
