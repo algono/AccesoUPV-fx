@@ -47,7 +47,6 @@ public class VPNTask extends AccesoTask {
         setErrorMessage(ERROR_CON_VPN);
         updateMessage("Conectando con la UPV...");
         Process p = startProcess("cmd.exe", "/c", "rasdial \"" + VPN + "\"");
-        Thread.sleep(1000);
         int exitValue = p.waitFor();
         if (exitValue != 0) {
             String out = getOutput(p);

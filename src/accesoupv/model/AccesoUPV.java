@@ -37,7 +37,7 @@ public final class AccesoUPV {
     public static final String WIN_DSIC = "windesktop.dsic.upv.es";
     public static final String UPV_SERVER = "www.upv.es";
     //Timeout
-    public static final int PING_TIMEOUT = 1000; //1000 miliseconds
+    public static final int PING_TIMEOUT = 1500; //Unit: miliseconds
     
     // Singleton patron (only 1 instance of this object stored at a time)
     private static AccesoUPV acceso;
