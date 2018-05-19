@@ -55,7 +55,7 @@ public class VPNTask extends AccesoTask {
             if (out.contains("623")) {
                 setErrorMessage(ERROR_NONEXISTANT_VPN);
                 throw new IllegalArgumentException();
-                //703 - Código de error "A la VPN le faltan datos"
+            //703 - Código de error "A la VPN le faltan datos"
             } else if (out.contains("703")) {
                 setErrorMessage(ERROR_MISSING_DATA_VPN);
             }

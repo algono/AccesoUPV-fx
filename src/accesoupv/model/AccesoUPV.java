@@ -28,7 +28,7 @@ import lib.LoadingScreen;
 public final class AccesoUPV {
     
     //Variables
-    private String drive, vpn, user;
+    private String vpn, user, drive;
     private String connectedVPN, connectedUser, connectedDrive;
     //Preferences
     private final Preferences prefs = Preferences.userNodeForPackage(this.getClass());
@@ -37,7 +37,7 @@ public final class AccesoUPV {
     public static final String WIN_DSIC = "windesktop.dsic.upv.es";
     public static final String UPV_SERVER = "www.upv.es";
     //Timeout
-    public static final int PING_TIMEOUT = 500; //500 miliseconds
+    public static final int PING_TIMEOUT = 1000; //1000 miliseconds
     
     // Singleton patron (only 1 instance of this object stored at a time)
     private static AccesoUPV acceso;
@@ -55,28 +55,31 @@ public final class AccesoUPV {
     }
     //Load and save variables (prefs)
     public void loadPrefs() {
-        drive = prefs.get("drive", null);
         vpn = prefs.get("vpn", null);
         user = prefs.get("user", null);
+        drive = prefs.get("drive", null);
     }
     
     public void savePrefs() {
-        prefs.put("drive", drive);
-        prefs.put("vpn", vpn);
-        prefs.put("user", user);
+        if (vpn == null) prefs.remove("vpn");
+        else prefs.put("vpn", vpn);
+        if (user == null) prefs.remove("user");
+        else prefs.put("user", user);
+        if (drive == null) prefs.remove("drive");
+        else prefs.put("drive", drive);
     }
     
     //Getters
-    public String getDrive() { return drive; }
     public String getVPN() { return vpn; }
     public String getUser() { return user; }
+    public String getDrive() { return drive; }
     //Setters
-    public void setDrive(String d) { drive = d; }
-    public void setVPN(String v) { vpn = v; }
-    public void setUser(String u) { user = u; }
+    public void setVPN(String v) { vpn = v.isEmpty() ? null : v; }
+    public void setUser(String u) { user = u.isEmpty() ? null : u; }
+    public void setDrive(String d) { drive = d.isEmpty() ? null : d; }
     
     //Checks if any variable is not defined
-    public boolean isIncomplete() { return drive == null || vpn == null || user == null; }
+    public boolean isIncomplete() { return vpn == null || user == null || drive == null; }
     //Checks if the drive letter is currently being used
     public boolean isDriveUsed() { return new File(drive).exists(); }
     //Gets the boolean values
@@ -119,6 +122,7 @@ public final class AccesoUPV {
             try {
                 if (!InetAddress.getByName("www.upv.es").isReachable(PING_TIMEOUT)) {
                     disconnectVPN();
+                    vpn = null;
                     return false;
                 }
             } catch (IOException ex) {}
@@ -135,7 +139,6 @@ public final class AccesoUPV {
             //Si el error se debió a que la VPN fue inválida, borra el valor asociado a esta.
             if (exception instanceof IllegalArgumentException) {
                 vpn = null;
-            } else if (exception instanceof IllegalStateException) {
             } else {
                 /** Si se trata de un error no conocido por el programa,
                  * muestra también un link a una web de la UPV
@@ -151,10 +154,12 @@ public final class AccesoUPV {
                         new Alert(Alert.AlertType.ERROR, "Ha ocurrido un error al tratar de abrir el navegador.").show();
                     }
                 });
-                TextArea errorContent = new TextArea(task.getException().getMessage());
-                errorContent.setEditable(false);
-                VBox errorVPNBox = new VBox(helpLink, errorContent);
-                errorAlert.getDialogPane().setExpandableContent(errorVPNBox);
+                if (exception != null && !exception.getMessage().isEmpty()) {
+                    TextArea errorContent = new TextArea(exception.getMessage());
+                    errorContent.setEditable(false);
+                    VBox errorVPNBox = new VBox(helpLink, errorContent);
+                    errorAlert.getDialogPane().setExpandableContent(errorVPNBox);
+                }
             }
             errorAlert.showAndWait();
         }
@@ -189,7 +194,9 @@ public final class AccesoUPV {
             vpnTask.setExitOnFailed(true);
             screen.getQueue().add(vpnTask);
         }
-        return screen.load();
+        boolean succeeded = screen.load();
+        if (succeeded) savePrefs();
+        return succeeded;
     }
     
     public boolean disconnectW() {

@@ -11,7 +11,6 @@ import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -21,7 +20,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Hyperlink;
@@ -43,8 +41,6 @@ public class AjustesController implements Initializable {
     
     @FXML
     private Text textWarningVPN;
-    @FXML
-    private Button buttonAccept;
     @FXML
     private TextField textVPN;
     @FXML
@@ -169,13 +165,7 @@ public class AjustesController implements Initializable {
                 textWarningVPN.setVisible(!newValue.equals(acceso.getVPN()));
             });
         }
-        
-        buttonAccept.disableProperty().bind(
-            Bindings.or(
-                    Bindings.isEmpty(textUser.textProperty()),
-                    Bindings.isEmpty(textVPN.textProperty())
-            )
-        );           
+                 
         menuAyuda.setOnAction(e -> gotoAyuda(""));
         menuAyudaDSIC.setOnAction(e -> gotoAyuda("DSIC"));
         menuAyudaVPN.setOnAction(e -> gotoAyuda("VPN"));

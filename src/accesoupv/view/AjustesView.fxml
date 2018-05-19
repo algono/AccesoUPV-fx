@@ -68,7 +68,7 @@
             <Text fx:id="textWarningVPN" fill="GREY" strokeType="OUTSIDE" strokeWidth="0.0" text="El cambio a la VPN se realizará la próxima vez que accedas a la aplicación." visible="false" />
             <HBox alignment="BOTTOM_CENTER" spacing="30.0">
                <children>
-                  <Button fx:id="buttonAccept" defaultButton="true" mnemonicParsing="false" onAction="#savePrefs" text="Aceptar" />
+                  <Button defaultButton="true" mnemonicParsing="false" onAction="#savePrefs" text="Aceptar" />
                   <Button cancelButton="true" mnemonicParsing="false" onAction="#closeDialogue" text="Cancelar" />
                </children>
                <padding>

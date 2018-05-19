@@ -22,8 +22,12 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -60,8 +64,8 @@ public class PrincipalController implements Initializable {
     //AccesoUPV Instance
     private static final AccesoUPV acceso = AccesoUPV.getInstance();
     
-    private void gotoAjustes() { gotoAjustes(false); }
-    private void gotoAjustes(boolean exitOnCancelled) {
+    private void showAjustes() { showAjustes(false); }
+    private void showAjustes(boolean exitOnCancelled) {
         if (acceso.isWConnected()) {
             String wMsg = "No se permite acceder a los ajustes mientras el disco W se encuentre conectado.\n\n"
                     + "¿Desea desconectarlo?";
@@ -89,7 +93,7 @@ public class PrincipalController implements Initializable {
         } catch (IOException ex) {}
     }
     
-    private void gotoAyuda(String page) {
+    private void showAyuda(String page) {
         try {
             Stage stage = new Stage();
             FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/AyudaView.fxml"));
@@ -111,9 +115,26 @@ public class PrincipalController implements Initializable {
         boolean succeeded = acceso.connectUPV();
         //Si la ejecución falló...
         if (!succeeded) {
-            //Y la causó una variable inválida... accede a los ajustes para cambiarla
-            if (acceso.isIncomplete()) {
-                gotoAjustes(true);
+            //Y la causó una variable inválida... Muestra un diálogo que permite cambiarla
+            if (acceso.getVPN() == null) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setHeaderText(null);
+                Label content = new Label("Debe establecer una red VPN para poder acceder a la UPV desde fuera del campus.");
+                Hyperlink help = new Hyperlink("Si no sabe cómo, pulse aquí.");
+                help.setOnAction((evt) -> showAyuda("VPN"));
+                alert.getDialogPane().setContent(new VBox(content, help));
+                alert.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+                Optional<ButtonType> alertRes = alert.showAndWait();
+                if (!alertRes.isPresent() || alertRes.get() == ButtonType.CANCEL) System.exit(0);
+                TextInputDialog dialog = new TextInputDialog();
+                dialog.setTitle("Introduzca nombre VPN");
+                dialog.setHeaderText(null);
+                dialog.setContentText("Introduzca el nombre de la red VPN a la UPV: ");
+                Optional<String> newVPN = dialog.showAndWait();
+                //Si ha escrito un valor, le cambia el nombre. Si no, sale del programa.
+                if (newVPN.isPresent()) acceso.setVPN(newVPN.get());
+                else System.exit(0);
+                //Y tras haber cambiado el nombre de la VPN, lo vuelve a intentar
                 connectUPV();
             } else {
                 System.exit(-1);
@@ -137,7 +158,7 @@ public class PrincipalController implements Initializable {
             warning.getButtonTypes().setAll(continuar, ajustes, ButtonType.CANCEL);
             Optional<ButtonType> result = warning.showAndWait();
             if (!result.isPresent() || result.get() == ButtonType.CANCEL) { return false; }
-            else if (result.get() == ajustes) gotoAjustes();
+            else if (result.get() == ajustes) showAjustes();
             else {
                 if (acceso.isDriveUsed()) {
                     WARNING_W = "El disco aún no ha sido desconectado. Si se trata del disco W, puede continuar sin problemas.\n"
@@ -161,7 +182,7 @@ public class PrincipalController implements Initializable {
             menuDisconnectW.setDisable(!succeeded);
             if (!succeeded) {
                 //...y el nombre del usuario no era válido... acceder a los ajustes para cambiarlo
-                if (acceso.isIncomplete()) gotoAjustes();
+                if (acceso.isIncomplete()) showAjustes();
                 return;
             } 
         }
@@ -193,10 +214,10 @@ public class PrincipalController implements Initializable {
         buttonLinuxDSIC.setOnAction(e -> accessDSIC(AccesoUPV.LINUX_DSIC));
         menuWinDSIC.setOnAction(e -> accessDSIC(AccesoUPV.WIN_DSIC));
         buttonWinDSIC.setOnAction(e -> accessDSIC(AccesoUPV.WIN_DSIC));
-        menuAyuda.setOnAction(e -> gotoAyuda(""));
-        menuAyudaDSIC.setOnAction(e -> gotoAyuda("DSIC"));
-        menuAyudaVPN.setOnAction(e -> gotoAyuda("VPN"));
-        menuAjustes.setOnAction(e -> gotoAjustes());
+        menuAyuda.setOnAction(e -> showAyuda(""));
+        menuAyudaDSIC.setOnAction(e -> showAyuda("DSIC"));
+        menuAyudaVPN.setOnAction(e -> showAyuda("VPN"));
+        menuAjustes.setOnAction(e -> showAjustes());
         connectUPV();
     }
 }
