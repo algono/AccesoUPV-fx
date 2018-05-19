@@ -15,7 +15,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
-import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.TextArea;
@@ -26,11 +25,13 @@ import lib.LoadingScreen;
  *
  * @author Alejandro
  */
-public class AccesoUPV {
+public final class AccesoUPV {
     
     //Variables
     private String drive, vpn, user;
     private String connectedVPN, connectedUser, connectedDrive;
+    //Preferences
+    private final Preferences prefs = Preferences.userNodeForPackage(this.getClass());
     //Servers
     public static final String LINUX_DSIC = "linuxdesktop.dsic.upv.es";
     public static final String WIN_DSIC = "windesktop.dsic.upv.es";
@@ -43,11 +44,7 @@ public class AccesoUPV {
     
     //Creating a new object loads again all prefs
     public AccesoUPV() {
-        //Loads prefs
-        Preferences prefs = Preferences.userNodeForPackage(AccesoUPV.class);
-        drive = prefs.get("drive", null);
-        vpn = prefs.get("vpn", null);
-        user = prefs.get("user", null);
+        loadPrefs();
         //Stores this object
         acceso = this;
     }
@@ -55,6 +52,18 @@ public class AccesoUPV {
     public static AccesoUPV getInstance() {
         if (acceso == null) acceso = new AccesoUPV();
         return acceso;
+    }
+    //Load and save variables (prefs)
+    public void loadPrefs() {
+        drive = prefs.get("drive", null);
+        vpn = prefs.get("vpn", null);
+        user = prefs.get("user", null);
+    }
+    
+    public void savePrefs() {
+        prefs.put("drive", drive);
+        prefs.put("vpn", vpn);
+        prefs.put("user", user);
     }
     
     //Getters
@@ -103,6 +112,7 @@ public class AccesoUPV {
     private boolean connectVPN() {
         if (vpn == null) return false;
         AccesoTask task = new VPNTask(vpn, true);
+        task.showErrorMessage(false);
         boolean VPNConnected = new LoadingScreen(task).load();
         if (VPNConnected) {
             //Si desde la VPN a la que se conectó no se puede acceder a la UPV, se entiende que ha elegido una incorrecta.
@@ -159,6 +169,7 @@ public class AccesoUPV {
             return false;
         }
         AccesoTask task = new WTask(user, drive, true);
+        task.showErrorMessage(false);
         boolean succeeded = new LoadingScreen(task).load();
         if (succeeded) {
             connectedUser = user;
@@ -171,43 +182,20 @@ public class AccesoUPV {
     }
     
     public boolean shutdown() {
-        boolean succeeded;
-        if (isVPNConnected() && isWConnected()) {
-            Task task = new Task<Void>() {
-                @Override
-                protected Void call() throws Exception {
-                    AccesoTask Wtask = new WTask(connectedUser, connectedDrive, false);
-                    Wtask.messageProperty().addListener((obs, oldVal, newVal) -> {
-                        updateMessage(newVal);
-                    });
-                    Wtask.run();
-                    AccesoTask VPNtask = new VPNTask(connectedVPN, false);
-                    VPNtask.messageProperty().addListener((obs, oldVal, newVal) -> {
-                        updateMessage(newVal);
-                    });
-                    VPNtask.setOnFailed((evt) -> {
-                        VPNtask.getErrorAlert().showAndWait();
-                        System.exit(-1);
-                    });
-                    VPNtask.run();
-                    return null;
-                }
-            };
-            succeeded = new LoadingScreen(task).load();
-        } else {
-            succeeded = disconnectW();
-            if (succeeded) {
-                succeeded = disconnectVPN();
-            }
+        LoadingScreen screen = new LoadingScreen();
+        if (isWConnected()) screen.getQueue().add(new WTask(connectedUser, connectedDrive, false));
+        if (isVPNConnected()) {
+            AccesoTask vpnTask = new VPNTask(connectedVPN, false);
+            vpnTask.setExitOnFailed(true);
+            screen.getQueue().add(vpnTask);
         }
-        return succeeded;
+        return screen.load();
     }
     
     public boolean disconnectW() {
         boolean succeeded = true;
         if (isWConnected()) {
             AccesoTask task = new WTask(connectedUser, connectedDrive, false);
-            task.showErrorMessage(true);
             succeeded = new LoadingScreen(task).load();
             if (succeeded) connectedDrive = null;
         }
@@ -218,19 +206,9 @@ public class AccesoUPV {
         boolean succeeded = true;
         if (isVPNConnected()) {
             AccesoTask task = new VPNTask(connectedVPN, false);
-            task.setOnFailed((evt) -> {
-                task.getErrorAlert().showAndWait();
-                System.exit(-1);
-            });
+            task.setExitOnFailed(true);
             succeeded = new LoadingScreen(task).load();
         }
         return succeeded;
-    }
-    
-    public void savePrefs() {
-        Preferences prefs = Preferences.userNodeForPackage(AccesoUPV.class);
-        prefs.put("drive", drive);
-        prefs.put("vpn", vpn);
-        prefs.put("user", user);
     }
 }

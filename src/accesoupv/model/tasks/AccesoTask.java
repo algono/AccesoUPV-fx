@@ -24,7 +24,8 @@ public abstract class AccesoTask extends Task<Void> {
     public static final int PROCESS_TIMEOUT = 5000; //5 seconds
     
     private String errorMsg;
-    private boolean showError = false;
+    private boolean showError = true;
+    private boolean exitOnFailed = false;
     //Whether the thing it is accessing to should be connected or disconnected after the execution of the task.
     protected final boolean newState;
     
@@ -33,6 +34,7 @@ public abstract class AccesoTask extends Task<Void> {
         setOnFailed((e) -> {
             //Platform.runLater() ensures that the Alert is being shown by the JavaFX Application Thread (avoiding possible errors).
             if (showError) Platform.runLater(() -> getErrorAlert().showAndWait());
+            if (exitOnFailed) System.exit(-1);
         });
     }
     
@@ -61,6 +63,7 @@ public abstract class AccesoTask extends Task<Void> {
         return errorAlert;
     }
     public void showErrorMessage(boolean show) { showError = show; }
+    public void setExitOnFailed(boolean exit) { exitOnFailed = exit; }
     protected void setErrorMessage(String errMsg) { errorMsg = errMsg; }
     
     //Métodos estáticos de utilidad para tratar procesos

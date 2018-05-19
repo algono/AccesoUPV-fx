@@ -69,7 +69,7 @@
             <HBox alignment="BOTTOM_CENTER" spacing="30.0">
                <children>
                   <Button fx:id="buttonAccept" defaultButton="true" mnemonicParsing="false" onAction="#savePrefs" text="Aceptar" />
-                  <Button fx:id="buttonClose" cancelButton="true" mnemonicParsing="false" onAction="#closeDialogue" text="Cancelar" />
+                  <Button cancelButton="true" mnemonicParsing="false" onAction="#closeDialogue" text="Cancelar" />
                </children>
                <padding>
                   <Insets bottom="10.0" />

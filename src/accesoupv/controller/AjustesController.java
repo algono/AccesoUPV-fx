@@ -6,10 +6,8 @@
 package accesoupv.controller;
 
 import accesoupv.model.AccesoUPV;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
@@ -47,8 +45,6 @@ public class AjustesController implements Initializable {
     private Text textWarningVPN;
     @FXML
     private Button buttonAccept;
-    @FXML
-    private Button buttonClose;
     @FXML
     private TextField textVPN;
     @FXML
