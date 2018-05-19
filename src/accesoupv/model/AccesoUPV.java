@@ -36,8 +36,9 @@ public final class AccesoUPV {
     public static final String LINUX_DSIC = "linuxdesktop.dsic.upv.es";
     public static final String WIN_DSIC = "windesktop.dsic.upv.es";
     public static final String UPV_SERVER = "www.upv.es";
-    //Timeout
-    public static final int PING_TIMEOUT = 1500; //Unit: miliseconds
+    //Timeouts (unit: miliseconds)
+    public static final int INITIAL_PING_TIMEOUT = 500; //Timeout for checking if the user is already connected to the UPV
+    public static final int FINAL_PING_TIMEOUT = 4000; //Timeout for checking if the connected VPN is able to connect the UPV
     
     // Singleton patron (only 1 instance of this object stored at a time)
     private static AccesoUPV acceso;
@@ -100,7 +101,7 @@ public final class AccesoUPV {
     public boolean connectUPV() {
         //Si ya es posible acceder a la UPV, estamos conectados
         try {
-            if (InetAddress.getByName("www.upv.es").isReachable(PING_TIMEOUT)) {
+            if (InetAddress.getByName("www.upv.es").isReachable(INITIAL_PING_TIMEOUT)) {
                 return true;
             }
         } catch (IOException ex) {}
@@ -120,7 +121,7 @@ public final class AccesoUPV {
         if (VPNConnected) {
             //Si desde la VPN a la que se conectó no se puede acceder a la UPV, se entiende que ha elegido una incorrecta.
             try {
-                if (!InetAddress.getByName("www.upv.es").isReachable(PING_TIMEOUT)) {
+                if (!InetAddress.getByName("www.upv.es").isReachable(FINAL_PING_TIMEOUT)) {
                     disconnectVPN();
                     vpn = null;
                     return false;

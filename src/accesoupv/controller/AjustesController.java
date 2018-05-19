@@ -20,6 +20,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Hyperlink;
@@ -57,6 +58,8 @@ public class AjustesController implements Initializable {
     private Hyperlink helpLinkVPN;
     @FXML
     private Hyperlink helpLinkUser;
+    @FXML
+    private Button buttonOK;
     
     //Constants (Messages)
     public static final String SUCCESS_MESSAGE = "El archivo ha sido creado con éxito.\n¿Desea abrir la carpeta en la cual ha sido guardado?";
@@ -180,5 +183,7 @@ public class AjustesController implements Initializable {
         //Evento para que siempre que quites el ratón del nodo, esconda el Tooltip
         helpLinkUser.addEventHandler(MouseEvent.MOUSE_EXITED, e -> helpLinkUser.getTooltip().hide());
         helpLinkUser.setTooltip(new Tooltip(HELP_TOOLTIP));
+        //Hace que al abrir la ventana, el focus lo tenga el botón de cancelar
+        Platform.runLater(() -> buttonOK.requestFocus());
     }    
 }
