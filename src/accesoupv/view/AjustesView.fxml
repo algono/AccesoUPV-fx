@@ -21,21 +21,33 @@
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="accesoupv.controller.AjustesController">
    <center>
-      <GridPane alignment="CENTER" hgap="20.0" prefWidth="421.0" vgap="20.0">
+      <GridPane alignment="CENTER" hgap="20.0" prefWidth="421.0" vgap="10.0">
         <columnConstraints>
           <ColumnConstraints hgrow="NEVER" minWidth="10.0" />
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
         </columnConstraints>
         <rowConstraints>
+            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
           <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
           <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
           <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <Label text="Nombre conexión VPN:" />
-            <Label text="Nombre usuario UPV:" GridPane.rowIndex="1" />
-            <Label text="Unidad de tu PC para Disco W:" GridPane.rowIndex="2" />
-            <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1">
+            <Text fill="GREY" strokeType="OUTSIDE" strokeWidth="0.0" text="Conexión VPN">
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font>
+            </Text>
+            <Label text="Nombre conexión VPN:" GridPane.rowIndex="1" />
+            <Text fill="GREY" strokeType="OUTSIDE" strokeWidth="0.0" text="Disco W" GridPane.rowIndex="2">
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font>
+            </Text>
+            <Label text="Nombre usuario UPV:" GridPane.rowIndex="3" />
+            <Label text="Unidad de tu PC para Disco W:" GridPane.rowIndex="4" />
+            <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                <children>
                   <TextField fx:id="textVPN" prefWidth="211.0" />
                   <Hyperlink fx:id="helpLinkVPN" text="?">
@@ -45,7 +57,7 @@
                   </Hyperlink>
                </children>
             </HBox>
-            <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
                <children>
                   <TextField fx:id="textUser" prefWidth="211.0" />
                   <Hyperlink fx:id="helpLinkUser" text="?">
@@ -55,7 +67,7 @@
                   </Hyperlink>
                </children>
             </HBox>
-            <ComboBox fx:id="comboDrive" prefWidth="66.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <ComboBox fx:id="comboDrive" prefWidth="66.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
          </children>
          <BorderPane.margin>
             <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />

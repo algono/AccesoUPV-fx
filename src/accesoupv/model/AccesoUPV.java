@@ -58,7 +58,7 @@ public final class AccesoUPV {
     public void loadPrefs() {
         vpn = prefs.get("vpn", null);
         user = prefs.get("user", null);
-        drive = prefs.get("drive", null);
+        drive = prefs.get("drive", "W:"); //Drive by default is W:
     }
     
     public void savePrefs() {
@@ -66,7 +66,7 @@ public final class AccesoUPV {
         else prefs.put("vpn", vpn);
         if (user == null) prefs.remove("user");
         else prefs.put("user", user);
-        if (drive == null) prefs.remove("drive");
+        if (drive == null || drive.equals("W:")) prefs.remove("drive");
         else prefs.put("drive", drive);
     }
     
@@ -77,7 +77,7 @@ public final class AccesoUPV {
     //Setters
     public void setVPN(String v) { vpn = v.isEmpty() ? null : v; }
     public void setUser(String u) { user = u.isEmpty() ? null : u; }
-    public void setDrive(String d) { drive = d.isEmpty() ? null : d; }
+    public void setDrive(String d) { drive = d; }
     
     //Checks if any variable is not defined
     public boolean isIncomplete() { return vpn == null || user == null || drive == null; }

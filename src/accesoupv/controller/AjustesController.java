@@ -99,8 +99,7 @@ public class AjustesController implements Initializable {
             vpn = "";
         }
         textVPN.setText(vpn);
-        //Si no tiene una asociada, selecciona 'W:' como la unidad por defecto
-        String drive = (acceso.getDrive().isEmpty()) ? "W:" : acceso.getDrive();
+        String drive = acceso.getDrive();
         //Si la lista lo contiene, selecciona la unidad guardada (o 'W:' por defecto si no hay guardada ninguna unidad)
         if (dataDrives.contains(drive)) {
             comboDrive.getSelectionModel().select(drive);
@@ -119,7 +118,7 @@ public class AjustesController implements Initializable {
             primaryStage.hide();
     }
     
-    private void gotoAyuda(String page) {
+    private void showAyuda(String page) {
         try {
             Stage stage = new Stage();
             FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/AyudaView.fxml"));
@@ -136,11 +135,20 @@ public class AjustesController implements Initializable {
         }
     }
     
+    private boolean anyChanges() {
+        String vpn = acceso.getVPN();
+        if (vpn == null) vpn = "";
+        String user = acceso.getUser();
+        if (user == null) user = "";
+        
+        return !(textVPN.getText().equals(vpn)
+        && textUser.getText().equals(user)
+        && comboDrive.getSelectionModel().getSelectedItem().equals(acceso.getDrive()));
+    }
+    
     @FXML
     private void closeDialogue(ActionEvent event) {
-        if (!textVPN.getText().equals(acceso.getVPN())
-                || !textUser.getText().equals(acceso.getUser())
-                || !comboDrive.getSelectionModel().getSelectedItem().equals(acceso.getDrive())) {
+        if (anyChanges()) {
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Desea salir sin guardar los cambios?");
             confirm.setHeaderText(null);
             Optional<ButtonType> result = confirm.showAndWait();
@@ -169,11 +177,11 @@ public class AjustesController implements Initializable {
             });
         }
                  
-        menuAyuda.setOnAction(e -> gotoAyuda(""));
-        menuAyudaDSIC.setOnAction(e -> gotoAyuda("DSIC"));
-        menuAyudaVPN.setOnAction(e -> gotoAyuda("VPN"));
+        menuAyuda.setOnAction(e -> showAyuda(""));
+        menuAyudaDSIC.setOnAction(e -> showAyuda("DSIC"));
+        menuAyudaVPN.setOnAction(e -> showAyuda("VPN"));
         
-        helpLinkVPN.setOnAction(e -> gotoAyuda("VPN"));
+        helpLinkVPN.setOnAction(e -> showAyuda("VPN"));
         helpLinkVPN.setTooltip(new Tooltip("Click para ver cómo \"" + menuAyudaVPN.getText() + "\""));
         //Evento para que si haces click, muestre directamente el Tooltip
         helpLinkUser.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> { 
