@@ -75,7 +75,7 @@ public class PrincipalController implements Initializable {
             warningW.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
             Optional<ButtonType> res = warningW.showAndWait();
             if (res.isPresent() && res.get() == ButtonType.OK) {
-                if (!acceso.disconnectW()) return;
+                if (!disconnectW()) return;
             } else return;
         }
         try {    
@@ -142,23 +142,27 @@ public class PrincipalController implements Initializable {
         }
     }
     /**
-     * Checks if the drive where W would be is already set up.
+     * Checks if the drive where W should be is set up before this program did it.
      * @return Whether the execution should continue or not.
      */
     private boolean checkDrive() {
-        if (acceso.isDriveUsed()) {
+        if (!acceso.isWConnected() && acceso.isDriveUsed()) {
             String WARNING_W = 
                     "La unidad definida para el disco W (" + acceso.getDrive() + ") ya contiene un disco asociado.\n\n"
                     + "Antes de continuar, desconecte el disco asociado, o cambie la unidad para el disco W desde los ajustes.\n ";
             Alert warning = new Alert(Alert.AlertType.WARNING);
-            warning.setHeaderText("Unidad " + acceso.getDrive() + " contiene disco");
+            String actDrive = acceso.getDrive();
+            warning.setHeaderText("Unidad " + actDrive + " contiene disco");
             warning.setContentText(WARNING_W);
             ButtonType continuar = new ButtonType("Continuar");
             ButtonType ajustes = new ButtonType("Ajustes", ButtonData.LEFT);
             warning.getButtonTypes().setAll(continuar, ajustes, ButtonType.CANCEL);
             Optional<ButtonType> result = warning.showAndWait();
             if (!result.isPresent() || result.get() == ButtonType.CANCEL) { return false; }
-            else if (result.get() == ajustes) showAjustes();
+            else if (result.get() == ajustes) { 
+                showAjustes();
+                if (acceso.getDrive().equals(actDrive)) { return false; }
+            }
             else {
                 if (acceso.isDriveUsed()) {
                     WARNING_W = "El disco aún no ha sido desconectado. Si se trata del disco W, puede continuar sin problemas.\n"
@@ -175,28 +179,33 @@ public class PrincipalController implements Initializable {
     }
     @FXML
     private void accessW(ActionEvent evt) {
-        if (!acceso.isWConnected() && checkDrive()) {
+        if (checkDrive()) {
             //Si la ejecución falló...
             boolean succeeded = acceso.connectW();
             buttonDisconnectW.setDisable(!succeeded);
             menuDisconnectW.setDisable(!succeeded);
             if (!succeeded) {
                 //...y el nombre del usuario no era válido... acceder a los ajustes para cambiarlo
-                if (acceso.isIncomplete()) showAjustes();
-                return;
+                if (acceso.isIncomplete()) {
+                    String actUser = acceso.getUser();
+                    showAjustes();
+                    //Si se ha cambiado el usuario, lo vuelve a intentar
+                    if (!acceso.getUser().equals(actUser)) { accessW(evt); }
+                    return;
+                }
             } 
-        }
-        try {
-            Desktop.getDesktop().open(new File(acceso.getDrive()));
-        } catch (IOException ex) {
-            new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
+            try {
+                Desktop.getDesktop().open(new File(acceso.getDrive()));
+            } catch (IOException ex) {
+                new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
+            }
         }
     }
-    @FXML
-    private void disconnectW(ActionEvent evt) {
+    private boolean disconnectW() {
         boolean succeeded = acceso.disconnectW();
         buttonDisconnectW.setDisable(succeeded);
         menuDisconnectW.setDisable(succeeded);
+        return succeeded;
     }
     
     private void accessDSIC(String server) {
@@ -218,6 +227,8 @@ public class PrincipalController implements Initializable {
         menuAyudaDSIC.setOnAction(e -> showAyuda("DSIC"));
         menuAyudaVPN.setOnAction(e -> showAyuda("VPN"));
         menuAjustes.setOnAction(e -> showAjustes());
+        buttonDisconnectW.setOnAction(e -> disconnectW());
+        menuDisconnectW.setOnAction(e -> disconnectW());
         connectUPV();
     }
 }

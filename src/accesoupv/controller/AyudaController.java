@@ -9,11 +9,10 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
@@ -47,6 +46,8 @@ public class AyudaController implements Initializable {
     private Label copiedLinux;
     @FXML
     private Label copiedWindows;
+    @FXML
+    private Button buttonClose;
     
     //Constants
     public static final String VPN_WEB = "https://www.upv.es/contenidos/INFOACCESO/infoweb/infoacceso/dat/697481normalc.html";
@@ -72,11 +73,6 @@ public class AyudaController implements Initializable {
         clipboard.setContent(content);
     }
     
-    @FXML
-    private void closeDialogue(ActionEvent event) {
-        Node mynode = (Node) event.getSource();
-        mynode.getScene().getWindow().hide();
-    }
     /**
      * Initializes the controller class.
      */
@@ -98,6 +94,7 @@ public class AyudaController implements Initializable {
             copiedLinux.setVisible(false);
             copiedWindows.setVisible(true);
         });
+        buttonClose.setOnAction((evt) -> primaryStage.hide());
         paneVPN.expandedProperty().addListener((obs, oldValue, newValue) -> primaryStage.setMaximized(newValue));
     }
 }

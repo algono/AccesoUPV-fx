@@ -27,7 +27,7 @@
                               <KeyCodeCombination alt="UP" code="A" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator>
                         </MenuItem>
-                        <MenuItem fx:id="menuDisconnectW" disable="true" mnemonicParsing="false" onAction="#disconnectW" text="Desconectar">
+                        <MenuItem fx:id="menuDisconnectW" disable="true" mnemonicParsing="false" text="Desconectar">
                            <accelerator>
                               <KeyCodeCombination alt="UP" code="D" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator>
@@ -82,7 +82,7 @@
                         <Font size="18.0" />
                      </font>
                   </Button>
-                  <Button fx:id="buttonDisconnectW" disable="true" mnemonicParsing="false" onAction="#disconnectW" text="Desconectar" textFill="#b22828">
+                  <Button fx:id="buttonDisconnectW" disable="true" mnemonicParsing="false" text="Desconectar" textFill="#b22828">
                      <font>
                         <Font size="14.0" />
                      </font>

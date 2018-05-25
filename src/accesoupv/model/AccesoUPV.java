@@ -19,7 +19,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
-import lib.LoadingScreen;
+import lib.LoadingStage;
 
 /**
  *
@@ -40,14 +40,13 @@ public final class AccesoUPV {
     public static final int INITIAL_PING_TIMEOUT = 500; //Timeout for checking if the user is already connected to the UPV
     public static final int FINAL_PING_TIMEOUT = 4000; //Timeout for checking if the connected VPN is able to connect the UPV
     
-    // Singleton patron (only 1 instance of this object stored at a time)
+    // Singleton patron (only 1 instance of this object can be constructed)
     private static AccesoUPV acceso;
     
     //Creating a new object loads again all prefs
-    public AccesoUPV() {
+    private AccesoUPV() {
         loadPrefs();
-        //Stores this object
-        acceso = this;
+        acceso = this; //Stores this object
     }
     // Returns the object instance stored here
     public static AccesoUPV getInstance() {
@@ -117,7 +116,9 @@ public final class AccesoUPV {
         if (vpn == null) return false;
         AccesoTask task = new VPNTask(vpn, true);
         task.showErrorMessage(false);
-        boolean VPNConnected = new LoadingScreen(task).load();
+        LoadingStage stage = new LoadingStage(task);
+        stage.showAndWait();
+        boolean VPNConnected = stage.waitToSucceeded();
         if (VPNConnected) {
             //Si desde la VPN a la que se conectó no se puede acceder a la UPV, se entiende que ha elegido una incorrecta.
             try {
@@ -174,28 +175,38 @@ public final class AccesoUPV {
             alert.showAndWait();
             return false;
         }
-        AccesoTask task = new WTask(user, drive, true);
-        task.showErrorMessage(false);
-        boolean succeeded = new LoadingScreen(task).load();
-        if (succeeded) {
+        boolean succeeded;
+        if (isDriveUsed()) {
             connectedUser = user;
             connectedDrive = drive;
+            succeeded = true;
         } else {
-            if (task.getException() instanceof IllegalArgumentException) user = null; 
-            task.getErrorAlert().showAndWait();
+            AccesoTask task = new WTask(user, drive, true);
+            task.showErrorMessage(false);
+            LoadingStage stage = new LoadingStage(task);
+            stage.showAndWait();
+            succeeded = stage.waitToSucceeded();
+            if (succeeded) {
+                connectedUser = user;
+                connectedDrive = drive;
+            } else {
+                if (task.getException() instanceof IllegalArgumentException) user = null; 
+                task.getErrorAlert().showAndWait();
+            }
         }
         return succeeded;
     }
     
     public boolean shutdown() {
-        LoadingScreen screen = new LoadingScreen();
-        if (isWConnected()) screen.getQueue().add(new WTask(connectedUser, connectedDrive, false));
+        LoadingStage stage = new LoadingStage();
+        if (isWConnected()) stage.getQueue().add(new WTask(connectedUser, connectedDrive, false));
         if (isVPNConnected()) {
             AccesoTask vpnTask = new VPNTask(connectedVPN, false);
             vpnTask.setExitOnFailed(true);
-            screen.getQueue().add(vpnTask);
+            stage.getQueue().add(vpnTask);
         }
-        boolean succeeded = screen.load();
+        stage.showAndWait();
+        boolean succeeded = stage.waitToSucceeded();
         if (succeeded) savePrefs();
         return succeeded;
     }
@@ -204,7 +215,9 @@ public final class AccesoUPV {
         boolean succeeded = true;
         if (isWConnected()) {
             AccesoTask task = new WTask(connectedUser, connectedDrive, false);
-            succeeded = new LoadingScreen(task).load();
+            LoadingStage stage = new LoadingStage(task);
+            stage.showAndWait();
+            succeeded = stage.waitToSucceeded();
             if (succeeded) connectedDrive = null;
         }
         return succeeded;
@@ -215,7 +228,9 @@ public final class AccesoUPV {
         if (isVPNConnected()) {
             AccesoTask task = new VPNTask(connectedVPN, false);
             task.setExitOnFailed(true);
-            succeeded = new LoadingScreen(task).load();
+            LoadingStage stage = new LoadingStage(task);
+            stage.showAndWait();
+            succeeded = stage.waitToSucceeded();
         }
         return succeeded;
     }
