@@ -155,12 +155,14 @@ public final class AccesoUPV {
         if (vpn == null) return false;
         AccesoTask task = new VPNTask(vpn, true);
         task.showErrorMessage(false);
+        //Si el usuario cancela el proceso de conexion, sale del programa
+        task.setOnCancelled((evt) -> System.exit(0));
         LoadingStage stage = new LoadingStage(task);
         stage.showAndWait();
-        boolean VPNConnected = stage.isSucceeded();
-        if (VPNConnected) {
+        boolean succeeded = stage.isSucceeded();
+        if (succeeded) {
             //Si desde la VPN a la que se conectó no se puede acceder a la UPV, se entiende que ha elegido una incorrecta.
-            try {
+            try {    
                 if (!InetAddress.getByName("www.upv.es").isReachable(FINAL_PING_TIMEOUT)) {
                     Alert alert = new Alert(Alert.AlertType.ERROR, VPNTask.ERROR_INVALID_VPN);
                     alert.setHeaderText(null);
@@ -173,41 +175,20 @@ public final class AccesoUPV {
             //Almacena el nombre de la VPN a la que se ha conectado
             connectedVPN = vpn;
         } else {
-            //Al tratarse claramente de un error, obtiene su mensaje de error (lo siguiente decidirá su contenido exacto)
             Alert errorAlert = task.getErrorAlert();
-            Throwable exception = task.getException();
-            /**
-             * Si el error se debió a algo conocido, no hace falta que muestre un link a posibles errores
-             * (puesto que ya se sabe a qué se debe).
-             */
-            //Si el error se debió a que la VPN fue inválida, borra el valor asociado a esta.
-            if (exception instanceof IllegalArgumentException) {
-                vpn = null;
-            } else {
-                /** Si se trata de un error no conocido por el programa,
-                 * muestra también un link a una web de la UPV
-                 * donde muestra posibles errores y cómo solucionarlos.
-                 */
-                Hyperlink helpLink = new Hyperlink("Para más información acerca de posibles errores, pulse aquí");
-                helpLink.setOnAction(e -> {
-                    try {
-                        Desktop desktop = Desktop.getDesktop();
-                        URI oURL = new URI(VPNTask.WEB_ERROR_VPN);
-                        desktop.browse(oURL);
-                    } catch (IOException | URISyntaxException ex) {
-                        new Alert(Alert.AlertType.ERROR, "Ha ocurrido un error al tratar de abrir el navegador.").show();
-                    }
-                });
-                if (exception != null && !exception.getMessage().isEmpty()) {
-                    TextArea errorContent = new TextArea(exception.getMessage());
-                    errorContent.setEditable(false);
-                    VBox errorVPNBox = new VBox(helpLink, errorContent);
-                    errorAlert.getDialogPane().setExpandableContent(errorVPNBox);
+            Hyperlink helpLink = new Hyperlink("Para más información acerca de posibles errores, pulse aquí");
+            helpLink.setOnAction(e -> {
+                try {
+                    Desktop desktop = Desktop.getDesktop();
+                    URI oURL = new URI(VPNTask.WEB_ERROR_VPN);
+                    desktop.browse(oURL);
+                } catch (IOException | URISyntaxException ex) {
+                    new Alert(Alert.AlertType.ERROR, "Ha ocurrido un error al tratar de abrir el navegador.").show();
                 }
-            }
+            });
             errorAlert.showAndWait();
         }
-        return VPNConnected;
+        return succeeded;
     }
     
     public boolean connectW() {

@@ -17,12 +17,8 @@ public class VPNTask extends AccesoTask {
     public static final String WEB_ERROR_VPN = "https://www.upv.es/contenidos/INFOACCESO/infoweb/infoacceso/dat/723787normalc.html";
     //Error messages
     public static final String ERROR_CON_VPN
-            = "Ha habido un error desconocido al tratar de conectarse a la VPN.\n\n"
-            + "Para más información, pulse 'Mostrar detalles'.";
-    
-    public static final String ERROR_NONEXISTANT_VPN = 
-            "No existe ninguna VPN creada con el nombre registrado.\n"
-            + "Debe establecer un nombre válido.";
+            = "Se ha producido un error al tratar de conectarse a la VPN.\n\n"
+            + "Compruebe que el nombre de la VPN está bien escrito y vuelva a intentarlo.";
     
     public static final String ERROR_INVALID_VPN = 
             "La VPN proporcionada no es válida, pues no es capaz de acceder a la UPV.\n"
@@ -41,31 +37,19 @@ public class VPNTask extends AccesoTask {
     protected void connect() throws Exception {
         setErrorMessage(ERROR_CON_VPN);
         updateMessage("Conectando con la UPV...");
-        Process p = startProcess("cmd.exe", "/c", "rasdial", "\"" + VPN + "\"");
-        int exitValue = p.waitFor();
-        if (exitValue != 0) {
-            String out = getOutput(p);
-            //623 - Código de error "No se encontró una VPN con ese nombre".
-            if (out.contains("623")) {
-                setErrorMessage(ERROR_NONEXISTANT_VPN);
-                throw new IllegalArgumentException();
-            //703 - Código de error "A la VPN le faltan datos"
-            } else if (out.contains("703")) {
-                //Si le faltan datos, trata de conectarse vía rasphone para que el usuario pueda proporcionarselos
-                p = startProcess("cmd.exe", "/c", "rasphone", "-d", "\"" + VPN + "\"");
-                exitValue = p.waitFor();
-                if (exitValue != 0) throw new IOException(getOutput(p));
-            } else {
-                throw new IOException(out);
-            }
-        }
+        Process p = startProcess("rasphone.exe", "-d", "\"" + VPN + "\"");
+        waitAndCheck(p, 1000);
+        //Si el proceso fue correctamente pero la VPN no esta conectada, se entiende que el usuario cancelo la operacion
+        p = AccesoTask.startProcess("rasdial.exe");
+        waitAndCheck(p, 0);
+        if (!getOutput(p).contains(VPN)) cancel();
     }
     
     @Override
     protected void disconnect() throws Exception {
         setErrorMessage(ERROR_DIS_VPN);
         updateMessage("Desconectando de la UPV...");
-        Process p = startProcess("cmd.exe", "/c", "rasdial", "\"" + VPN + "\"", "/DISCONNECT");
+        Process p = startProcess("rasdial.exe", "\"" + VPN + "\"", "/DISCONNECT");
         waitAndCheck(p, 1000);
     }
     

@@ -111,11 +111,22 @@ public class PrincipalController implements Initializable {
         }
     }
     
+    private Optional<String> setVPNDialogue(boolean isNew) {
+        String inputContentText = (isNew)
+                        ? "Introduzca el nombre de la nueva conexión VPN a la UPV: " 
+                        : "Introduzca el nombre de la conexión VPN existente a la UPV: ";
+        TextInputDialog dialog = new TextInputDialog(acceso.getVPN());
+        dialog.setTitle("Introduzca nombre VPN");
+        dialog.setHeaderText(null);
+        dialog.setContentText(inputContentText);
+        return dialog.showAndWait();
+    }
+    
     private void connectUPV() {
         boolean succeeded = acceso.connectUPV();
         //Si la ejecución falló...
         if (!succeeded) {
-            //Y la causó una variable inválida... Muestra un diálogo que permite cambiarla
+            //Y fue porque no tenía VPN establecida, permite al usuario establecerla
             if (acceso.getVPN() == null) {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setHeaderText(null);
@@ -129,23 +140,21 @@ public class PrincipalController implements Initializable {
                 Optional<ButtonType> alertRes = alert.showAndWait();
                 if (!alertRes.isPresent() || alertRes.get() == ButtonType.CANCEL) System.exit(0);
                 boolean setNewVPN = alertRes.get() == ButtonType.YES;
-                String inputContentText = (setNewVPN)
-                        ? "Introduzca el nombre de la nueva red VPN a la UPV: " 
-                        : "Introduzca el nombre de la red VPN existente a la UPV: ";
-                TextInputDialog dialog = new TextInputDialog();
-                dialog.setTitle("Introduzca nombre VPN");
-                dialog.setHeaderText(null);
-                dialog.setContentText(inputContentText);
-                Optional<String> newVPN = dialog.showAndWait();
+                Optional<String> newVPN = setVPNDialogue(setNewVPN);
                 //Si ha escrito un valor, le cambia el nombre. Si no, sale del programa.
                 if (newVPN.isPresent()) {
                     acceso.setVPN(newVPN.get());
                     //Si se ha elegido crear una VPN nueva, la crea. Si es una existente, trata de conectarse a ella.
                     if (setNewVPN) acceso.createVPN();
-                    else acceso.connectVPN();
+                    else connectUPV();
                 } else { System.exit(0); }
             } else {
-                System.exit(-1);
+                //Si no fue por eso, permite cambiar el valor de la VPN por si lo puso mal
+                Optional<String> newVPN = setVPNDialogue(false);
+                if (newVPN.isPresent()) {
+                    acceso.setVPN(newVPN.get());
+                    connectUPV();
+                } else { System.exit(0); }    
             }
         }
     }
@@ -192,20 +201,20 @@ public class PrincipalController implements Initializable {
             boolean succeeded = acceso.connectW();
             buttonDisconnectW.setDisable(!succeeded);
             menuDisconnectW.setDisable(!succeeded);
-            if (!succeeded) {
+            if (succeeded) {
+                try {
+                    Desktop.getDesktop().open(new File(acceso.getDrive()));
+                } catch (IOException ex) {
+                    new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
+                }
+            } else {
                 //...y el nombre del usuario no era válido... acceder a los ajustes para cambiarlo
                 if (acceso.isIncomplete()) {
                     String actUser = acceso.getUser();
                     showAjustes();
                     //Si se ha cambiado el usuario, lo vuelve a intentar
                     if (!acceso.getUser().equals(actUser)) { accessW(evt); }
-                    return;
                 }
-            } 
-            try {
-                Desktop.getDesktop().open(new File(acceso.getDrive()));
-            } catch (IOException ex) {
-                new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
             }
         }
     }

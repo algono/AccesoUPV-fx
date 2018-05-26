@@ -73,8 +73,8 @@ public abstract class AccesoTask extends Task<Void> {
     }
     public static void waitAndCheck(Process p, int tMin, boolean showExMsg) throws Exception {
         Thread.sleep(tMin);
-        boolean terminated = p.waitFor(PROCESS_TIMEOUT, TimeUnit.MILLISECONDS);
-        if (!terminated || p.exitValue() != 0) {
+        int exitValue = p.waitFor();
+        if (exitValue != 0) {
             String msg = showExMsg ? getOutput(p) : "";
             throw new IOException(msg);
         }
