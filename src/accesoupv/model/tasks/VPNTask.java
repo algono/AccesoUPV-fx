@@ -41,7 +41,7 @@ public class VPNTask extends AccesoTask {
     protected void connect() throws Exception {
         setErrorMessage(ERROR_CON_VPN);
         updateMessage("Conectando con la UPV...");
-        Process p = startProcess("cmd.exe", "/c", "rasdial \"" + VPN + "\"");
+        Process p = startProcess("cmd.exe", "/c", "rasdial", "\"" + VPN + "\"");
         int exitValue = p.waitFor();
         if (exitValue != 0) {
             String out = getOutput(p);
@@ -52,7 +52,7 @@ public class VPNTask extends AccesoTask {
             //703 - Código de error "A la VPN le faltan datos"
             } else if (out.contains("703")) {
                 //Si le faltan datos, trata de conectarse vía rasphone para que el usuario pueda proporcionarselos
-                p = startProcess("cmd.exe", "/c", "rasphone -d \"" + VPN + "\"");
+                p = startProcess("cmd.exe", "/c", "rasphone", "-d", "\"" + VPN + "\"");
                 exitValue = p.waitFor();
                 if (exitValue != 0) throw new IOException(getOutput(p));
             } else {
@@ -65,7 +65,7 @@ public class VPNTask extends AccesoTask {
     protected void disconnect() throws Exception {
         setErrorMessage(ERROR_DIS_VPN);
         updateMessage("Desconectando de la UPV...");
-        Process p = startProcess("cmd.exe", "/c", "rasdial " + VPN + " /DISCONNECT");
+        Process p = startProcess("cmd.exe", "/c", "rasdial", "\"" + VPN + "\"", "/DISCONNECT");
         waitAndCheck(p, 1000);
     }
     

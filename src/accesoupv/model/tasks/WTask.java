@@ -36,7 +36,7 @@ public class WTask extends AccesoTask {
     protected void connect() throws Exception {
         setErrorMessage(ERROR_W);
         updateMessage("Accediendo al disco W...");
-        Process p = startProcess("cmd.exe", "/c", "net use " + drive + " " + getDirW());
+        Process p = startProcess("cmd.exe", "/c", "net", "use", drive, getDirW());
         Thread.sleep(1000);
         int exitValue = p.waitFor();
         if (exitValue != 0) {
@@ -55,7 +55,7 @@ public class WTask extends AccesoTask {
     protected void disconnect() throws Exception {
         setErrorMessage(ERROR_DIS_W);
         updateMessage("Desconectando Disco W...");
-        Process p = startProcess("cmd.exe", "/c", "net use " + drive + " /delete");
+        Process p = startProcess("cmd.exe", "/c", "net", "use", drive, "/delete");
         waitAndCheck(p, 1000, false);
     }
     
