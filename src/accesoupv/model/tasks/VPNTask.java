@@ -28,11 +28,6 @@ public class VPNTask extends AccesoTask {
             "La VPN proporcionada no es válida, pues no es capaz de acceder a la UPV.\n"
             + "Establezca una válida.";
     
-    public static final String ERROR_MISSING_DATA_VPN
-            = "La VPN requiere datos que no le han sido proporcionados.\n\n"
-            + "Compruebe manualmente que la VPN se conecta correctamente recordando tus datos, y vuelva a intentarlo."
-            + "Para más información, pulse 'Mostrar detalles'.";
-    
     public static final String ERROR_DIS_VPN = "No ha podido desconectarse la VPN. Deberá desconectarla manualmente.";   
     
     private final String VPN;
@@ -56,10 +51,13 @@ public class VPNTask extends AccesoTask {
                 throw new IllegalArgumentException();
             //703 - Código de error "A la VPN le faltan datos"
             } else if (out.contains("703")) {
-                setErrorMessage(ERROR_MISSING_DATA_VPN);
+                //Si le faltan datos, trata de conectarse vía rasphone para que el usuario pueda proporcionarselos
+                p = startProcess("cmd.exe", "/c", "rasphone -d \"" + VPN + "\"");
+                exitValue = p.waitFor();
+                if (exitValue != 0) throw new IOException(getOutput(p));
+            } else {
+                throw new IOException(out);
             }
-            throw new IOException(out);
-            
         }
     }
     

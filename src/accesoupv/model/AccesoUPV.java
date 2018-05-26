@@ -8,13 +8,18 @@ package accesoupv.model;
 import accesoupv.model.tasks.*;
 import java.awt.Desktop;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.prefs.Preferences;
+import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.TextArea;
@@ -46,6 +51,8 @@ public final class AccesoUPV {
     //Creating a new object loads again all prefs
     private AccesoUPV() {
         loadPrefs();
+        //Whenever the application is going to exit, saves prefs
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> savePrefs()));
         acceso = this; //Stores this object
     }
     // Returns the object instance stored here
@@ -108,21 +115,56 @@ public final class AccesoUPV {
         return connectVPN();
     }
     
+    public boolean createVPN() {
+        Task<Void> createTask = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                updateMessage("Creando conexión VPN...");
+                InputStream scriptIn = getClass().getResourceAsStream("/accesoupv/resources/CreateVPN.ps1");
+                InputStream xmlIn = getClass().getResourceAsStream("/accesoupv/resources/My_VPN_config.xml");
+                File temp = File.createTempFile("temp", ".ps1");
+                File tempXml = File.createTempFile("temp", ".xml");
+                //Just in case the task throws an exception, it ensures the temp files are deleted
+                temp.deleteOnExit(); tempXml.deleteOnExit();
+                //Copies both files
+                try (Scanner sc = new Scanner(scriptIn); PrintWriter pw = new PrintWriter(new FileOutputStream(temp), true)) {
+                    while (sc.hasNext()) {
+                        pw.println(sc.nextLine().replaceAll("VPNNAME", vpn).replaceAll("XMLNAME", tempXml.getName()));
+                    }
+                }
+                try (Scanner sc = new Scanner(xmlIn); PrintWriter pw = new PrintWriter(new FileOutputStream(tempXml), true)) {
+                    while (sc.hasNext()) { pw.println(sc.nextLine()); }
+                }
+                //Runs the script and waits for its completion               
+                Process p = new ProcessBuilder("powershell.exe", "-ExecutionPolicy", "ByPass", "-Command", temp.getAbsolutePath()).start();
+                p.waitFor();
+                //Deletes the temp files
+                temp.delete(); tempXml.delete();
+                return null;
+            }
+        };
+        LoadingStage stage = new LoadingStage(createTask);
+        stage.showAndWait();
+        return stage.isSucceeded() && connectVPN();
+    }
+    
     /**
-     * 
      * @return If the operation completed successfully.
      */
-    private boolean connectVPN() {
+    public boolean connectVPN() {
         if (vpn == null) return false;
         AccesoTask task = new VPNTask(vpn, true);
         task.showErrorMessage(false);
         LoadingStage stage = new LoadingStage(task);
         stage.showAndWait();
-        boolean VPNConnected = stage.waitToSucceeded();
+        boolean VPNConnected = stage.isSucceeded();
         if (VPNConnected) {
             //Si desde la VPN a la que se conectó no se puede acceder a la UPV, se entiende que ha elegido una incorrecta.
             try {
                 if (!InetAddress.getByName("www.upv.es").isReachable(FINAL_PING_TIMEOUT)) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, VPNTask.ERROR_INVALID_VPN);
+                    alert.setHeaderText(null);
+                    alert.showAndWait();
                     disconnectVPN();
                     vpn = null;
                     return false;
@@ -185,7 +227,7 @@ public final class AccesoUPV {
             task.showErrorMessage(false);
             LoadingStage stage = new LoadingStage(task);
             stage.showAndWait();
-            succeeded = stage.waitToSucceeded();
+            succeeded = stage.isSucceeded();
             if (succeeded) {
                 connectedUser = user;
                 connectedDrive = drive;
@@ -206,7 +248,7 @@ public final class AccesoUPV {
             stage.getQueue().add(vpnTask);
         }
         stage.showAndWait();
-        boolean succeeded = stage.waitToSucceeded();
+        boolean succeeded = stage.isSucceeded();
         if (succeeded) savePrefs();
         return succeeded;
     }
@@ -217,7 +259,7 @@ public final class AccesoUPV {
             AccesoTask task = new WTask(connectedUser, connectedDrive, false);
             LoadingStage stage = new LoadingStage(task);
             stage.showAndWait();
-            succeeded = stage.waitToSucceeded();
+            succeeded = stage.isSucceeded();
             if (succeeded) connectedDrive = null;
         }
         return succeeded;
@@ -230,7 +272,7 @@ public final class AccesoUPV {
             task.setExitOnFailed(true);
             LoadingStage stage = new LoadingStage(task);
             stage.showAndWait();
-            succeeded = stage.waitToSucceeded();
+            succeeded = stage.isSucceeded();
         }
         return succeeded;
     }

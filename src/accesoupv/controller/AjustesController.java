@@ -128,7 +128,7 @@ public class AjustesController implements Initializable {
             Scene scene = new Scene(root);
 
             stage.setScene(scene);
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/help-icon.png")));
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/icons/help-icon.png")));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.show();
         } catch (IOException ex) {

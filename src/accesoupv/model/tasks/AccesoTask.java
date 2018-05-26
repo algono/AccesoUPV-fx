@@ -68,10 +68,10 @@ public abstract class AccesoTask extends Task<Void> {
     
     //Métodos estáticos de utilidad para tratar procesos
     
-    protected static void waitAndCheck(Process p, int tMin) throws Exception {
+    public static void waitAndCheck(Process p, int tMin) throws Exception {
         waitAndCheck(p, tMin, true);
     }
-    protected static void waitAndCheck(Process p, int tMin, boolean showExMsg) throws Exception {
+    public static void waitAndCheck(Process p, int tMin, boolean showExMsg) throws Exception {
         Thread.sleep(tMin);
         boolean terminated = p.waitFor(PROCESS_TIMEOUT, TimeUnit.MILLISECONDS);
         if (!terminated || p.exitValue() != 0) {
@@ -79,14 +79,14 @@ public abstract class AccesoTask extends Task<Void> {
             throw new IOException(msg);
         }
     }
-    protected static String getOutput(Process p) throws IOException {
+    public static String getOutput(Process p) throws IOException {
         String res = "";
         try (Scanner out = new Scanner(p.getInputStream())) {
             while (out.hasNext()) { res += out.nextLine() + "\n"; }
         }
         return res;
     }
-    protected static Process startProcess(String... args) throws IOException {
+    public static Process startProcess(String... args) throws IOException {
         ProcessBuilder builder = new ProcessBuilder(args);
         builder.redirectErrorStream(true);
         return builder.start();

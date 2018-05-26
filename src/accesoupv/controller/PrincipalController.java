@@ -87,7 +87,7 @@ public class PrincipalController implements Initializable {
             Scene scene = new Scene(root);
 
             stage.setScene(scene);
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/preferences-icon.png")));
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/icons/preferences-icon.png")));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
         } catch (IOException ex) {}
@@ -103,7 +103,7 @@ public class PrincipalController implements Initializable {
             Scene scene = new Scene(root);
 
             stage.setScene(scene);
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/help-icon.png")));
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/icons/help-icon.png")));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.show();
         } catch (IOException ex) {
@@ -119,23 +119,31 @@ public class PrincipalController implements Initializable {
             if (acceso.getVPN() == null) {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setHeaderText(null);
-                Label content = new Label("Debe establecer una red VPN para poder acceder a la UPV desde fuera del campus.");
-                Hyperlink help = new Hyperlink("Si no sabe cómo, pulse aquí.");
+                Label content = new Label("Debe establecer una red VPN para poder acceder a la UPV desde fuera del campus.\n\n"
+                        + "¿Desea que se cree la VPN automáticamente?\n\n"
+                        + "Si ya tiene una creada o prefiere crearla manualmente, elija \"No\".");
+                Hyperlink help = new Hyperlink("Para saber cómo crear una VPN manualmente, pulse aquí");
                 help.setOnAction((evt) -> showAyuda("VPN"));
                 alert.getDialogPane().setContent(new VBox(content, help));
-                alert.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+                alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO,ButtonType.CANCEL);
                 Optional<ButtonType> alertRes = alert.showAndWait();
                 if (!alertRes.isPresent() || alertRes.get() == ButtonType.CANCEL) System.exit(0);
+                boolean setNewVPN = alertRes.get() == ButtonType.YES;
+                String inputContentText = (setNewVPN)
+                        ? "Introduzca el nombre de la nueva red VPN a la UPV: " 
+                        : "Introduzca el nombre de la red VPN existente a la UPV: ";
                 TextInputDialog dialog = new TextInputDialog();
                 dialog.setTitle("Introduzca nombre VPN");
                 dialog.setHeaderText(null);
-                dialog.setContentText("Introduzca el nombre de la red VPN a la UPV: ");
+                dialog.setContentText(inputContentText);
                 Optional<String> newVPN = dialog.showAndWait();
                 //Si ha escrito un valor, le cambia el nombre. Si no, sale del programa.
-                if (newVPN.isPresent()) acceso.setVPN(newVPN.get());
-                else System.exit(0);
-                //Y tras haber cambiado el nombre de la VPN, lo vuelve a intentar
-                connectUPV();
+                if (newVPN.isPresent()) {
+                    acceso.setVPN(newVPN.get());
+                    //Si se ha elegido crear una VPN nueva, la crea. Si es una existente, trata de conectarse a ella.
+                    if (setNewVPN) acceso.createVPN();
+                    else acceso.connectVPN();
+                } else { System.exit(0); }
             } else {
                 System.exit(-1);
             }
