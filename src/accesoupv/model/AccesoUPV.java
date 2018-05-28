@@ -8,22 +8,15 @@ package accesoupv.model;
 import accesoupv.model.tasks.*;
 import java.awt.Desktop;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.prefs.Preferences;
-import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Hyperlink;
-import javafx.scene.control.TextArea;
-import javafx.scene.layout.VBox;
 import lib.LoadingStage;
 
 /**
@@ -116,36 +109,9 @@ public final class AccesoUPV {
     }
     
     public boolean createVPN() {
-        Task<Void> createTask = new Task<Void>() {
-            @Override
-            protected Void call() throws Exception {
-                updateMessage("Creando conexión VPN...");
-                InputStream scriptIn = getClass().getResourceAsStream("/accesoupv/resources/CreateVPN.ps1");
-                InputStream xmlIn = getClass().getResourceAsStream("/accesoupv/resources/My_VPN_config.xml");
-                File temp = File.createTempFile("temp", ".ps1");
-                File tempXml = File.createTempFile("temp", ".xml");
-                //Just in case the task throws an exception, it ensures the temp files are deleted
-                temp.deleteOnExit(); tempXml.deleteOnExit();
-                //Copies both files
-                try (Scanner sc = new Scanner(scriptIn); PrintWriter pw = new PrintWriter(new FileOutputStream(temp), true)) {
-                    while (sc.hasNext()) {
-                        pw.println(sc.nextLine().replaceAll("VPNNAME", vpn).replaceAll("XMLNAME", tempXml.getName()));
-                    }
-                }
-                try (Scanner sc = new Scanner(xmlIn); PrintWriter pw = new PrintWriter(new FileOutputStream(tempXml), true)) {
-                    while (sc.hasNext()) { pw.println(sc.nextLine()); }
-                }
-                //Runs the script and waits for its completion               
-                Process p = new ProcessBuilder("powershell.exe", "-ExecutionPolicy", "ByPass", "-Command", temp.getAbsolutePath()).start();
-                p.waitFor();
-                //Deletes the temp files
-                temp.delete(); tempXml.delete();
-                return null;
-            }
-        };
-        LoadingStage stage = new LoadingStage(createTask);
+        LoadingStage stage = new LoadingStage(new CreateVPNTask(vpn));
         stage.showAndWait();
-        return stage.isSucceeded() && connectVPN();
+        return stage.isSucceeded();
     }
     
     /**

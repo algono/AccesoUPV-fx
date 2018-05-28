@@ -122,32 +122,35 @@ public class PrincipalController implements Initializable {
         return dialog.showAndWait();
     }
     
+    private void establishVPN() {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setHeaderText(null);
+        Label content = new Label("Debe establecer una red VPN para poder acceder a la UPV desde fuera del campus.\n\n"
+                + "¿Desea que se cree la VPN automáticamente?\n\n"
+                + "Si ya tiene una creada o prefiere crearla manualmente, elija \"No\".");
+        Hyperlink help = new Hyperlink("Para saber cómo crear una VPN manualmente, pulse aquí");
+        help.setOnAction((evt) -> showAyuda("VPN"));
+        alert.getDialogPane().setContent(new VBox(content, help));
+        alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO,ButtonType.CANCEL);
+        Optional<ButtonType> alertRes = alert.showAndWait();
+        if (!alertRes.isPresent() || alertRes.get() == ButtonType.CANCEL) System.exit(0);
+        boolean setNewVPN = alertRes.get() == ButtonType.YES;
+        Optional<String> newVPN = setVPNDialogue(setNewVPN);
+        //Si ha escrito un valor, le cambia el nombre. Si no, sale del programa.
+        if (newVPN.isPresent()) {
+            acceso.setVPN(newVPN.get());
+            if (setNewVPN) acceso.createVPN(); //Si se ha elegido crear una VPN nueva, la crea.
+            connectUPV();
+        } else { System.exit(0); }
+    }
+    
     private void connectUPV() {
         boolean succeeded = acceso.connectUPV();
         //Si la ejecución falló...
         if (!succeeded) {
             //Y fue porque no tenía VPN establecida, permite al usuario establecerla
             if (acceso.getVPN() == null) {
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setHeaderText(null);
-                Label content = new Label("Debe establecer una red VPN para poder acceder a la UPV desde fuera del campus.\n\n"
-                        + "¿Desea que se cree la VPN automáticamente?\n\n"
-                        + "Si ya tiene una creada o prefiere crearla manualmente, elija \"No\".");
-                Hyperlink help = new Hyperlink("Para saber cómo crear una VPN manualmente, pulse aquí");
-                help.setOnAction((evt) -> showAyuda("VPN"));
-                alert.getDialogPane().setContent(new VBox(content, help));
-                alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO,ButtonType.CANCEL);
-                Optional<ButtonType> alertRes = alert.showAndWait();
-                if (!alertRes.isPresent() || alertRes.get() == ButtonType.CANCEL) System.exit(0);
-                boolean setNewVPN = alertRes.get() == ButtonType.YES;
-                Optional<String> newVPN = setVPNDialogue(setNewVPN);
-                //Si ha escrito un valor, le cambia el nombre. Si no, sale del programa.
-                if (newVPN.isPresent()) {
-                    acceso.setVPN(newVPN.get());
-                    //Si se ha elegido crear una VPN nueva, la crea. Si es una existente, trata de conectarse a ella.
-                    if (setNewVPN) acceso.createVPN();
-                    else connectUPV();
-                } else { System.exit(0); }
+                establishVPN();
             } else {
                 //Si no fue por eso, permite cambiar el valor de la VPN por si lo puso mal
                 Optional<String> newVPN = setVPNDialogue(false);

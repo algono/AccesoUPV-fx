@@ -5,8 +5,6 @@
  */
 package accesoupv.model.tasks;
 
-import java.io.IOException;
-
 /**
  *
  * @author aleja
@@ -39,7 +37,7 @@ public class VPNTask extends AccesoTask {
         updateMessage("Conectando con la UPV...");
         Process p = startProcess("rasphone.exe", "-d", "\"" + VPN + "\"");
         waitAndCheck(p, 1000);
-        //Si el proceso fue correctamente pero la VPN no esta conectada, se entiende que el usuario cancelo la operacion
+        //Si el proceso fue correctamente pero la VPN no esta conectada, se entiende que el usuario canceló la operacion
         p = AccesoTask.startProcess("rasdial.exe");
         waitAndCheck(p, 0);
         if (!getOutput(p).contains(VPN)) cancel();
