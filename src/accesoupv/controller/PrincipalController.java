@@ -133,15 +133,17 @@ public class PrincipalController implements Initializable {
         alert.getDialogPane().setContent(new VBox(content, help));
         alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO,ButtonType.CANCEL);
         Optional<ButtonType> alertRes = alert.showAndWait();
+        //Si el usuario canceló o cerró el diálogo, sale del programa
         if (!alertRes.isPresent() || alertRes.get() == ButtonType.CANCEL) System.exit(0);
+        //Si pulsó que sí, se debe crear una VPN nueva. Si pulsó que no, se debe introducir una existente.
         boolean setNewVPN = alertRes.get() == ButtonType.YES;
         Optional<String> newVPN = setVPNDialogue(setNewVPN);
-        //Si ha escrito un valor, le cambia el nombre. Si no, sale del programa.
+        //Si ha escrito un valor, le cambia el nombre. Si no, vuelve a empezar.
         if (newVPN.isPresent()) {
             acceso.setVPN(newVPN.get());
             if (setNewVPN) acceso.createVPN(); //Si se ha elegido crear una VPN nueva, la crea.
             connectUPV();
-        } else { System.exit(0); }
+        } else { establishVPN(); }
     }
     
     private void connectUPV() {
@@ -157,7 +159,7 @@ public class PrincipalController implements Initializable {
                 if (newVPN.isPresent()) {
                     acceso.setVPN(newVPN.get());
                     connectUPV();
-                } else { System.exit(0); }    
+                } else { establishVPN(); }    
             }
         }
     }

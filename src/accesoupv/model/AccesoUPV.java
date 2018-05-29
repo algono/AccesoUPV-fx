@@ -194,9 +194,12 @@ public final class AccesoUPV {
             vpnTask.setExitOnFailed(true);
             stage.getQueue().add(vpnTask);
         }
-        stage.showAndWait();
-        boolean succeeded = stage.isSucceeded();
-        if (succeeded) savePrefs();
+        //Si la cola no está vacía (es decir, tiene que realizar alguna tarea), la/las realiza
+        boolean succeeded = stage.getQueue().isEmpty();
+        if (!succeeded) {
+            stage.showAndWait();
+            succeeded = stage.isSucceeded();
+        }
         return succeeded;
     }
     

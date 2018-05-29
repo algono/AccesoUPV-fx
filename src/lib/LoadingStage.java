@@ -62,8 +62,8 @@ public class LoadingStage extends Stage {
         //When all tasks end, notify the threads waiting and hide the stage 
         mainTask.runningProperty().addListener((obs, oldValue, newValue) -> {
             if (!newValue) {
-                hide();
                 synchronized(this) { notifyAll(); }
+                hide();
             }
         });
     }
