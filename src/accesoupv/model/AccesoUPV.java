@@ -12,7 +12,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
-import myLibrary.javafx.LoadingStage;
+import myLibrary.javafx.LoadingUtils.LoadingStage;
 import javafx.scene.control.Alert;
 
 /**

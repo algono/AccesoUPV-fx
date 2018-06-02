@@ -30,11 +30,13 @@ public abstract class AccesoTask extends Task<Void> {
     
     public AccesoTask(boolean state) {
         connecting = state;
-        setOnFailed((e) -> {
-            //Platform.runLater() ensures that the Alert is being shown by the JavaFX Application Thread (avoiding possible errors).
-            if (showError) Platform.runLater(() -> getErrorAlert().showAndWait());
-            if (exitOnFailed) System.exit(-1);
-        });
+    }
+    
+    @Override
+    protected void failed() {
+        //Platform.runLater() ensures that the Alert is being shown by the JavaFX Application Thread (avoiding possible errors).
+        if (showError) Platform.runLater(() -> getErrorAlert().showAndWait());
+        if (exitOnFailed) System.exit(-1);
     }
     
     @Override

@@ -28,7 +28,7 @@ public class CreateVPNTask extends Task<Void> {
     protected Void call() throws Exception {
         updateMessage("Creando conexión VPN...");
         InputStream scriptIn = getClass().getResourceAsStream("/accesoupv/resources/CreateVPN.ps1");
-        InputStream xmlIn = getClass().getResourceAsStream("/accesoupv/resources/My_VPN_config.xml");
+        InputStream xmlIn = getClass().getResourceAsStream("/accesoupv/resources/VPN_config.xml");
         File temp = File.createTempFile("temp", ".ps1");
         File tempXml = File.createTempFile("temp", ".xml");
         //Just in case the task throws an exception, it ensures the temp files are deleted
