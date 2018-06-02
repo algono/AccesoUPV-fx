@@ -214,7 +214,7 @@ public class PrincipalController implements Initializable {
                 }
             } else {
                 //...y el nombre del usuario no era válido... acceder a los ajustes para cambiarlo
-                if (acceso.isIncomplete()) {
+                if (acceso.getUser() == null) {
                     String actUser = acceso.getUser();
                     showAjustes();
                     //Si se ha cambiado el usuario, lo vuelve a intentar

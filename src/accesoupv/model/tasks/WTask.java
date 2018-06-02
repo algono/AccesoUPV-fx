@@ -34,7 +34,7 @@ public class WTask extends AccesoTask {
     
     @Override
     protected void connect() throws Exception {
-        setErrorMessage(ERROR_W);
+        updateErrorMsg(ERROR_W);
         updateMessage("Accediendo al disco W...");
         Process p = startProcess("cmd.exe", "/c", "net", "use", drive, getDirW());
         Thread.sleep(1000);
@@ -43,7 +43,7 @@ public class WTask extends AccesoTask {
             String out = getOutput(p);
             // 55 - Error del sistema "El recurso no se encuentra disponible" (es decir, la dirW no existe, por tanto, el usuario no es válido).
             if (out.contains("55")) {
-                setErrorMessage(ERROR_INVALID_USER);
+                updateErrorMsg(ERROR_INVALID_USER);
                 throw new IllegalArgumentException();
             } else {
                 throw new IOException(out);
@@ -53,7 +53,7 @@ public class WTask extends AccesoTask {
 
     @Override
     protected void disconnect() throws Exception {
-        setErrorMessage(ERROR_DIS_W);
+        updateErrorMsg(ERROR_DIS_W);
         updateMessage("Desconectando Disco W...");
         Process p = startProcess("cmd.exe", "/c", "net", "use", drive, "/delete");
         waitAndCheck(p, 1000, false);

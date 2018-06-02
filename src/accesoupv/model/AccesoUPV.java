@@ -6,18 +6,14 @@
 package accesoupv.model;
 
 import accesoupv.model.tasks.*;
-import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
+import myLibrary.javafx.LoadingStage;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Hyperlink;
-import lib.LoadingStage;
 
 /**
  *
@@ -34,19 +30,18 @@ public final class AccesoUPV {
     public static final String LINUX_DSIC = "linuxdesktop.dsic.upv.es";
     public static final String WIN_DSIC = "windesktop.dsic.upv.es";
     public static final String UPV_SERVER = "www.upv.es";
-    //Timeouts (unit: miliseconds)
-    public static final int INITIAL_PING_TIMEOUT = 500; //Timeout for checking if the user is already connected to the UPV
-    public static final int FINAL_PING_TIMEOUT = 4000; //Timeout for checking if the connected VPN is able to connect the UPV
+    //Timeout for checking if the user is already connected to the UPV (in ms)
+    public static final int PING_TIMEOUT = 500;
+    
     
     // Singleton patron (only 1 instance of this object can be constructed)
     private static AccesoUPV acceso;
     
-    //Creating a new object loads again all prefs
+    //Creating a new object loads all prefs
     private AccesoUPV() {
         loadPrefs();
         //Whenever the application is going to exit, saves prefs
         Runtime.getRuntime().addShutdownHook(new Thread(() -> savePrefs()));
-        acceso = this; //Stores this object
     }
     // Returns the object instance stored here
     public static AccesoUPV getInstance() {
@@ -74,12 +69,16 @@ public final class AccesoUPV {
     public String getUser() { return user; }
     public String getDrive() { return drive; }
     //Setters
-    public void setVPN(String v) { vpn = v.isEmpty() ? null : v; }
-    public void setUser(String u) { user = u.isEmpty() ? null : u; }
+    public void setVPN(String v) {
+        v = v.trim();
+        vpn = v.isEmpty() ? null : v; 
+    }
+    public void setUser(String u) {
+        u = u.trim();
+        user = u.isEmpty() ? null : u;
+    }
     public void setDrive(String d) { drive = d; }
     
-    //Checks if any variable is not defined
-    public boolean isIncomplete() { return vpn == null || user == null || drive == null; }
     //Checks if the drive letter is currently being used
     public boolean isDriveUsed() { return new File(drive).exists(); }
     //Gets the boolean values
@@ -100,7 +99,7 @@ public final class AccesoUPV {
     public boolean connectUPV() {
         //Si ya es posible acceder a la UPV, estamos conectados
         try {
-            if (InetAddress.getByName("www.upv.es").isReachable(INITIAL_PING_TIMEOUT)) {
+            if (InetAddress.getByName("www.upv.es").isReachable(PING_TIMEOUT)) {
                 return true;
             }
         } catch (IOException ex) {}
@@ -120,40 +119,13 @@ public final class AccesoUPV {
     public boolean connectVPN() {
         if (vpn == null) return false;
         AccesoTask task = new VPNTask(vpn, true);
-        task.showErrorMessage(false);
         //Si el usuario cancela el proceso de conexion, sale del programa
         task.setOnCancelled((evt) -> System.exit(0));
         LoadingStage stage = new LoadingStage(task);
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
-        if (succeeded) {
-            //Si desde la VPN a la que se conectó no se puede acceder a la UPV, se entiende que ha elegido una incorrecta.
-            try {    
-                if (!InetAddress.getByName("www.upv.es").isReachable(FINAL_PING_TIMEOUT)) {
-                    Alert alert = new Alert(Alert.AlertType.ERROR, VPNTask.ERROR_INVALID_VPN);
-                    alert.setHeaderText(null);
-                    alert.showAndWait();
-                    disconnectVPN();
-                    vpn = null;
-                    return false;
-                }
-            } catch (IOException ex) {}
-            //Almacena el nombre de la VPN a la que se ha conectado
-            connectedVPN = vpn;
-        } else {
-            Alert errorAlert = task.getErrorAlert();
-            Hyperlink helpLink = new Hyperlink("Para más información acerca de posibles errores, pulse aquí");
-            helpLink.setOnAction(e -> {
-                try {
-                    Desktop desktop = Desktop.getDesktop();
-                    URI oURL = new URI(VPNTask.WEB_ERROR_VPN);
-                    desktop.browse(oURL);
-                } catch (IOException | URISyntaxException ex) {
-                    new Alert(Alert.AlertType.ERROR, "Ha ocurrido un error al tratar de abrir el navegador.").show();
-                }
-            });
-            errorAlert.showAndWait();
-        }
+        if (succeeded) connectedVPN = vpn;
+        else if (task.getException() instanceof IllegalArgumentException) vpn = null; 
         return succeeded;
     }
     
@@ -171,16 +143,14 @@ public final class AccesoUPV {
             succeeded = true;
         } else {
             AccesoTask task = new WTask(user, drive, true);
-            task.showErrorMessage(false);
             LoadingStage stage = new LoadingStage(task);
             stage.showAndWait();
             succeeded = stage.isSucceeded();
             if (succeeded) {
                 connectedUser = user;
                 connectedDrive = drive;
-            } else {
-                if (task.getException() instanceof IllegalArgumentException) user = null; 
-                task.getErrorAlert().showAndWait();
+            } else if (task.getException() instanceof IllegalArgumentException) {
+                user = null;
             }
         }
         return succeeded;

@@ -23,13 +23,13 @@ public abstract class AccesoTask extends Task<Void> {
     public static final int PROCESS_TIMEOUT = 5000; //5 seconds
     
     private String errorMsg;
-    private boolean showError = true;
-    private boolean exitOnFailed = false;
+    protected boolean showError = true;
+    protected boolean exitOnFailed = false;
     //Whether the thing it is accessing to should be connected or disconnected after the execution of the task.
-    protected final boolean newState;
+    protected final boolean connecting;
     
     public AccesoTask(boolean state) {
-        newState = state;
+        connecting = state;
         setOnFailed((e) -> {
             //Platform.runLater() ensures that the Alert is being shown by the JavaFX Application Thread (avoiding possible errors).
             if (showError) Platform.runLater(() -> getErrorAlert().showAndWait());
@@ -39,7 +39,7 @@ public abstract class AccesoTask extends Task<Void> {
     
     @Override
     protected Void call() throws Exception {
-        if (newState) connect();
+        if (connecting) connect();
         else disconnect();
         return null;
     }
@@ -63,15 +63,17 @@ public abstract class AccesoTask extends Task<Void> {
     }
     public void showErrorMessage(boolean show) { showError = show; }
     public void setExitOnFailed(boolean exit) { exitOnFailed = exit; }
-    protected void setErrorMessage(String errMsg) { errorMsg = errMsg; }
+    protected void updateErrorMsg(String errMsg) { errorMsg = errMsg; }
     
     //Métodos estáticos de utilidad para tratar procesos
-    
+    public static void waitAndCheck(Process p) throws Exception {
+        waitAndCheck(p, 0);
+    }
     public static void waitAndCheck(Process p, int tMin) throws Exception {
         waitAndCheck(p, tMin, true);
     }
     public static void waitAndCheck(Process p, int tMin, boolean showExMsg) throws Exception {
-        Thread.sleep(tMin);
+        if (tMin > 0) Thread.sleep(tMin);
         int exitValue = p.waitFor();
         if (exitValue != 0) {
             String msg = showExMsg ? getOutput(p) : "";
