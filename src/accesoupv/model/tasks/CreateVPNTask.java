@@ -18,6 +18,10 @@ import javafx.concurrent.Task;
  */
 public class CreateVPNTask extends Task<Void> {
     
+    private static final String SCRIPT = 
+    "$importXML = New-Object XML" + "\n"
+    + "$importXML.Load(\"${env:temp}\\XMLNAME\")" + "\n"
+    + "Add-VpnConnection -Name \"VPNNAME\" -ServerAddress \"vpn.upv.es\" -AuthenticationMethod Eap -EncryptionLevel Required -RememberCredential -TunnelType Sstp -EapConfigXmlStream $importXML" + "\n";
     private final String vpn;
     
     public CreateVPNTask(String vpnName) {
@@ -27,14 +31,13 @@ public class CreateVPNTask extends Task<Void> {
     @Override
     protected Void call() throws Exception {
         updateMessage("Creando conexión VPN...");
-        InputStream scriptIn = getClass().getResourceAsStream("/accesoupv/resources/CreateVPN.ps1");
         InputStream xmlIn = getClass().getResourceAsStream("/accesoupv/resources/VPN_config.xml");
         File temp = File.createTempFile("temp", ".ps1");
         File tempXml = File.createTempFile("temp", ".xml");
         //Just in case the task throws an exception, it ensures the temp files are deleted
         temp.deleteOnExit(); tempXml.deleteOnExit();
         //Copies both files
-        try (Scanner sc = new Scanner(scriptIn); PrintWriter pw = new PrintWriter(new FileOutputStream(temp), true)) {
+        try (Scanner sc = new Scanner(SCRIPT); PrintWriter pw = new PrintWriter(new FileOutputStream(temp), true)) {
             while (sc.hasNext()) {
                 pw.println(sc.nextLine().replaceAll("VPNNAME", vpn).replaceAll("XMLNAME", tempXml.getName()));
             }

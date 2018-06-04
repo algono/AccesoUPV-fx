@@ -34,15 +34,20 @@ public abstract class AccesoTask extends Task<Void> {
     
     @Override
     protected void failed() {
-        //Platform.runLater() ensures that the Alert is being shown by the JavaFX Application Thread (avoiding possible errors).
-        if (showError) Platform.runLater(() -> getErrorAlert().showAndWait());
         if (exitOnFailed) System.exit(-1);
     }
     
     @Override
     protected Void call() throws Exception {
-        if (connecting) connect();
-        else disconnect();
+        try {
+            if (connecting) connect();
+            else disconnect();
+        } catch (Exception ex) {
+            //Antes de que la task termine y se considere como 'failed', muestra el mensaje de error si su flag (showError) lo habilita,
+            //y después vuelve a lanzar la excepción para que los demás la traten debidamente
+            if (showError) Platform.runLater(() -> getErrorAlert().showAndWait());
+            throw ex;
+        }
         return null;
     }
     
