@@ -119,13 +119,13 @@ public final class AccesoUPV {
     public boolean connectVPN() {
         if (vpn == null) return false;
         AccesoTask task = new VPNTask(vpn, true);
-        //Si el usuario cancela el proceso de conexion, sale del programa
+        //Si el usuario cancela el proceso de conexión, sale del programa
         task.setOnCancelled((evt) -> System.exit(0));
         LoadingStage stage = new LoadingStage(task);
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
         if (succeeded) connectedVPN = vpn;
-        else if (task.getException() instanceof IllegalArgumentException) vpn = null; 
+        else if (task.getException() instanceof IllegalArgumentException) vpn = null;
         return succeeded;
     }
     
