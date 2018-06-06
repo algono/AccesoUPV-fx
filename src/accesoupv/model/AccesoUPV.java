@@ -109,7 +109,13 @@ public final class AccesoUPV {
     public boolean createVPN() {
         LoadingStage stage = new LoadingStage(new CreateVPNTask(vpn));
         stage.showAndWait();
-        return stage.isSucceeded();
+        boolean succeeded = stage.isSucceeded();
+        if (succeeded) {
+            Alert successAlert = new Alert(Alert.AlertType.INFORMATION, "La conexión VPN (con nombre \"" + vpn + "\") ha sido creada con éxito.");
+            successAlert.setHeaderText(null);
+            successAlert.showAndWait();
+        }
+        return succeeded;
     }
     
     /**
@@ -117,7 +123,7 @@ public final class AccesoUPV {
      */
     public boolean connectVPN() {
         if (vpn == null) return false;
-        AccesoTask task = new VPNTask(vpn, true);
+        AccesoTask task = new AccesoVPNTask(vpn, true);
         //Si el usuario cancela el proceso de conexión, sale del programa
         task.setOnCancelled((evt) -> System.exit(0));
         LoadingStage stage = new LoadingStage(task);
@@ -174,7 +180,7 @@ public final class AccesoUPV {
             if (!res.isPresent() || res.get() != ButtonType.OK) return false;
             setUserDialog();
         }
-        AccesoTask task = new WTask(user, drive, true);
+        AccesoTask task = new AccesoWTask(user, drive, true);
         LoadingStage stage = new LoadingStage(task);
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
@@ -189,9 +195,9 @@ public final class AccesoUPV {
     
     public boolean shutdown() {
         LoadingStage stage = new LoadingStage();
-        if (isWConnected()) stage.getQueue().add(new WTask(connectedUser, connectedDrive, false));
+        if (isWConnected()) stage.getQueue().add(new AccesoWTask(connectedUser, connectedDrive, false));
         if (isVPNConnected()) {
-            AccesoTask vpnTask = new VPNTask(connectedVPN, false);
+            AccesoTask vpnTask = new AccesoVPNTask(connectedVPN, false);
             vpnTask.setExitOnFailed(true);
             stage.getQueue().add(vpnTask);
         }
@@ -207,7 +213,7 @@ public final class AccesoUPV {
     public boolean disconnectW() {
         boolean succeeded = true;
         if (isWConnected()) {
-            AccesoTask task = new WTask(connectedUser, connectedDrive, false);
+            AccesoTask task = new AccesoWTask(connectedUser, connectedDrive, false);
             LoadingStage stage = new LoadingStage(task);
             stage.showAndWait();
             succeeded = stage.isSucceeded();
@@ -219,7 +225,7 @@ public final class AccesoUPV {
     public boolean disconnectVPN() {
         boolean succeeded = true;
         if (isVPNConnected()) {
-            AccesoTask task = new VPNTask(connectedVPN, false);
+            AccesoTask task = new AccesoVPNTask(connectedVPN, false);
             task.setExitOnFailed(true);
             LoadingStage stage = new LoadingStage(task);
             stage.showAndWait();

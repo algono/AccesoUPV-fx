@@ -19,7 +19,7 @@ import javafx.scene.layout.VBox;
  *
  * @author aleja
  */
-public class VPNTask extends AccesoTask {
+public class AccesoVPNTask extends AccesoTask {
     //Error messages
     public static final String ERROR_CON_VPN
             = "Se ha producido un error al tratar de conectarse a la VPN.\n\n"
@@ -38,7 +38,7 @@ public class VPNTask extends AccesoTask {
     
     private final String VPN;
     
-    public VPNTask(String vpn, boolean connecting) {
+    public AccesoVPNTask(String vpn, boolean connecting) {
         super(connecting);
         VPN = vpn;
     }
@@ -90,7 +90,7 @@ public class VPNTask extends AccesoTask {
             helpLink.setOnAction(e -> {
                 try {
                     Desktop desktop = Desktop.getDesktop();
-                    URI oURL = new URI(VPNTask.WEB_ERROR_VPN);
+                    URI oURL = new URI(AccesoVPNTask.WEB_ERROR_VPN);
                     desktop.browse(oURL);
                 } catch (IOException | URISyntaxException ex) {
                     new Alert(Alert.AlertType.ERROR, "Ha ocurrido un error al tratar de abrir el navegador.").show();

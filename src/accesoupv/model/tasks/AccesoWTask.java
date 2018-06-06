@@ -11,7 +11,7 @@ import java.io.IOException;
  *
  * @author aleja
  */
-public class WTask extends AccesoTask {
+public class AccesoWTask extends AccesoTask {
     //Error messages
     public static final String ERROR_W = "Ha habido un error al tratar de conectarse al disco W. Pulse en 'Mostrar detalles' para más información.";
     public static final String ERROR_INVALID_USER = "El usuario especificado no existe.";
@@ -22,7 +22,7 @@ public class WTask extends AccesoTask {
     
     private final String user, drive;
     
-    public WTask(String wUser, String wDrive, boolean connecting) {
+    public AccesoWTask(String wUser, String wDrive, boolean connecting) {
         super(connecting);
         user = wUser;
         drive = wDrive;
