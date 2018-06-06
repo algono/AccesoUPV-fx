@@ -64,8 +64,7 @@ public class PrincipalController implements Initializable {
     //AccesoUPV Instance
     private static final AccesoUPV acceso = AccesoUPV.getInstance();
     
-    private void showAjustes() { showAjustes(false); }
-    private void showAjustes(boolean exitOnCancelled) {
+    private void showAjustes() {
         if (acceso.isWConnected()) {
             String wMsg = "No se permite acceder a los ajustes mientras el disco W se encuentre conectado.\n\n"
                     + "¿Desea desconectarlo?";
@@ -78,12 +77,11 @@ public class PrincipalController implements Initializable {
                 if (!disconnectW()) return;
             } else return;
         }
-        try {    
+        try {
             Stage stage = new Stage();
             FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/AjustesView.fxml"));
             Parent root = (Parent) myLoader.load();
-            AjustesController dialogue = myLoader.<AjustesController>getController();
-            dialogue.init(stage, exitOnCancelled);
+            stage.setTitle("Preferencias");
             Scene scene = new Scene(root);
 
             stage.setScene(scene);
@@ -111,16 +109,7 @@ public class PrincipalController implements Initializable {
         }
     }
     
-    private Optional<String> setVPNDialogue(boolean isNew) {
-        String inputContentText = (isNew)
-                        ? "Introduzca el nombre de la nueva conexión VPN a la UPV: " 
-                        : "Introduzca el nombre de la conexión VPN existente a la UPV: ";
-        TextInputDialog dialog = new TextInputDialog(acceso.getVPN());
-        dialog.setTitle("Introduzca nombre VPN");
-        dialog.setHeaderText(null);
-        dialog.setContentText(inputContentText);
-        return dialog.showAndWait();
-    }
+    
     
     private void establishVPN() {
         Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -137,30 +126,22 @@ public class PrincipalController implements Initializable {
         if (!alertRes.isPresent() || alertRes.get() == ButtonType.CANCEL) System.exit(0);
         //Si pulsó que sí, se debe crear una VPN nueva. Si pulsó que no, se debe introducir una existente.
         boolean setNewVPN = alertRes.get() == ButtonType.YES;
-        Optional<String> newVPN = setVPNDialogue(setNewVPN);
-        //Si ha escrito un valor, le cambia el nombre. Si no, vuelve a empezar.
-        if (newVPN.isPresent()) {
-            acceso.setVPN(newVPN.get());
+        boolean hasNewVPN = acceso.setVPNDialog(setNewVPN);
+        //Si la VPN ha sido cambiada, continúa. Si no, vuelve a la primera Alert.
+        if (hasNewVPN) {
             if (setNewVPN) acceso.createVPN(); //Si se ha elegido crear una VPN nueva, la crea.
-            connectUPV();
+            connectVPN();
         } else { establishVPN(); }
     }
     
-    private void connectUPV() {
-        boolean succeeded = acceso.connectUPV();
-        //Si la ejecución falló...
+    private void connectVPN() {
+        if (acceso.getVPN() == null) establishVPN();
+        boolean succeeded = acceso.connectVPN();
+        //Si la ejecución falló, permite cambiar el valor de la VPN por si lo puso mal
         if (!succeeded) {
-            //Y fue porque no tenía VPN establecida, permite al usuario establecerla
-            if (acceso.getVPN() == null) {
-                establishVPN();
-            } else {
-                //Si no fue por eso, permite cambiar el valor de la VPN por si lo puso mal
-                Optional<String> newVPN = setVPNDialogue(false);
-                if (newVPN.isPresent()) {
-                    acceso.setVPN(newVPN.get());
-                    connectUPV();
-                } else { establishVPN(); }    
-            }
+            boolean hasNewVPN = acceso.setVPNDialog(false);
+            if (hasNewVPN) connectVPN();
+            else establishVPN();
         }
     }
     /**
@@ -171,29 +152,26 @@ public class PrincipalController implements Initializable {
         if (!acceso.isWConnected() && acceso.isDriveUsed()) {
             String WARNING_W = 
                     "La unidad definida para el disco W (" + acceso.getDrive() + ") ya contiene un disco asociado.\n\n"
-                    + "Antes de continuar, desconecte el disco asociado, o cambie la unidad para el disco W desde los ajustes.\n ";
+                    + "Antes de continuar, desconecte el disco asociado, o cambie la unidad utilizada para el disco W.\n ";
             Alert warning = new Alert(Alert.AlertType.WARNING);
             String actDrive = acceso.getDrive();
             warning.setHeaderText("Unidad " + actDrive + " contiene disco");
             warning.setContentText(WARNING_W);
-            ButtonType continuar = new ButtonType("Continuar");
-            ButtonType ajustes = new ButtonType("Ajustes", ButtonData.LEFT);
-            warning.getButtonTypes().setAll(continuar, ajustes, ButtonType.CANCEL);
+            ButtonType retry = new ButtonType("Reintentar");
+            ButtonType change = new ButtonType("Cambiar", ButtonData.LEFT);
+            warning.getButtonTypes().setAll(retry, change, ButtonType.CANCEL);
             Optional<ButtonType> result = warning.showAndWait();
             if (!result.isPresent() || result.get() == ButtonType.CANCEL) { return false; }
-            else if (result.get() == ajustes) { 
-                showAjustes();
-                if (acceso.getDrive().equals(actDrive)) { return false; }
+            else if (result.get() == change) { 
+                if (!acceso.setDriveDialog()) { return checkDrive(); }
             }
             else {
                 if (acceso.isDriveUsed()) {
-                    WARNING_W = "El disco aún no ha sido desconectado. Si se trata del disco W, puede continuar sin problemas.\n"
-                            + "Pero si no, el programa no funcionará correctamente.\n\n"
-                            + "¿Desea continuar?";
-                    warning.setContentText(WARNING_W);
-                    warning.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-                    result = warning.showAndWait();
-                    if (!result.isPresent() || result.get() == ButtonType.CANCEL) { return false; }
+                    Alert error = new Alert(Alert.AlertType.ERROR, "El disco aún no ha sido desconectado.\n"
+                            + "Desconéctelo y vuelva a intentarlo.");
+                    error.setHeaderText(null);
+                    error.showAndWait();
+                    return checkDrive();
                 }
             }
         }
@@ -211,14 +189,6 @@ public class PrincipalController implements Initializable {
                     Desktop.getDesktop().open(new File(acceso.getDrive()));
                 } catch (IOException ex) {
                     new Alert(Alert.AlertType.ERROR, ERROR_FOLDER_MSG).show();
-                }
-            } else {
-                //...y el nombre del usuario no era válido... acceder a los ajustes para cambiarlo
-                if (acceso.getUser() == null) {
-                    String actUser = acceso.getUser();
-                    showAjustes();
-                    //Si se ha cambiado el usuario, lo vuelve a intentar
-                    if (!acceso.getUser().equals(actUser)) { accessW(evt); }
                 }
             }
         }
@@ -251,6 +221,6 @@ public class PrincipalController implements Initializable {
         menuAjustes.setOnAction(e -> showAjustes());
         buttonDisconnectW.setOnAction(e -> disconnectW());
         menuDisconnectW.setOnAction(e -> disconnectW());
-        connectUPV();
+        if (!acceso.isConnectedToUPV()) connectVPN(); //Si no está ya conectado a la UPV, trata de conectarse a la VPN
     }
 }

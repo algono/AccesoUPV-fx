@@ -7,6 +7,7 @@ package accesoupv.model.tasks;
 
 import java.io.IOException;
 import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
@@ -45,7 +46,18 @@ public abstract class AccesoTask extends Task<Void> {
         } catch (Exception ex) {
             //Antes de que la task termine y se considere como 'failed', muestra el mensaje de error si su flag (showError) lo habilita,
             //y después vuelve a lanzar la excepción para que los demás la traten debidamente
-            if (showError) Platform.runLater(() -> getErrorAlert().showAndWait());
+            if (showError) {
+                CountDownLatch latch = new CountDownLatch(1);
+                Platform.runLater(() -> {
+                    getErrorAlert(ex).showAndWait();
+                    latch.countDown();
+                });
+                try {
+                    latch.await();
+                } catch (InterruptedException iEx) {
+                    throw ex; //Evitamos que la InterruptedException del await tape la excepción que lanzó la propia task
+                }
+            }
             throw ex;
         }
         return null;
@@ -55,11 +67,11 @@ public abstract class AccesoTask extends Task<Void> {
     protected abstract void disconnect() throws Exception;
     
     //Getters
-    public String getErrorMessage() { return errorMsg; }
-    public Alert getErrorAlert() {
+    public String getErrorMessage() { return errorMsg; }   
+    public Alert getErrorAlert() { return getErrorAlert(getException()); }
+    protected Alert getErrorAlert(Throwable exception) {
         Alert errorAlert = new Alert(Alert.AlertType.ERROR, errorMsg);
         errorAlert.setHeaderText(null);
-        Throwable exception = getException();
         String errorOutput = (exception == null) ? null : exception.getMessage();
         if (errorOutput != null && !errorOutput.isEmpty()) {
             TextArea errorContent = new TextArea(errorOutput);

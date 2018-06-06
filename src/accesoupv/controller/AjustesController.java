@@ -17,6 +17,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -65,57 +66,23 @@ public class AjustesController implements Initializable {
     public static final String SUCCESS_MESSAGE = "El archivo ha sido creado con éxito.\n¿Desea abrir la carpeta en la cual ha sido guardado?";
     public static final String ERROR_MESSAGE = "Ha habido un error al crear el programa. Vuelva a intentarlo.";
     public static final String FOLDER_ERROR_MESSAGE = "Ha habido un error al abrir la carpeta. Ábrala manualmente.";
-    public static final String HELP_TOOLTIP = 
+    public static final String HELP_USER_TOOLTIP = 
             "Formato:\n"
             + "Siendo tu usuario completo: \"usuario@dominio.upv.es\"\n"
             + "Escriba: \"usuario\"";
     
-    private Stage primaryStage;
-    private boolean exitOnCancel;
     private ObservableList<String> dataDrives;
     //AccesoUPV Instance
     private static final AccesoUPV acceso = AccesoUPV.getInstance();
     
-    public void init(Stage stage, boolean exOnCancel) {
-        primaryStage = stage;
-        primaryStage.setTitle("Preferencias");
-        exitOnCancel = exOnCancel;
-        if (exitOnCancel) {
-            primaryStage.setOnCloseRequest((evt) -> {
-                Platform.exit();
-                System.exit(0);
-            });
-        }
-        //Escribe las preferencias guardadas
-        String user = acceso.getUser();
-        if (user == null) {
-            Platform.runLater(() -> textUser.requestFocus());
-            user = "";
-        }
-        textUser.setText(user);
-        String vpn = acceso.getVPN();
-        if (vpn == null) {
-            Platform.runLater(() -> textVPN.requestFocus());
-            vpn = "";
-        }
-        textVPN.setText(vpn);
-        String drive = acceso.getDrive();
-        //Si la lista lo contiene, selecciona la unidad guardada (o 'W:' por defecto si no hay guardada ninguna unidad)
-        if (dataDrives.contains(drive)) {
-            comboDrive.getSelectionModel().select(drive);
-        } else {
-            comboDrive.getSelectionModel().selectFirst();
-        }
-    }
-    
     @FXML
-    private void savePrefs(ActionEvent event) {
+    private void savePrefs(ActionEvent evt) {
             acceso.setVPN(textVPN.getText());
             acceso.setDrive(comboDrive.getValue());
             acceso.setUser(textUser.getText());
             acceso.savePrefs();
             //Cierra la ventana de ajustes
-            primaryStage.hide();
+            ((Node) evt.getSource()).getScene().getWindow().hide();
     }
     
     private void showAyuda(String page) {
@@ -147,18 +114,14 @@ public class AjustesController implements Initializable {
     }
     
     @FXML
-    private void closeDialogue(ActionEvent event) {
+    private void closeDialogue(ActionEvent evt) {
         if (anyChanges()) {
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Desea salir sin guardar los cambios?");
             confirm.setHeaderText(null);
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.get() != ButtonType.OK) return;
         }
-        if (exitOnCancel) {
-            Platform.exit();
-            System.exit(0);
-        }
-        primaryStage.hide();
+        ((Node) evt.getSource()).getScene().getWindow().hide();
     }
     
     /**
@@ -184,14 +147,36 @@ public class AjustesController implements Initializable {
         helpLinkVPN.setOnAction(e -> showAyuda("VPN"));
         helpLinkVPN.setTooltip(new Tooltip("Click para ver cómo \"" + menuAyudaVPN.getText() + "\""));
         //Evento para que si haces click, muestre directamente el Tooltip
-        helpLinkUser.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> { 
-            helpLinkUser.getTooltip().show(primaryStage);
-            e.consume();
+        helpLinkUser.addEventFilter(MouseEvent.MOUSE_PRESSED, evt -> { 
+            helpLinkUser.getTooltip().show(((Node) evt.getSource()).getScene().getWindow());
+            evt.consume();
         });
         //Evento para que siempre que quites el ratón del nodo, esconda el Tooltip
         helpLinkUser.addEventHandler(MouseEvent.MOUSE_EXITED, e -> helpLinkUser.getTooltip().hide());
-        helpLinkUser.setTooltip(new Tooltip(HELP_TOOLTIP));
-        //Hace que al abrir la ventana, el focus lo tenga el botón de cancelar
+        helpLinkUser.setTooltip(new Tooltip(HELP_USER_TOOLTIP));
+        
+        //Escribe las preferencias guardadas
+        String user = acceso.getUser();
+        if (user == null) {
+            Platform.runLater(() -> textUser.requestFocus());
+            user = "";
+        }
+        textUser.setText(user);
+        String vpn = acceso.getVPN();
+        if (vpn == null) {
+            Platform.runLater(() -> textVPN.requestFocus());
+            vpn = "";
+        }
+        textVPN.setText(vpn);
+        String drive = acceso.getDrive();
+        //Si la lista lo contiene, selecciona la unidad guardada (o 'W:' por defecto si no hay guardada ninguna unidad)
+        if (dataDrives.contains(drive)) {
+            comboDrive.getSelectionModel().select(drive);
+        } else {
+            comboDrive.getSelectionModel().selectFirst();
+        }
+        
+        //Hace que al abrir la ventana, el focus lo tenga el botón de aceptar
         Platform.runLater(() -> buttonOK.requestFocus());
     }    
 }

@@ -5,15 +5,21 @@
  */
 package accesoupv.model;
 
+import accesoupv.controller.AjustesController;
 import accesoupv.model.tasks.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.prefs.Preferences;
 import myLibrary.javafx.LoadingUtils.LoadingStage;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextInputDialog;
 
 /**
  *
@@ -69,14 +75,8 @@ public final class AccesoUPV {
     public String getUser() { return user; }
     public String getDrive() { return drive; }
     //Setters
-    public void setVPN(String v) {
-        v = v.trim();
-        vpn = v.isEmpty() ? null : v; 
-    }
-    public void setUser(String u) {
-        u = u.trim();
-        user = u.isEmpty() ? null : u;
-    }
+    public void setVPN(String v) { vpn = v.isEmpty() ? null : v; }
+    public void setUser(String u) { user = u.isEmpty() ? null : u; }
     public void setDrive(String d) { drive = d; }
     
     //Checks if the drive letter is currently being used
@@ -96,15 +96,14 @@ public final class AccesoUPV {
         return drives;
     }
     
-    public boolean connectUPV() {
+    public boolean isConnectedToUPV() {
         //Si ya es posible acceder a la UPV, estamos conectados
         try {
             if (InetAddress.getByName("www.upv.es").isReachable(PING_TIMEOUT)) {
                 return true;
             }
         } catch (IOException ex) {}
-        //Si no, trata de conectarse a la VPN
-        return connectVPN();
+        return false;
     }
     
     public boolean createVPN() {
@@ -125,33 +124,65 @@ public final class AccesoUPV {
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
         if (succeeded) connectedVPN = vpn;
-        else if (task.getException() instanceof IllegalArgumentException) vpn = null;
+        else if (task.getException() instanceof IllegalArgumentException) {
+            if (setVPNDialog(false)) return connectVPN(); //Si la VPN no era válida, permite cambiarla, y si la cambió, vuelve a intentarlo.
+        }
         return succeeded;
     }
     
+    public boolean setVPNDialog(boolean isNew) {
+        String inputContentText = (isNew)
+                        ? "Introduzca el nombre de la nueva conexión VPN a la UPV: " 
+                        : "Introduzca el nombre de la conexión VPN existente a la UPV: ";
+        TextInputDialog dialog = new TextInputDialog(vpn);
+        dialog.setTitle("Introduzca nombre VPN");
+        dialog.setHeaderText(null);
+        dialog.setContentText(inputContentText);
+        Optional<String> res = dialog.showAndWait();
+        res.ifPresent((newVPN) -> vpn = newVPN);
+        return res.isPresent();
+    }
+    
+    public boolean setUserDialog() {
+        TextInputDialog dialog = new TextInputDialog(user);
+        dialog.setTitle("Introduzca usuario");
+        dialog.setHeaderText(null);
+        dialog.setContentText("Introduzca su usuario de la UPV: ");
+        dialog.getDialogPane().setExpandableContent(new Label(AjustesController.HELP_USER_TOOLTIP));
+        Optional<String> res = dialog.showAndWait();
+        res.ifPresent((newUser) -> user = newUser);
+        return res.isPresent();
+    }
+    public boolean setDriveDialog() {
+        List<String> drives = getAvailableDrives();
+        String def = drives.contains("W:") ? "W:" : null;
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(def, drives);
+        dialog.setTitle("Elegir unidad Disco W");
+        dialog.setHeaderText(null);
+        dialog.setContentText("Elija una unidad para su Disco W: ");
+        Optional<String> res = dialog.showAndWait();
+        res.ifPresent((newDrive) -> drive = newDrive);
+        return res.isPresent();
+    }
+    
     public boolean connectW() {
-        if (user == null) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "No ha especificado ningún usuario. Establezca uno.");
+        while (user == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "No ha especificado ningún usuario. Establezca uno.");
             alert.setHeaderText(null);
-            alert.showAndWait();
-            return false;
+            alert.getButtonTypes().add(ButtonType.CANCEL);
+            Optional<ButtonType> res = alert.showAndWait();
+            if (!res.isPresent() || res.get() != ButtonType.OK) return false;
+            setUserDialog();
         }
-        boolean succeeded;
-        if (isDriveUsed()) {
+        AccesoTask task = new WTask(user, drive, true);
+        LoadingStage stage = new LoadingStage(task);
+        stage.showAndWait();
+        boolean succeeded = stage.isSucceeded();
+        if (succeeded) {
             connectedUser = user;
             connectedDrive = drive;
-            succeeded = true;
-        } else {
-            AccesoTask task = new WTask(user, drive, true);
-            LoadingStage stage = new LoadingStage(task);
-            stage.showAndWait();
-            succeeded = stage.isSucceeded();
-            if (succeeded) {
-                connectedUser = user;
-                connectedDrive = drive;
-            } else if (task.getException() instanceof IllegalArgumentException) {
-                user = null;
-            }
+        } else if (task.getException() instanceof IllegalArgumentException) {
+            if (setUserDialog()) return connectW(); //Si el usuario no era válido, permite cambiarlo, y si lo cambió, vuelve a intentarlo.
         }
         return succeeded;
     }
