@@ -14,8 +14,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.prefs.Preferences;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import myLibrary.javafx.LoadingUtils.LoadingStage;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
@@ -29,7 +34,8 @@ public final class AccesoUPV {
     
     //Variables
     private String vpn, user, drive;
-    private String connectedVPN, connectedUser, connectedDrive;
+    private String connectedVPN;
+    private final StringProperty connectedDrive = new SimpleStringProperty(null);
     //Preferences
     private final Preferences prefs = Preferences.userNodeForPackage(this.getClass());
     //Servers
@@ -74,16 +80,17 @@ public final class AccesoUPV {
     public String getVPN() { return vpn; }
     public String getUser() { return user; }
     public String getDrive() { return drive; }
+    public boolean isVPNConnected() { return connectedVPN != null; }
+    public boolean isWConnected() { return connectedDrive.get() != null; }
     //Setters
     public void setVPN(String v) { vpn = v.isEmpty() ? null : v; }
     public void setUser(String u) { user = u.isEmpty() ? null : u; }
-    public void setDrive(String d) { drive = d; }
+    public void setDrive(String d) { drive = d; } 
+    //Binding to know if W is connected or not
+    public BooleanBinding connectedWBinding() { return connectedDrive.isNotEmpty(); }
     
     //Checks if the drive letter is currently being used
     public boolean isDriveUsed() { return new File(drive).exists(); }
-    //Gets the boolean values
-    public boolean isVPNConnected() { return connectedVPN != null; }
-    public boolean isWConnected() { return connectedDrive != null; }
     
     public static List<String> getAvailableDrives() {
         List<String> drives = new ArrayList<>();
@@ -105,7 +112,7 @@ public final class AccesoUPV {
         } catch (IOException ex) {}
         return false;
     }
-    
+    //VPN RELATED
     public boolean createVPN() {
         LoadingStage stage = new LoadingStage(new CreateVPNTask(vpn));
         stage.showAndWait();
@@ -122,6 +129,7 @@ public final class AccesoUPV {
      * @return If the operation completed successfully.
      */
     public boolean connectVPN() {
+        if (isVPNConnected()) return true; //If the VPN is already connected, it's not necessary to connect it again
         if (vpn == null) return false;
         AccesoTask task = new AccesoVPNTask(vpn, true);
         //Si el usuario cancela el proceso de conexión, sale del programa
@@ -135,7 +143,7 @@ public final class AccesoUPV {
         }
         return succeeded;
     }
-    
+    //DIALOGS
     public boolean setVPNDialog(boolean isNew) {
         String inputContentText = (isNew)
                         ? "Introduzca el nombre de la nueva conexión VPN a la UPV: " 
@@ -170,8 +178,44 @@ public final class AccesoUPV {
         res.ifPresent((newDrive) -> drive = newDrive);
         return res.isPresent();
     }
+    // DISCO W RELATED
+    /**
+     * Checks if the drive where W should be is set up before this program did it.
+     * @return Whether the execution should continue or not.
+     */
+    public boolean checkDrive() {
+        if (!isWConnected() && isDriveUsed()) {
+            String WARNING_W = 
+                    "La unidad definida para el disco W (" + drive + ") ya contiene un disco asociado.\n\n"
+                    + "Antes de continuar, desconecte el disco asociado, o cambie la unidad utilizada para el disco W.\n ";
+            Alert warning = new Alert(Alert.AlertType.WARNING);
+            String actDrive = drive;
+            warning.setHeaderText("Unidad " + actDrive + " contiene disco");
+            warning.setContentText(WARNING_W);
+            ButtonType retry = new ButtonType("Reintentar");
+            ButtonType change = new ButtonType("Cambiar", ButtonBar.ButtonData.LEFT);
+            warning.getButtonTypes().setAll(retry, change, ButtonType.CANCEL);
+            Optional<ButtonType> result = warning.showAndWait();
+            if (!result.isPresent() || result.get() == ButtonType.CANCEL) { return false; }
+            else if (result.get() == change) { 
+                if (!setDriveDialog()) { return checkDrive(); }
+            }
+            else {
+                if (isDriveUsed()) {
+                    Alert error = new Alert(Alert.AlertType.ERROR, "El disco aún no ha sido desconectado.\n"
+                            + "Desconéctelo y vuelva a intentarlo.");
+                    error.setHeaderText(null);
+                    error.showAndWait();
+                    return checkDrive();
+                }
+            }
+        }
+        return true;
+    }
     
     public boolean connectW() {
+        if (isWConnected()) return true; //If W is already connected, it's not necessary to connect it again
+        else if (!checkDrive()) return false; //If the drive isn't available, abort the process
         while (user == null) {
             Alert alert = new Alert(Alert.AlertType.WARNING, "No ha especificado ningún usuario. Establezca uno.");
             alert.setHeaderText(null);
@@ -185,17 +229,16 @@ public final class AccesoUPV {
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
         if (succeeded) {
-            connectedUser = user;
-            connectedDrive = drive;
+            connectedDrive.set(drive);
         } else if (task.getException() instanceof IllegalArgumentException) {
             if (setUserDialog()) return connectW(); //Si el usuario no era válido, permite cambiarlo, y si lo cambió, vuelve a intentarlo.
         }
         return succeeded;
     }
-    
+    //DISCONNECTING METHODS
     public boolean shutdown() {
         LoadingStage stage = new LoadingStage();
-        if (isWConnected()) stage.getQueue().add(new AccesoWTask(connectedUser, connectedDrive, false));
+        if (isWConnected()) stage.getQueue().add(new AccesoWTask(user, connectedDrive.get(), false));
         if (isVPNConnected()) {
             AccesoTask vpnTask = new AccesoVPNTask(connectedVPN, false);
             vpnTask.setExitOnFailed(true);
@@ -213,11 +256,11 @@ public final class AccesoUPV {
     public boolean disconnectW() {
         boolean succeeded = true;
         if (isWConnected()) {
-            AccesoTask task = new AccesoWTask(connectedUser, connectedDrive, false);
+            AccesoTask task = new AccesoWTask(user, connectedDrive.get(), false);
             LoadingStage stage = new LoadingStage(task);
             stage.showAndWait();
             succeeded = stage.isSucceeded();
-            if (succeeded) connectedDrive = null;
+            if (succeeded) connectedDrive.set(null);
         }
         return succeeded;
     }
