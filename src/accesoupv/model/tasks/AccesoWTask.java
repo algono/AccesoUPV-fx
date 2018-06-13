@@ -5,7 +5,14 @@
  */
 package accesoupv.model.tasks;
 
+import accesoupv.model.Dominio;
 import java.io.IOException;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 
 /**
  *
@@ -19,17 +26,21 @@ public class AccesoWTask extends AccesoTask {
             "Ha habido un error al desconectar el disco W.\n\n"
             + "Compruebe que no tenga abierto un archivo/carpeta del disco e inténtelo de nuevo.\n\n"
             + "Si el error persiste, desconéctelo manualmente.";
-    
+    public static final String OPEN_FILES_WARNING = 
+            "Existen archivos abiertos y/o búsquedas incompletas de directorios pendientes en el disco W. Si no los cierra antes de desconectarse, podría perder datos.\n\n"
+            + "¿Desea continuar la desconexión y forzar el cierre?";
     private final String user, drive;
+    private final Dominio dom;
     
-    public AccesoWTask(String wUser, String wDrive, boolean connecting) {
+    public AccesoWTask(String wUser, String wDrive, Dominio wDom, boolean connecting) {
         super(connecting);
         user = wUser;
         drive = wDrive;
+        dom = wDom;
     }
     
     public String getDirW() {
-        return "\\\\nasupv.upv.es\\alumnos\\" + user.charAt(0) + "\\" + user;
+        return "\\\\nasupv.upv.es\\" + dom.toString().toLowerCase() + "\\" + user.charAt(0) + "\\" + user;
     }
     
     @Override
@@ -56,7 +67,34 @@ public class AccesoWTask extends AccesoTask {
         updateErrorMsg(ERROR_DIS_W);
         updateMessage("Desconectando Disco W...");
         Process p = startProcess("cmd.exe", "/c", "net", "use", drive, "/delete");
-        waitAndCheck(p, 1000, false);
+        Thread.sleep(1000);
+        int exitValue = p.waitFor();
+        if (exitValue != 0) {
+            String out = getOutput(p);
+            //Esa secuencia es parte de "(S/N)", con lo que deducimos que nos pide confirmación (porque tenemos archivos abiertos)
+            if (out.contains("/N)")) {
+                final AtomicBoolean res = new AtomicBoolean();
+                final CountDownLatch latch = new CountDownLatch(1);
+                Platform.runLater(() -> {
+                    Alert conf = new Alert(Alert.AlertType.WARNING, OPEN_FILES_WARNING);
+                    conf.setHeaderText(null);
+                    conf.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+                    Optional<ButtonType> confRes = conf.showAndWait();
+                    res.set(confRes.isPresent() && confRes.get() == ButtonType.OK);
+                    latch.countDown();
+                });
+                latch.await();
+                if (res.get()) {
+                    //"/y" le pasa un "Sí" automáticamente, mientras que "/no" le pasaría un "No".
+                    p = startProcess("cmd.exe", "/c", "net", "use", drive, "/delete", "/y");
+                    waitAndCheck(p, 1000);
+                } else {
+                    cancel();
+                }
+            } else {
+                throw new IOException(out);
+            }
+        }
     }
     
 }

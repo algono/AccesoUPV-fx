@@ -186,8 +186,8 @@ public class PrincipalController implements Initializable {
         menuDisconnectW.setOnAction(e -> acceso.disconnectW());
         
         //Setting bindings for buttons
-        buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.connectedWBinding()));
-        menuDisconnectW.disableProperty().bind(Bindings.not(acceso.connectedWBinding()));
+        buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.connectedWProperty()));
+        menuDisconnectW.disableProperty().bind(Bindings.not(acceso.connectedWProperty()));
         
         //Si no está ya conectado a la UPV, trata de conectarse a la VPN
         if (!acceso.isConnectedToUPV()) connectVPN();

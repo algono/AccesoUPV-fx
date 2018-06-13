@@ -14,10 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.prefs.Preferences;
-import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.ReadOnlyStringProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import myLibrary.javafx.LoadingUtils.LoadingStage;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
@@ -34,8 +32,9 @@ public final class AccesoUPV {
     
     //Variables
     private String vpn, user, drive;
+    private Dominio domain; //alumnos o upvnet, depending whether it is a student or not
     private String connectedVPN;
-    private final StringProperty connectedDrive = new SimpleStringProperty(null);
+    private final ReadOnlyBooleanWrapper connectedWProperty = new ReadOnlyBooleanWrapper(false);
     //Preferences
     private final Preferences prefs = Preferences.userNodeForPackage(this.getClass());
     //Servers
@@ -65,6 +64,7 @@ public final class AccesoUPV {
         vpn = prefs.get("vpn", null);
         user = prefs.get("user", null);
         drive = prefs.get("drive", "W:"); //Drive by default is W:
+        domain = prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS;
     }
     
     public void savePrefs() {
@@ -74,20 +74,61 @@ public final class AccesoUPV {
         else prefs.put("user", user);
         if (drive == null || drive.equals("W:")) prefs.remove("drive");
         else prefs.put("drive", drive);
+        if (domain == Dominio.ALUMNOS) prefs.remove("non-student");
+        else prefs.putBoolean("non-student", true);
+    }
+    
+    protected void clearPrefs() {
+        prefs.remove("vpn");
+        prefs.remove("user");
+        prefs.remove("drive");
+        prefs.remove("non-student");
+    }
+    public void reset() {
+        vpn = null; user = null; drive = null; domain = Dominio.ALUMNOS;
+        clearPrefs();
     }
     
     //Getters
     public String getVPN() { return vpn; }
     public String getUser() { return user; }
     public String getDrive() { return drive; }
+    public Dominio getDomain() { return domain; }
+    
     public boolean isVPNConnected() { return connectedVPN != null; }
-    public boolean isWConnected() { return connectedDrive.get() != null; }
+    public boolean isWConnected() {
+        //Si se considera la W como "conectada", pero la unidad no lo está, se deduce que se desconectó manualmente
+        boolean res = connectedWProperty.get() && isDriveUsed();
+        connectedWProperty.set(res); 
+        return res;
+    }
+    //If the W drive is connected, throw an Exception
+    protected void checkW() {
+        if (isWConnected()) {
+            throw new IllegalStateException("You are not allowed to change variables related to the W drive while it is connected.");
+        }
+    }
     //Setters
-    public void setVPN(String v) { vpn = v.isEmpty() ? null : v; }
-    public void setUser(String u) { user = u.isEmpty() ? null : u; }
-    public void setDrive(String d) { drive = d; } 
+    public void setVPN(String v) { 
+        v = v.trim();
+        vpn = v.isEmpty() ? null : v; 
+    }
+    public void setUser(String u) {
+        checkW();
+        u = u.trim();
+        user = u.isEmpty() ? null : u; 
+    }
+    public void setDrive(String d) {
+        checkW();
+        drive = d; 
+    }
+    public void setDomain(Dominio d) {
+        checkW();
+        domain = d; 
+    }
+    
     //Binding to know if W is connected or not
-    public BooleanBinding connectedWBinding() { return connectedDrive.isNotEmpty(); }
+    public ReadOnlyBooleanProperty connectedWProperty() { return connectedWProperty.getReadOnlyProperty(); }
     
     //Checks if the drive letter is currently being used
     public boolean isDriveUsed() { return new File(drive).exists(); }
@@ -224,13 +265,12 @@ public final class AccesoUPV {
             if (!res.isPresent() || res.get() != ButtonType.OK) return false;
             setUserDialog();
         }
-        AccesoTask task = new AccesoWTask(user, drive, true);
+        AccesoTask task = new AccesoWTask(user, drive, domain, true);
         LoadingStage stage = new LoadingStage(task);
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
-        if (succeeded) {
-            connectedDrive.set(drive);
-        } else if (task.getException() instanceof IllegalArgumentException) {
+        connectedWProperty.set(succeeded);
+        if (!succeeded && task.getException() instanceof IllegalArgumentException) {
             if (setUserDialog()) return connectW(); //Si el usuario no era válido, permite cambiarlo, y si lo cambió, vuelve a intentarlo.
         }
         return succeeded;
@@ -238,7 +278,7 @@ public final class AccesoUPV {
     //DISCONNECTING METHODS
     public boolean shutdown() {
         LoadingStage stage = new LoadingStage();
-        if (isWConnected()) stage.getQueue().add(new AccesoWTask(user, connectedDrive.get(), false));
+        if (isWConnected()) stage.getQueue().add(new AccesoWTask(user, drive, domain, false));
         if (isVPNConnected()) {
             AccesoTask vpnTask = new AccesoVPNTask(connectedVPN, false);
             vpnTask.setExitOnFailed(true);
@@ -256,11 +296,11 @@ public final class AccesoUPV {
     public boolean disconnectW() {
         boolean succeeded = true;
         if (isWConnected()) {
-            AccesoTask task = new AccesoWTask(user, connectedDrive.get(), false);
+            AccesoTask task = new AccesoWTask(user, drive, domain, false);
             LoadingStage stage = new LoadingStage(task);
             stage.showAndWait();
             succeeded = stage.isSucceeded();
-            if (succeeded) connectedDrive.set(null);
+            connectedWProperty.set(!succeeded);
         }
         return succeeded;
     }

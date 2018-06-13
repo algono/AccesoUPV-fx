@@ -7,7 +7,6 @@ package accesoupv;
 
 import accesoupv.model.AccesoUPV;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -31,8 +30,7 @@ public class Launcher extends Application {
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/icons/app-icon.png")));
         stage.setScene(scene);
         stage.setOnCloseRequest((WindowEvent we) -> {
-            if (AccesoUPV.getInstance().shutdown()) Platform.exit();
-            else we.consume();
+            if (!AccesoUPV.getInstance().shutdown()) we.consume();
         });
         stage.show();
     }

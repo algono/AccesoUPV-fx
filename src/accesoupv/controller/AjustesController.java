@@ -6,11 +6,13 @@
 package accesoupv.controller;
 
 import accesoupv.model.AccesoUPV;
+import accesoupv.model.Dominio;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -26,7 +28,9 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
@@ -60,12 +64,22 @@ public class AjustesController implements Initializable {
     @FXML
     private Hyperlink helpLinkUser;
     @FXML
-    private Button buttonOK;
+    private ToggleGroup dominio;
+    @FXML
+    private RadioButton alumnoRadioButton;
+    @FXML
+    private Button resetButton;
+    @FXML
+    private Button OKButton;
     
     //Constants (Messages)
     public static final String SUCCESS_MESSAGE = "El archivo ha sido creado con éxito.\n¿Desea abrir la carpeta en la cual ha sido guardado?";
     public static final String ERROR_MESSAGE = "Ha habido un error al crear el programa. Vuelva a intentarlo.";
     public static final String FOLDER_ERROR_MESSAGE = "Ha habido un error al abrir la carpeta. Ábrala manualmente.";
+    public static final String RESET_MESSAGE = 
+            "Se reestablecerán los valores predeterminados, por tanto será como si acabaras de ejecutar el programa por primera vez.\n\n"
+            + "Para completar este proceso, el programa se cerrará. Al volverlo a abrir se habrá completado.\n\n"
+            + "¿Estás seguro?";
     public static final String HELP_USER_TOOLTIP = 
             "Formato:\n"
             + "Siendo tu usuario completo: \"usuario@dominio.upv.es\"\n"
@@ -80,6 +94,8 @@ public class AjustesController implements Initializable {
             acceso.setVPN(textVPN.getText());
             acceso.setDrive(comboDrive.getValue());
             acceso.setUser(textUser.getText());
+            Dominio dom = alumnoRadioButton.isSelected() ? Dominio.ALUMNOS : Dominio.UPVNET;
+            acceso.setDomain(dom);
             acceso.savePrefs();
             //Cierra la ventana de ajustes
             ((Node) evt.getSource()).getScene().getWindow().hide();
@@ -110,7 +126,10 @@ public class AjustesController implements Initializable {
         
         return !(textVPN.getText().equals(vpn)
         && textUser.getText().equals(user)
-        && comboDrive.getSelectionModel().getSelectedItem().equals(acceso.getDrive()));
+        && comboDrive.getSelectionModel().getSelectedItem().equals(acceso.getDrive())
+        //XNOR (Iguales -> true, Distintos -> false)
+        && (alumnoRadioButton.isSelected() == (acceso.getDomain() == Dominio.ALUMNOS))
+        );
     }
     
     @FXML
@@ -131,28 +150,49 @@ public class AjustesController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        //Crea la lista de unidades disponibles para el disco W
         dataDrives = FXCollections.observableList(AccesoUPV.getAvailableDrives());
         comboDrive.setItems(dataDrives);
+        
         //Si se ha cambiado el valor de la VPN y se encuentra conectada, muestra un mensaje.
         if (acceso.isVPNConnected()) {
             textVPN.textProperty().addListener((obs, oldValue, newValue) -> {
                 textWarningVPN.setVisible(!newValue.equals(acceso.getVPN()));
             });
         }
-                 
-        menuAyuda.setOnAction(e -> showAyuda(""));
-        menuAyudaDSIC.setOnAction(e -> showAyuda("DSIC"));
-        menuAyudaVPN.setOnAction(e -> showAyuda("VPN"));
         
-        helpLinkVPN.setOnAction(e -> showAyuda("VPN"));
+        //Bindings para evitar que se puedan dejar campos vacíos
+        OKButton.disableProperty().bind(Bindings.createBooleanBinding(() ->
+                textVPN.getText().trim().isEmpty() || textUser.getText().trim().isEmpty(),
+                textVPN.textProperty(), textUser.textProperty()));
+        
+        menuAyuda.setOnAction(evt -> showAyuda(""));
+        menuAyudaDSIC.setOnAction(evt -> showAyuda("DSIC"));
+        menuAyudaVPN.setOnAction(evt -> showAyuda("VPN"));
+        helpLinkVPN.setOnAction(evt -> showAyuda("VPN"));
         helpLinkVPN.setTooltip(new Tooltip("Click para ver cómo \"" + menuAyudaVPN.getText() + "\""));
+        
+        resetButton.setOnAction(evt -> {
+            //Ventana de confirmación
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, RESET_MESSAGE);
+            confirm.setHeaderText(null);
+            Optional<ButtonType> res = confirm.showAndWait();
+            //Si confirma, resetea y cierra la ventana de ajustes
+            if (res.isPresent() && res.get() == ButtonType.OK) {
+                acceso.reset();
+                acceso.disconnectVPN();
+                System.exit(0);
+            }
+        });
+        
         //Evento para que si haces click, muestre directamente el Tooltip
         helpLinkUser.addEventFilter(MouseEvent.MOUSE_PRESSED, evt -> { 
             helpLinkUser.getTooltip().show(((Node) evt.getSource()).getScene().getWindow());
             evt.consume();
         });
+        
         //Evento para que siempre que quites el ratón del nodo, esconda el Tooltip
-        helpLinkUser.addEventHandler(MouseEvent.MOUSE_EXITED, e -> helpLinkUser.getTooltip().hide());
+        helpLinkUser.addEventHandler(MouseEvent.MOUSE_EXITED, evt -> helpLinkUser.getTooltip().hide());
         helpLinkUser.setTooltip(new Tooltip(HELP_USER_TOOLTIP));
         
         //Escribe las preferencias guardadas
@@ -169,6 +209,7 @@ public class AjustesController implements Initializable {
         }
         textVPN.setText(vpn);
         String drive = acceso.getDrive();
+        
         //Si la lista lo contiene, selecciona la unidad guardada (o 'W:' por defecto si no hay guardada ninguna unidad)
         if (dataDrives.contains(drive)) {
             comboDrive.getSelectionModel().select(drive);
@@ -176,7 +217,10 @@ public class AjustesController implements Initializable {
             comboDrive.getSelectionModel().selectFirst();
         }
         
+        //Si el dominio guardado es ALUMNOS, marca el RadioButton adecuado
+        if (acceso.getDomain() == Dominio.ALUMNOS) alumnoRadioButton.setSelected(true);
+        
         //Hace que al abrir la ventana, el focus lo tenga el botón de aceptar
-        Platform.runLater(() -> buttonOK.requestFocus());
+        Platform.runLater(() -> OKButton.requestFocus());
     }    
 }

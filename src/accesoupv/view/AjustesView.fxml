@@ -8,8 +8,10 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -31,7 +33,8 @@
           <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
           <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+          <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
             <Text fill="GREY" strokeType="OUTSIDE" strokeWidth="0.0" text="Conexión VPN">
@@ -68,26 +71,41 @@
                </children>
             </HBox>
             <ComboBox fx:id="comboDrive" prefWidth="75.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+            <Label text="Dominio:" GridPane.rowIndex="5" />
+            <HBox alignment="CENTER_LEFT" spacing="20.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
+               <children>
+                  <RadioButton fx:id="alumnoRadioButton" mnemonicParsing="false" text="Alumno">
+                     <toggleGroup>
+                        <ToggleGroup fx:id="dominio" />
+                     </toggleGroup>
+                  </RadioButton>
+                  <RadioButton layoutX="10.0" layoutY="10.0" mnemonicParsing="false" selected="true" text="UPVNET" toggleGroup="$dominio" />
+               </children>
+            </HBox>
          </children>
          <BorderPane.margin>
-            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+            <Insets bottom="10.0" left="20.0" right="20.0" top="20.0" />
          </BorderPane.margin>
       </GridPane>
    </center>
    <bottom>
-      <VBox alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
+      <VBox alignment="CENTER" spacing="15.0" BorderPane.alignment="CENTER">
          <children>
             <Text fx:id="textWarningVPN" fill="GREY" strokeType="OUTSIDE" strokeWidth="0.0" text="El cambio a la VPN se realizará la próxima vez que accedas a la aplicación." visible="false" />
-            <HBox alignment="BOTTOM_CENTER" spacing="30.0">
+            <HBox alignment="BOTTOM_CENTER" spacing="50.0">
                <children>
-                  <Button fx:id="buttonOK" defaultButton="true" mnemonicParsing="false" onAction="#savePrefs" text="Aceptar" />
+                  <Button fx:id="resetButton" mnemonicParsing="false" text="Reestablecer" />
+                  <Button fx:id="OKButton" defaultButton="true" mnemonicParsing="false" onAction="#savePrefs" text="Aceptar" />
                   <Button cancelButton="true" mnemonicParsing="false" onAction="#closeDialogue" text="Cancelar" />
                </children>
-               <padding>
-                  <Insets bottom="10.0" />
-               </padding>
+               <VBox.margin>
+                  <Insets />
+               </VBox.margin>
             </HBox>
          </children>
+         <BorderPane.margin>
+            <Insets bottom="10.0" />
+         </BorderPane.margin>
       </VBox>
    </bottom>
    <top>
