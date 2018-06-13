@@ -5,8 +5,6 @@
  */
 package accesoupv.model.tasks;
 
-import java.io.IOException;
-import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -18,31 +16,18 @@ import javafx.scene.layout.VBox;
  *
  * @author Alejandro
  */
-public abstract class AccesoTask extends Task<Void> {
+public abstract class AlertingTask extends Task<Void> {
     
     //Timeout
     public static final int PROCESS_TIMEOUT = 5000; //5 seconds
     
     private String errorMsg;
     protected boolean showError = true;
-    protected boolean exitOnFailed = false;
-    //Whether the thing it is accessing to should be connected or disconnected after the execution of the task.
-    protected final boolean connecting;
-    
-    public AccesoTask(boolean state) {
-        connecting = state;
-    }
     
     @Override
-    protected void failed() {
-        if (exitOnFailed) System.exit(-1);
-    }
-    
-    @Override
-    protected Void call() throws Exception {
+    protected final Void call() throws Exception {
         try {
-            if (connecting) connect();
-            else disconnect();
+            doTask();
         } catch (Exception ex) {
             //Antes de que la task termine y se considere como 'failed', muestra el mensaje de error si su flag (showError) lo habilita,
             //y después vuelve a lanzar la excepción para que los demás la traten debidamente
@@ -63,13 +48,12 @@ public abstract class AccesoTask extends Task<Void> {
         return null;
     }
     
-    protected abstract void connect() throws Exception;
-    protected abstract void disconnect() throws Exception;
+    protected abstract void doTask() throws Exception;
     
     //Getters
     public String getErrorMessage() { return errorMsg; }   
     public Alert getErrorAlert() { return getErrorAlert(getException()); }
-    protected Alert getErrorAlert(Throwable exception) {
+    protected final Alert getErrorAlert(Throwable exception) {
         Alert errorAlert = new Alert(Alert.AlertType.ERROR, errorMsg);
         errorAlert.setHeaderText(null);
         String errorOutput = (exception == null) ? null : exception.getMessage();
@@ -80,35 +64,10 @@ public abstract class AccesoTask extends Task<Void> {
         }
         return errorAlert;
     }
+    
+    //Setters
     public void showErrorMessage(boolean show) { showError = show; }
-    public void setExitOnFailed(boolean exit) { exitOnFailed = exit; }
     protected void updateErrorMsg(String errMsg) { errorMsg = errMsg; }
     
-    //Métodos estáticos de utilidad para tratar procesos
-    public static void waitAndCheck(Process p) throws Exception {
-        waitAndCheck(p, 0);
-    }
-    public static void waitAndCheck(Process p, int tMin) throws Exception {
-        waitAndCheck(p, tMin, true);
-    }
-    public static void waitAndCheck(Process p, int tMin, boolean showExMsg) throws Exception {
-        if (tMin > 0) Thread.sleep(tMin);
-        int exitValue = p.waitFor();
-        if (exitValue != 0) {
-            String msg = showExMsg ? getOutput(p) : "";
-            throw new IOException(msg);
-        }
-    }
-    public static String getOutput(Process p) throws IOException {
-        String res = "";
-        try (Scanner out = new Scanner(p.getInputStream())) {
-            while (out.hasNext()) { res += out.nextLine() + "\n"; }
-        }
-        return res;
-    }
-    public static Process startProcess(String... args) throws IOException {
-        ProcessBuilder builder = new ProcessBuilder(args);
-        builder.redirectErrorStream(true);
-        return builder.start();
-    }
+    
 }

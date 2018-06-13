@@ -22,7 +22,7 @@
               <items>
                   <Menu mnemonicParsing="false" text="Disco W">
                      <items>
-                      <MenuItem mnemonicParsing="false" onAction="#accessW" text="Acceder">
+                      <MenuItem fx:id="menuAccessW" mnemonicParsing="false" text="Acceder">
                            <accelerator>
                               <KeyCodeCombination alt="UP" code="A" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator>
@@ -77,7 +77,7 @@
                         <Font size="18.0" />
                      </font>
                   </Text>
-                  <Button mnemonicParsing="false" onAction="#accessW" text="Acceder" textFill="#3a7c0b">
+                  <Button fx:id="buttonAccessW" mnemonicParsing="false" text="Acceder" textFill="#3a7c0b">
                      <font>
                         <Font size="18.0" />
                      </font>

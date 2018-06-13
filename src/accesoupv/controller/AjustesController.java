@@ -25,6 +25,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.MenuItem;
@@ -71,6 +72,8 @@ public class AjustesController implements Initializable {
     private Button resetButton;
     @FXML
     private Button OKButton;
+    @FXML
+    private CheckBox driveCheckBox;
     
     //Constants (Messages)
     public static final String SUCCESS_MESSAGE = "El archivo ha sido creado con éxito.\n¿Desea abrir la carpeta en la cual ha sido guardado?";
@@ -84,19 +87,21 @@ public class AjustesController implements Initializable {
             "Formato:\n"
             + "Siendo tu usuario completo: \"usuario@dominio.upv.es\"\n"
             + "Escriba: \"usuario\"";
+    public static final String DRIVE_TOOLTIP = 
+            "Si te es indiferente la unidad en la que se cree la conexión con el Disco W, haz clic aquí.\n"
+            + "(la conexión se creará en la primera unidad disponible)";
     
+    //List with available drives for comboDrive
     private ObservableList<String> dataDrives;
     //AccesoUPV Instance
     private static final AccesoUPV acceso = AccesoUPV.getInstance();
     
     @FXML
     private void savePrefs(ActionEvent evt) {
-            acceso.setVPN(textVPN.getText());
-            acceso.setDrive(comboDrive.getValue());
-            acceso.setUser(textUser.getText());
-            Dominio dom = alumnoRadioButton.isSelected() ? Dominio.ALUMNOS : Dominio.UPVNET;
-            acceso.setDomain(dom);
-            acceso.savePrefs();
+            if (VPNChanged()) acceso.setVPN(textVPN.getText());
+            if (userChanged()) acceso.setUser(textUser.getText());
+            if (driveChanged()) acceso.setDrive(driveCheckBox.isSelected() ? "*" : comboDrive.getValue());
+            if (domainChanged()) acceso.setDomain(alumnoRadioButton.isSelected() ? Dominio.ALUMNOS : Dominio.UPVNET);
             //Cierra la ventana de ajustes
             ((Node) evt.getSource()).getScene().getWindow().hide();
     }
@@ -118,18 +123,32 @@ public class AjustesController implements Initializable {
         }
     }
     
-    private boolean anyChanges() {
+    private boolean VPNChanged() {
         String vpn = acceso.getVPN();
         if (vpn == null) vpn = "";
+        return !textVPN.getText().equals(vpn);
+    }
+    
+    private boolean userChanged() {
         String user = acceso.getUser();
         if (user == null) user = "";
-        
-        return !(textVPN.getText().equals(vpn)
-        && textUser.getText().equals(user)
-        && comboDrive.getSelectionModel().getSelectedItem().equals(acceso.getDrive())
-        //XNOR (Iguales -> true, Distintos -> false)
-        && (alumnoRadioButton.isSelected() == (acceso.getDomain() == Dominio.ALUMNOS))
-        );
+        return !textUser.getText().equals(user);
+    }
+    
+    private boolean driveChanged() {
+        String selectedItem = comboDrive.getSelectionModel().getSelectedItem();
+        return driveCheckBox.isSelected() 
+                ? !acceso.getDrive().equals("*") 
+                : selectedItem != null && !selectedItem.equals(acceso.getDrive());
+    }
+    
+    private boolean domainChanged() {
+        //XOR (Iguales -> false, Distintos -> true)
+        return alumnoRadioButton.isSelected() != (acceso.getDomain() == Dominio.ALUMNOS);
+    }
+    
+    private boolean anyChanges() {
+        return VPNChanged() || userChanged() || driveChanged() || domainChanged();
     }
     
     @FXML
@@ -208,14 +227,21 @@ public class AjustesController implements Initializable {
             vpn = "";
         }
         textVPN.setText(vpn);
-        String drive = acceso.getDrive();
         
+        String drive = acceso.getDrive();
+        //Por defecto se selecciona siempre el primer elemento de comboDrive
+        comboDrive.getSelectionModel().selectFirst();
+        //Si está en "indiferente" activa el checkbox
+        if (drive.equals("*")) driveCheckBox.setSelected(true);
         //Si la lista lo contiene, selecciona la unidad guardada (o 'W:' por defecto si no hay guardada ninguna unidad)
-        if (dataDrives.contains(drive)) {
+        else if (dataDrives.contains(drive)) {
             comboDrive.getSelectionModel().select(drive);
-        } else {
-            comboDrive.getSelectionModel().selectFirst();
         }
+        
+        //Si el checkbox de "unidad indiferente" está seleccionado, la comboBox se desactiva
+        comboDrive.disableProperty().bind(driveCheckBox.selectedProperty());        
+        
+        driveCheckBox.setTooltip(new Tooltip(DRIVE_TOOLTIP));
         
         //Si el dominio guardado es ALUMNOS, marca el RadioButton adecuado
         if (acceso.getDomain() == Dominio.ALUMNOS) alumnoRadioButton.setSelected(true);

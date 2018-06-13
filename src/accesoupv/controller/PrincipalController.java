@@ -6,14 +6,11 @@
 package accesoupv.controller;
 
 import accesoupv.model.AccesoUPV;
-import java.awt.Desktop;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.beans.binding.Bindings;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -56,13 +53,16 @@ public class PrincipalController implements Initializable {
     private Button buttonLinuxDSIC;
     @FXML
     private Button buttonWinDSIC;
+    @FXML
+    private MenuItem menuAccessW;
+    @FXML
+    private Button buttonAccessW;
     
     //Messages
-    public static final String WARNING_FOLDER_W_MSG = "El disco ha sido conectado correctamente, pero no se ha podido abrir la carpeta.\n"
-            + "Ábrala manualmente.";
     public static final String ERROR_DSIC_MSG = "No se ha podido acceder al servidor DSIC.";
     //AccesoUPV Instance
     private static final AccesoUPV acceso = AccesoUPV.getInstance();
+    
     
     private void showAjustes() {
         if (acceso.isWConnected()) {
@@ -147,18 +147,6 @@ public class PrincipalController implements Initializable {
         }
     }
     
-    @FXML
-    private void accessW(ActionEvent evt) {
-        boolean succeeded = acceso.connectW();
-        if (succeeded) {
-            try {
-                Desktop.getDesktop().open(new File(acceso.getDrive()));
-            } catch (IOException ex) {
-                new Alert(Alert.AlertType.WARNING, WARNING_FOLDER_W_MSG).show();
-            }
-        }
-    }
-    
     private void accessDSIC(String server) {
         try {
             new ProcessBuilder("cmd.exe", "/c", "mstsc /v:" + server).start();
@@ -181,6 +169,9 @@ public class PrincipalController implements Initializable {
         menuAyudaVPN.setOnAction(e -> showAyuda("VPN"));
         
         menuAjustes.setOnAction(e -> showAjustes());
+        
+        buttonAccessW.setOnAction(e -> acceso.accessW());
+        menuAccessW.setOnAction(e -> acceso.accessW());
         
         buttonDisconnectW.setOnAction(e -> acceso.disconnectW());
         menuDisconnectW.setOnAction(e -> acceso.disconnectW());
