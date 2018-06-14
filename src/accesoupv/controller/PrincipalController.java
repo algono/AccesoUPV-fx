@@ -65,18 +65,6 @@ public class PrincipalController implements Initializable {
     
     
     private void showAjustes() {
-        if (acceso.isWConnected()) {
-            String wMsg = "No se permite acceder a los ajustes mientras el disco W se encuentre conectado.\n\n"
-                    + "¿Desea desconectarlo?";
-            Alert warningW = new Alert(Alert.AlertType.WARNING, wMsg);
-            warningW.setTitle("Disco W Conectado");
-            warningW.setHeaderText(null);
-            warningW.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-            Optional<ButtonType> res = warningW.showAndWait();
-            if (res.isPresent() && res.get() == ButtonType.OK) {
-                if (!acceso.disconnectW()) return;
-            } else return;
-        }
         try {
             Stage stage = new Stage();
             FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/AjustesView.fxml"));

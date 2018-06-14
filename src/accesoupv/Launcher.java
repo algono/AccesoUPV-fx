@@ -25,6 +25,7 @@ public class Launcher extends Application {
         
         FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/PrincipalView.fxml"));
         Parent root = (Parent) myLoader.load();
+        stage.setResizable(false);
         Scene scene = new Scene(root);
         stage.setTitle("Acceso UPV");
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/icons/app-icon.png")));

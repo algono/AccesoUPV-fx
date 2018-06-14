@@ -76,7 +76,7 @@ public final class AccesoUPV {
     public void loadPrefs() {
         VPN = prefs.get("VPN", null);
         user = prefs.get("user", null);
-        drive = prefs.get("drive", "W:"); //Drive by default is W:
+        drive = prefs.get("drive", "*");
         domain = prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS;
     }
     
@@ -85,7 +85,7 @@ public final class AccesoUPV {
         else prefs.put("VPN", VPN);
         if (user == null) prefs.remove("user");
         else prefs.put("user", user);
-        if (drive == null || drive.equals("W:")) prefs.remove("drive");
+        if (drive == null || drive.equals("*")) prefs.remove("drive");
         else prefs.put("drive", drive);
         if (domain == Dominio.ALUMNOS) prefs.remove("non-student");
         else prefs.putBoolean("non-student", true);
@@ -110,41 +110,30 @@ public final class AccesoUPV {
     
     public boolean isVPNConnected() { return VPNService.isConnected(); }
     public boolean isWConnected() { return WService.isConnected(); }
-    
-    protected void checkVPN() {
-        if (isVPNConnected()) {
-            throw new IllegalStateException("You are not allowed to change variables related to the VPN while it is connected.");
-        }
+      
+    public void updateVPN() {
+        VPNService.setVPN(VPN);
     }
-    //If the W drive is connected, throw an Exception
-    protected void checkW() {
-        if (isWConnected()) {
-            throw new IllegalStateException("You are not allowed to change variables related to the W drive while it is connected.");
-        }
+    public void updateW() {
+        WService.setUser(user);
+        WService.setDrive(drive);
+        WService.setDomain(domain);
     }
     
     //Setters
     public void setVPN(String v) {
-        checkVPN();
         v = v.trim();
-        VPN = v.isEmpty() ? null : v;
-        VPNService.setVPN(VPN);
+        VPN = v.isEmpty() ? null : v;  
     }
     public void setUser(String u) {
-        checkW();
         u = u.trim();
-        user = u.isEmpty() ? null : u;
-        WService.setUser(user);
+        user = u.isEmpty() ? null : u; 
     }
     public void setDrive(String d) {
-        checkW();
         drive = d;
-        WService.setDrive(drive);
     }
     public void setDomain(Dominio d) {
-        checkW();
-        domain = d;
-        WService.setDomain(domain);
+        domain = d;        
     }
     
     //Properties
@@ -154,12 +143,12 @@ public final class AccesoUPV {
     //Checks if the drive letter is currently being used (if it is "*", it is never being used, because the system picks the first available drive)
     public boolean isDriveUsed() { return drive.equals("*") ? false : new File(drive).exists(); }
     
-    public static List<String> getAvailableDrives() {
+    public List<String> getAvailableDrives() {
         List<String> drives = new ArrayList<>();
         char letter = 'Z';
         while (letter >= 'D') {
             String d = letter + ":";
-            if (!new File(d).exists()) drives.add(d);
+            if (!new File(d).exists() || (isWConnected() && d.equals(drive))) drives.add(d);
             letter--;
         }
         return drives;
@@ -196,7 +185,8 @@ public final class AccesoUPV {
      */
     public boolean connectVPN() {
         if (isVPNConnected()) return true; //If the VPN is already connected, it's not necessary to connect it again
-        if (VPN == null) return false;   
+        if (VPN == null) return false;
+        updateVPN();
         LoadingStage stage = new LoadingStage(VPNService);
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
@@ -300,6 +290,7 @@ public final class AccesoUPV {
             if (!res.isPresent() || res.get() != ButtonType.OK) return false;
             setUserDialog();
         }
+        updateW();
         LoadingStage stage = new LoadingStage(WService);
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();

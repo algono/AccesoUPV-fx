@@ -71,7 +71,7 @@
                   </Hyperlink>
                </children>
             </HBox>
-            <HBox alignment="CENTER_LEFT" spacing="20.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
+            <HBox fx:id="driveBox" alignment="CENTER_LEFT" spacing="20.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
                <children>
                   <ComboBox fx:id="comboDrive" prefWidth="75.0" />
                   <CheckBox fx:id="driveCheckBox" mnemonicParsing="false" text="Indiferente" />
@@ -95,9 +95,9 @@
       </GridPane>
    </center>
    <bottom>
-      <VBox alignment="CENTER" spacing="15.0" BorderPane.alignment="CENTER">
+      <VBox alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
          <children>
-            <Text fx:id="textWarningVPN" fill="GREY" strokeType="OUTSIDE" strokeWidth="0.0" text="El cambio a la VPN se realizará la próxima vez que accedas a la aplicación." visible="false" />
+            <Text fx:id="textWarningConnected" fill="GREY" strokeType="OUTSIDE" strokeWidth="0.0" text="Los cambios a un servicio ya conectado se aplicarán una vez lo reconectes." />
             <HBox alignment="BOTTOM_CENTER" spacing="50.0">
                <children>
                   <Button fx:id="resetButton" mnemonicParsing="false" text="Reestablecer" />
