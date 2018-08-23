@@ -77,7 +77,7 @@ public class AccesoWService extends AccesoService {
                     } else {
                         throw new IOException(out);
                     }
-                } else if (drive.equals("*")) {
+                } else if (drive.equals("*")) { //Si la unidad no estaba determinada, la obtiene del output del proceso.
                     String out = ProcessUtils.getOutput(p);
                     int indexOf = out.indexOf(':');
                     drive = out.substring(indexOf-1, indexOf+1);

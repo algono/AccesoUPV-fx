@@ -302,11 +302,12 @@ public final class AccesoUPV {
     //DISCONNECTING METHODS
     public boolean shutdown() {
         LoadingStage stage = new LoadingStage();
-        if (isWConnected()) stage.getQueue().add(WService);
-        if (isVPNConnected()) { stage.getQueue().add(VPNService); }
-        //Si la cola no está vacía (es decir, tiene que realizar alguna tarea), la/las realiza
-        boolean succeeded = stage.getQueue().isEmpty();
-        if (!succeeded) {
+        List<Worker> workerList = stage.getLoadingService().getWorkerList();
+        if (isWConnected()) workerList.add(WService);
+        if (isVPNConnected()) { workerList.add(VPNService); }
+        //Si tiene que realizar alguna tarea, la realiza (si no, devuelve true)
+        boolean succeeded = true;
+        if (isWConnected() || isVPNConnected()) {
             stage.showAndWait();
             succeeded = stage.isSucceeded();
         }

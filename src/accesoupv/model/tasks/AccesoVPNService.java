@@ -60,16 +60,16 @@ public class AccesoVPNService extends AccesoService {
                 //Si el proceso fue correctamente pero la VPN no esta conectada, se entiende que el usuario canceló la operación
                 p = ProcessUtils.startProcess("rasdial.exe");
                 ProcessUtils.waitAndCheck(p);
-                if (!ProcessUtils.getOutput(p).contains(VPN)) cancel();
                 //Si el usuario no canceló la operación (lo cual implica que la VPN se conectó con éxito), continúa.
-                if (!isCancelled()) {
+                if (ProcessUtils.getOutput(p).contains(VPN)) {
                     //Si desde la VPN a la que se conectó no se puede acceder a la UPV, se entiende que ha elegido una incorrecta.
                     boolean reachable = false;
                     try {
                         reachable = InetAddress.getByName("www.upv.es").isReachable(PING_TIMEOUT);
                     } finally {
-                        //Tanto si no era alcanzable como si hubo un error al realizar el ping, desconecta la VPN por si acaso.
-                        if (!reachable) {
+                        //Tanto si no era alcanzable como si hubo un error al realizar el ping
+                        //(o si fue cancelado desde fuera), desconecta la VPN por si acaso.
+                        if (!reachable || isCancelled()) {
                             p = ProcessUtils.startProcess("rasdial.exe", "\"" + VPN + "\"", "/DISCONNECT");
                             ProcessUtils.waitAndCheck(p);
                         }
@@ -79,6 +79,8 @@ public class AccesoVPNService extends AccesoService {
                         updateErrorMsg(ERROR_INVALID_VPN);
                         throw new IllegalArgumentException();
                     }
+                } else {
+                    cancel(); 
                 }
             }
             
