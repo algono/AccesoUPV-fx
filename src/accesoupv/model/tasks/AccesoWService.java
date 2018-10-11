@@ -66,10 +66,10 @@ public class AccesoWService extends AccesoService {
                 updateErrorMsg(ERROR_W);
                 updateMessage("Accediendo al disco W...");
                 Process p = ProcessUtils.startProcess("cmd.exe", "/c", "net", "use", drive, getDirW());
-                Thread.sleep(1000);
-                int exitValue = p.waitFor();
-                if (exitValue != 0) {
-                    String out = ProcessUtils.getOutput(p);
+                try {
+                    ProcessUtils.waitAndCheck(p, delay);
+                } catch (IOException ex) {
+                    String out = ex.getMessage();
                     // 55 - Error del sistema "El recurso no se encuentra disponible" (es decir, la dirW no existe, por tanto, el usuario no es válido).
                     if (out.contains("55")) {
                         updateErrorMsg(ERROR_INVALID_USER);
@@ -77,7 +77,8 @@ public class AccesoWService extends AccesoService {
                     } else {
                         throw new IOException(out);
                     }
-                } else if (drive.equals("*")) { //Si la unidad no estaba determinada, la obtiene del output del proceso.
+                } 
+                if (drive.equals("*")) { //Si la unidad no estaba determinada, la obtiene del output del proceso.
                     String out = ProcessUtils.getOutput(p);
                     int indexOf = out.indexOf(':');
                     drive = out.substring(indexOf-1, indexOf+1);
@@ -94,7 +95,7 @@ public class AccesoWService extends AccesoService {
                 updateErrorMsg(ERROR_DIS_W);
                 updateMessage("Desconectando Disco W...");
                 Process p = ProcessUtils.startProcess("cmd.exe", "/c", "net", "use", drive, "/delete");
-                Thread.sleep(1000);
+                Thread.sleep(delay);
                 int exitValue = p.waitFor();
                 if (exitValue != 0) {
                     String out = ProcessUtils.getOutput(p);

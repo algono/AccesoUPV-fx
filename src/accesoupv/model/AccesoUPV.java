@@ -303,7 +303,7 @@ public final class AccesoUPV {
     public boolean shutdown() {
         LoadingStage stage = new LoadingStage();
         List<Worker> workerList = stage.getLoadingService().getWorkerList();
-        if (isWConnected()) workerList.add(WService);
+        if (isWConnected()) { workerList.add(WService); WService.setDelay(1000); }
         if (isVPNConnected()) { workerList.add(VPNService); }
         //Si tiene que realizar alguna tarea, la realiza (si no, devuelve true)
         boolean succeeded = true;
@@ -317,6 +317,7 @@ public final class AccesoUPV {
     public boolean disconnectW() {
         boolean succeeded = true;
         if (isWConnected()) {
+            WService.setDelay(0);
             LoadingStage stage = new LoadingStage(WService);
             stage.showAndWait();
             succeeded = stage.isSucceeded();
