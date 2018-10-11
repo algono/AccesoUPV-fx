@@ -62,7 +62,6 @@ public final class AccesoUPV {
     private AccesoUPV() {
         loadPrefs();
         VPNService = new AccesoVPNService(VPN);
-        VPNService.setOnFailed((evt) -> System.exit(-1));
         WService = new AccesoWService(user, drive, domain);
         //Whenever the application is going to exit, saves prefs
         Runtime.getRuntime().addShutdownHook(new Thread(() -> savePrefs()));

@@ -25,7 +25,8 @@ public class AccesoVPNService extends AccesoService {
     //Error messages
     public static final String ERROR_CON_VPN
             = "Se ha producido un error al tratar de conectarse a la VPN.\n\n"
-            + "Compruebe que el nombre de la VPN está bien escrito y vuelva a intentarlo.\n ";
+            + "Compruebe que tiene conexión a Internet,\n"
+            + "que el nombre de la VPN está bien escrito\ny vuelva a intentarlo.\n ";
     
     public static final String ERROR_INVALID_VPN = 
             "La VPN proporcionada no es válida, pues no es capaz de acceder a la UPV.\n"
