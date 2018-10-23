@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -169,6 +170,8 @@ public class PrincipalController implements Initializable {
         menuDisconnectW.disableProperty().bind(Bindings.not(acceso.connectedWProperty()));
         
         //Si no está ya conectado a la UPV, trata de conectarse a la VPN
+        Platform.setImplicitExit(false); //Se asegura de que el programa no se cierre solo
         if (!acceso.isConnectedToUPV()) connectVPN();
+        Platform.runLater(() -> Platform.setImplicitExit(true));
     }
 }
