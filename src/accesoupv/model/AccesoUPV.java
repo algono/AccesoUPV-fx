@@ -77,7 +77,7 @@ public final class AccesoUPV {
     }
     //Load and save variables (prefs)
     public void loadPrefs() {
-        prefs.get("VPN", null);
+        VPNService.setVPN(prefs.get("VPN", null));
         String user = prefs.get("user", null);
         WService.setUser(user);
         WService.setDrive(prefs.get("driveW", "*"));
