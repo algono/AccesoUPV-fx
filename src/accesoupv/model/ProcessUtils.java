@@ -6,6 +6,8 @@
 package accesoupv.model;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -36,6 +38,9 @@ public final class ProcessUtils {
         return res;
     }
     public static Process startProcess(String... args) throws IOException {
+        return startProcess(Arrays.asList(args));
+    }
+    public static Process startProcess(List<String> args) throws IOException {
         ProcessBuilder builder = new ProcessBuilder(args);
         builder.redirectErrorStream(true);
         return builder.start();

@@ -29,13 +29,13 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -52,7 +52,9 @@ public class AjustesController implements Initializable {
     @FXML
     private TextField textVPN;
     @FXML
-    private ComboBox<String> comboDrive;
+    private ComboBox<String> comboDriveW;
+    @FXML
+    private ComboBox<String> comboDriveDSIC;
     @FXML
     private TextField textUser;
     @FXML
@@ -74,10 +76,12 @@ public class AjustesController implements Initializable {
     @FXML
     private Button OKButton;
     @FXML
-    private CheckBox driveCheckBox;
+    private CheckBox driveWCheckBox;
     @FXML
-    private HBox driveBox;
-        
+    private CheckBox driveDSICCheckBox;
+    @FXML
+    private PasswordField passDriveDSIC;
+    
     //Constants (Messages)
     public static final String SUCCESS_MESSAGE = "El archivo ha sido creado con éxito.\n¿Desea abrir la carpeta en la cual ha sido guardado?";
     public static final String ERROR_MESSAGE = "Ha habido un error al crear el programa. Vuelva a intentarlo.";
@@ -91,11 +95,11 @@ public class AjustesController implements Initializable {
             + "Siendo tu usuario completo: \"usuario@dominio.upv.es\"\n"
             + "Escriba: \"usuario\"";
     public static final String DRIVE_TOOLTIP = 
-            "Si te es indiferente la unidad en la que se cree la conexión con el Disco W, habilita esta opción.\n"
+            "Si te es indiferente la unidad en la que se cree la conexión con el disco, habilita esta opción.\n"
             + "(la conexión se creará en la primera unidad disponible)";
     
-    //List with available drives for comboDrive
-    private ObservableList<String> dataDrives;
+    //Lists with available drives for comboDrives
+    private ObservableList<String> dataDrivesW, dataDrivesDSIC;
     //AccesoUPV Instance
     private static final AccesoUPV acceso = AccesoUPV.getInstance();
     
@@ -103,8 +107,10 @@ public class AjustesController implements Initializable {
     private void savePrefs(ActionEvent evt) {
             if (VPNChanged()) acceso.setVPN(textVPN.getText());
             if (userChanged()) acceso.setUser(textUser.getText());
-            if (driveChanged()) acceso.setDrive(driveCheckBox.isSelected() ? "*" : comboDrive.getValue());
+            if (driveWChanged()) acceso.setDriveW(driveWCheckBox.isSelected() ? "*" : comboDriveW.getValue());
             if (domainChanged()) acceso.setDomain(alumnoRadioButton.isSelected() ? Dominio.ALUMNOS : Dominio.UPVNET);
+            if (driveDSICChanged()) acceso.setDriveDSIC(driveDSICCheckBox.isSelected() ? "*" : comboDriveDSIC.getValue());
+            if (passDSICChanged()) acceso.setPassDSIC(passDriveDSIC.getText());
             //Cierra la ventana de ajustes
             ((Node) evt.getSource()).getScene().getWindow().hide();
     }
@@ -128,21 +134,31 @@ public class AjustesController implements Initializable {
     
     private boolean VPNChanged() {
         String vpn = acceso.getVPN();
-        if (vpn == null) vpn = "";
-        return !textVPN.getText().equals(vpn);
+        return !textVPN.getText().equals(vpn == null ? "" : vpn);
     }
     
     private boolean userChanged() {
         String user = acceso.getUser();
-        if (user == null) user = "";
-        return !textUser.getText().equals(user);
+        return !textUser.getText().equals(user == null ? "" : user);
     }
     
-    private boolean driveChanged() {
-        String selectedItem = comboDrive.getSelectionModel().getSelectedItem();
-        return driveCheckBox.isSelected() 
-                ? !acceso.getDrive().equals("*") 
-                : selectedItem != null && !selectedItem.equals(acceso.getDrive());
+    private boolean driveWChanged() {
+        String selectedItem = comboDriveW.getSelectionModel().getSelectedItem();
+        return driveWCheckBox.isSelected() 
+                ? !acceso.getDriveW().equals("*") 
+                : selectedItem != null && !selectedItem.equals(acceso.getDriveW());
+    }
+    
+    private boolean driveDSICChanged() {
+        String selectedItem = comboDriveDSIC.getSelectionModel().getSelectedItem();
+        return driveDSICCheckBox.isSelected() 
+                ? !acceso.getDriveDSIC().equals("*") 
+                : selectedItem != null && !selectedItem.equals(acceso.getDriveDSIC());
+    }
+    
+    private boolean passDSICChanged() {
+        String pass = acceso.getPassDSIC();
+        return !passDriveDSIC.getText().equals(pass == null ? "" : pass);
     }
     
     private boolean domainChanged() {
@@ -151,7 +167,7 @@ public class AjustesController implements Initializable {
     }
     
     private boolean anyChanges() {
-        return VPNChanged() || userChanged() || driveChanged() || domainChanged();
+        return VPNChanged() || userChanged() || driveWChanged() || driveDSICChanged() || domainChanged();
     }
     
     @FXML
@@ -165,6 +181,28 @@ public class AjustesController implements Initializable {
         ((Node) evt.getSource()).getScene().getWindow().hide();
     }
     
+    private void initDriveBoxes(String drive, ComboBox<String> c, CheckBox ch, ObservableList<String> data) {
+        c.setItems(data);
+        //Si el comboBox no tiene unidades disponibles, selecciona el checkBox y deshabilita ambos
+        if (data.isEmpty()) {
+            ch.setSelected(true);
+            c.setDisable(true); ch.setDisable(true);
+        }
+        //Por defecto se selecciona siempre el primer elemento de comboDrive
+        c.getSelectionModel().selectFirst();
+        //Si está en "indiferente" activa el checkbox
+        if (drive.equals("*")) ch.setSelected(true);
+        //Si la lista lo contiene, selecciona la unidad guardada
+        else if (data.contains(drive)) {
+            c.getSelectionModel().select(drive);
+        }
+        
+        //Si el checkbox de "unidad indiferente" está seleccionado, la comboBox se desactiva (y viceversa)
+        c.disableProperty().bind(ch.selectedProperty());
+        
+        ch.setTooltip(new Tooltip(DRIVE_TOOLTIP));
+    }
+    
     /**
      * Initializes the controller class.
      * @param url
@@ -173,21 +211,20 @@ public class AjustesController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         //Crea la lista de unidades disponibles para el disco W
-        dataDrives = FXCollections.observableList(acceso.getAvailableDrives());
-        comboDrive.setItems(dataDrives);
-        //Si el comboBox no tiene unidades disponibles, selecciona el checkBox y deshabilita la HBox entera
-        if (dataDrives.isEmpty()) {
-            driveCheckBox.setSelected(true);
-            driveBox.setDisable(true);
-        }
+        dataDrivesW = FXCollections.observableList(acceso.getAvailableDrivesW());
+        dataDrivesDSIC = FXCollections.observableList(acceso.getAvailableDrivesDSIC());
+        initDriveBoxes(acceso.getDriveW(), comboDriveW, driveWCheckBox, dataDrivesW);
+        initDriveBoxes(acceso.getDriveDSIC(), comboDriveDSIC, driveDSICCheckBox, dataDrivesDSIC);
         
         //Si se ha cambiado algún valor de un servicio que se encuentra conectado, muestra un mensaje.
         textWarningConnected.visibleProperty().bind(Bindings.createBooleanBinding(() ->
             (acceso.isVPNConnected() && VPNChanged())
-            || (acceso.isWConnected() && (userChanged() || driveChanged() || domainChanged()))
+            || (acceso.isWConnected() && (userChanged() || driveWChanged() || domainChanged()))
+            || (acceso.isDSICConnected() && (userChanged() || driveDSICChanged()))
         ,textVPN.textProperty(), textUser.textProperty(), 
-        comboDrive.getSelectionModel().selectedItemProperty(), driveCheckBox.selectedProperty(),
-        dominio.selectedToggleProperty()));
+        comboDriveW.getSelectionModel().selectedItemProperty(), driveWCheckBox.selectedProperty(),
+        comboDriveDSIC.getSelectionModel().selectedItemProperty(), driveDSICCheckBox.selectedProperty(),
+        passDriveDSIC.textProperty(), dominio.selectedToggleProperty()));
         
         menuAyuda.setOnAction(evt -> showAyuda(""));
         menuAyudaDSIC.setOnAction(evt -> showAyuda("DSIC"));
@@ -202,8 +239,9 @@ public class AjustesController implements Initializable {
             Optional<ButtonType> res = confirm.showAndWait();
             //Si confirma, resetea y cierra la ventana de ajustes
             if (res.isPresent() && res.get() == ButtonType.OK) {
-                acceso.reset();
-                acceso.disconnectVPN();
+                acceso.clearPrefs();
+                acceso.setSavePrefsOnExit(false);
+                acceso.shutdown();
                 System.exit(0);
             }
         });
@@ -225,6 +263,7 @@ public class AjustesController implements Initializable {
             user = "";
         }
         textUser.setText(user);
+        
         String vpn = acceso.getVPN();
         if (vpn == null) {
             Platform.runLater(() -> textVPN.requestFocus());
@@ -232,20 +271,12 @@ public class AjustesController implements Initializable {
         }
         textVPN.setText(vpn);
         
-        String drive = acceso.getDrive();
-        //Por defecto se selecciona siempre el primer elemento de comboDrive
-        comboDrive.getSelectionModel().selectFirst();
-        //Si está en "indiferente" activa el checkbox
-        if (drive.equals("*")) driveCheckBox.setSelected(true);
-        //Si la lista lo contiene, selecciona la unidad guardada
-        else if (dataDrives.contains(drive)) {
-            comboDrive.getSelectionModel().select(drive);
+        String pass = acceso.getPassDSIC();
+        if (pass == null) {
+            Platform.runLater(() -> passDriveDSIC.requestFocus());
+            pass = "";
         }
-        
-        //Si el checkbox de "unidad indiferente" está seleccionado, la comboBox se desactiva (y viceversa)
-        comboDrive.disableProperty().bind(driveCheckBox.selectedProperty());
-        
-        driveCheckBox.setTooltip(new Tooltip(DRIVE_TOOLTIP));
+        passDriveDSIC.setText(pass);
         
         //Si el dominio guardado es ALUMNOS, marca el RadioButton adecuado
         if (acceso.getDomain() == Dominio.ALUMNOS) alumnoRadioButton.setSelected(true);

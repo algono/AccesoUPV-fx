@@ -58,6 +58,14 @@ public class PrincipalController implements Initializable {
     private MenuItem menuAccessW;
     @FXML
     private Button buttonAccessW;
+    @FXML
+    private Button buttonAccessDSIC;
+    @FXML
+    private Button buttonDisconnectDSIC;
+    @FXML
+    private MenuItem menuAccessDSIC;
+    @FXML
+    private MenuItem menuDisconnectDSIC;
     
     //Messages
     public static final String ERROR_DSIC_MSG = "No se ha podido acceder al servidor DSIC.";
@@ -162,12 +170,20 @@ public class PrincipalController implements Initializable {
         buttonAccessW.setOnAction(e -> acceso.accessW());
         menuAccessW.setOnAction(e -> acceso.accessW());
         
+        buttonAccessDSIC.setOnAction(e -> acceso.accessDSIC());
+        menuAccessDSIC.setOnAction(e -> acceso.accessDSIC());
+        
         buttonDisconnectW.setOnAction(e -> acceso.disconnectW());
         menuDisconnectW.setOnAction(e -> acceso.disconnectW());
+        
+        buttonDisconnectDSIC.setOnAction(e -> acceso.disconnectDSIC());
+        menuDisconnectDSIC.setOnAction(e -> acceso.disconnectDSIC());
         
         //Setting bindings for buttons
         buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.connectedWProperty()));
         menuDisconnectW.disableProperty().bind(Bindings.not(acceso.connectedWProperty()));
+        buttonDisconnectDSIC.disableProperty().bind(Bindings.not(acceso.connectedDSICProperty()));
+        menuDisconnectDSIC.disableProperty().bind(Bindings.not(acceso.connectedDSICProperty()));
         
         //Si no está ya conectado a la UPV, trata de conectarse a la VPN
         Platform.setImplicitExit(false); //Se asegura de que el programa no se cierre solo

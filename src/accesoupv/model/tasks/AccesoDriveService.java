@@ -5,9 +5,11 @@
  */
 package accesoupv.model.tasks;
 
-import accesoupv.model.Dominio;
 import accesoupv.model.ProcessUtils;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,25 +22,23 @@ import javafx.scene.control.ButtonType;
  *
  * @author aleja
  */
-public class AccesoWService extends AccesoService {
+public abstract class AccesoDriveService extends AccesoService {
     //Error messages
-    public static final String ERROR_W = "Ha habido un error al tratar de conectarse al disco W. Pulse en 'Mostrar detalles' para más información.";
+    public static final String ERROR_CON = "Ha habido un error al tratar de conectarse al disco. Pulse en 'Mostrar detalles' para más información.";
     public static final String ERROR_INVALID_USER = "El usuario especificado no existe.";
-    public static final String ERROR_DIS_W = 
-            "Ha habido un error al desconectar el disco W.\n\n"
+    public static final String ERROR_DIS = 
+            "Ha habido un error al desconectar el disco.\n\n"
             + "Compruebe que no tenga abierto un archivo/carpeta del disco e inténtelo de nuevo.\n\n"
             + "Si el error persiste, desconéctelo manualmente.";
     public static final String OPEN_FILES_WARNING = 
-            "Existen archivos abiertos y/o búsquedas incompletas de directorios pendientes en el disco W. Si no los cierra antes de desconectarse, podría perder datos.\n\n"
+            "Existen archivos abiertos y/o búsquedas incompletas de directorios pendientes en el disco. Si no los cierra antes de desconectarse, podría perder datos.\n\n"
             + "¿Desea continuar la desconexión y forzar el cierre?";
-    private String user;
-    private String drive;
-    private Dominio dom;
     
-    public AccesoWService(String wUser, String wDrive, Dominio wDom) {
+    protected String user, drive, connectedDrive;
+    
+    public AccesoDriveService(String wUser, String wDrive) {
         user = wUser;
         drive = wDrive;
-        dom = wDom;
     }
 
     public String getUser() {
@@ -48,14 +48,19 @@ public class AccesoWService extends AccesoService {
     public String getDrive() {
         return drive;
     }
-
-    public Dominio getDomain() {
-        return dom;
-    }
     
+    public abstract String getDir();
     
-    public String getDirW() {
-        return "\\\\nasupv.upv.es\\" + dom.toString().toLowerCase() + "\\" + user.charAt(0) + "\\" + user;
+    public List<String> getExtraArgs() { return null; }
+    
+    protected String getConMsg() { return "Accediendo al disco..."; }
+    protected String getDisMsg() { return "Desconectando disco..."; }
+    
+    @Override
+    protected void succeeded() {
+        super.succeeded();
+        if (isConnected()) connectedDrive = drive;
+        else connectedDrive = null;
     }
     
     @Override
@@ -63,9 +68,12 @@ public class AccesoWService extends AccesoService {
         return new AlertingTask() {
             @Override
             protected void doTask() throws Exception {
-                updateErrorMsg(ERROR_W);
-                updateMessage("Accediendo al disco W...");
-                Process p = ProcessUtils.startProcess("cmd.exe", "/c", "net", "use", drive, getDirW());
+                updateErrorMsg(ERROR_CON);
+                updateMessage(getConMsg());
+                List<String> args = new ArrayList<>(Arrays.asList("cmd.exe", "/c", "net", "use", drive, getDir()));
+                List<String> extraArgs = getExtraArgs();
+                if (extraArgs != null) args.addAll(getExtraArgs());
+                Process p = ProcessUtils.startProcess(args);
                 try {
                     ProcessUtils.waitAndCheck(p, delay);
                 } catch (IOException ex) {
@@ -92,9 +100,9 @@ public class AccesoWService extends AccesoService {
         return new AlertingTask() {
             @Override
             protected void doTask() throws Exception {
-                updateErrorMsg(ERROR_DIS_W);
-                updateMessage("Desconectando Disco W...");
-                Process p = ProcessUtils.startProcess("cmd.exe", "/c", "net", "use", drive, "/delete");
+                updateErrorMsg(ERROR_DIS);
+                updateMessage(getDisMsg());
+                Process p = ProcessUtils.startProcess("cmd.exe", "/c", "net", "use", connectedDrive, "/delete");
                 Thread.sleep(delay);
                 int exitValue = p.waitFor();
                 if (exitValue != 0) {
@@ -127,19 +135,6 @@ public class AccesoWService extends AccesoService {
         };
     }
 
-    public void setUser(String user) {
-        checkConnected();
-        this.user = user;
-    }
-
-    public void setDrive(String drive) {
-        checkConnected();
-        this.drive = drive;
-    }
-
-    public void setDomain(Dominio domain) {
-        checkConnected();
-        dom = domain;
-    }
-    
+    public void setUser(String user) { this.user = user; }
+    public void setDrive(String drive) { this.drive = drive; }
 }

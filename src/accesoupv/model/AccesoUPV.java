@@ -5,10 +5,9 @@
  */
 package accesoupv.model;
 
-import accesoupv.model.tasks.AccesoWService;
-import accesoupv.model.tasks.CreateVPNTask;
-import accesoupv.model.tasks.AccesoVPNService;
 import accesoupv.controller.AjustesController;
+import accesoupv.model.tasks.*;
+import accesoupv.model.tasks.DiscosW.*;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
@@ -27,28 +26,28 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
+import lib.PasswordDialog;
 
 /**
  *
  * @author Alejandro
  */
 public final class AccesoUPV {
-    
-    //Variables
-    private String VPN, user, drive;
-    private Dominio domain; //alumnos o upvnet, depending whether it is a student or not
-    
+   
     //Preferences
     private final Preferences prefs = Preferences.userNodeForPackage(this.getClass());
+    //Boolean (Save prefs on exit)
+    private boolean savePrefsOnExit = true;
     //Services
     private final AccesoVPNService VPNService;
-    private final AccesoWService WService;
+    private final AccesoDriveWService WService;
+    private final AccesoDriveDSICService DSICService;
     //Servers
     public static final String LINUX_DSIC = "linuxdesktop.dsic.upv.es";
     public static final String WIN_DSIC = "windesktop.dsic.upv.es";
     public static final String UPV_SERVER = "www.upv.es";
     //Messages
-    public static final String WARNING_FOLDER_W_MSG = 
+    public static final String WARNING_FOLDER_DRIVE_MSG = 
             "El disco ha sido conectado correctamente, pero no se ha podido abrir la carpeta.\n"
             + "Ábrala manualmente.";
     //Timeout for checking if the user is already connected to the UPV (in ms)
@@ -60,11 +59,16 @@ public final class AccesoUPV {
     
     //Creating a new object loads all prefs
     private AccesoUPV() {
-        loadPrefs();
+        //Loads variables for the first time since execution started
+        String VPN = prefs.get("VPN", null);
+        String user = prefs.get("user", null);
+        String driveW = prefs.get("driveW", "*");
+        String driveDSIC = prefs.get("driveDSIC", "*");
+        Dominio domain = prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS;
+        
         VPNService = new AccesoVPNService(VPN);
-        WService = new AccesoWService(user, drive, domain);
-        //Whenever the application is going to exit, saves prefs
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> savePrefs()));
+        WService = new AccesoDriveWService(user, driveW, domain);
+        DSICService = new AccesoDriveDSICService(user, driveDSIC);
     }
     // Returns the object instance stored here
     public static AccesoUPV getInstance() {
@@ -73,81 +77,98 @@ public final class AccesoUPV {
     }
     //Load and save variables (prefs)
     public void loadPrefs() {
-        VPN = prefs.get("VPN", null);
-        user = prefs.get("user", null);
-        drive = prefs.get("drive", "*");
-        domain = prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS;
+        prefs.get("VPN", null);
+        String user = prefs.get("user", null);
+        WService.setUser(user);
+        WService.setDrive(prefs.get("driveW", "*"));
+        WService.setDomain(prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS);
+        DSICService.setUser(user);
+        DSICService.setDrive(prefs.get("driveDSIC", "*"));
     }
-    
     public void savePrefs() {
+        savePrefs(VPNService.getVPN(),
+                WService.getUser(), 
+                WService.getDrive(),
+                WService.getDomain(),
+                DSICService.getDrive()
+                );
+    }
+    protected void savePrefs(String VPN, String user, String driveW, Dominio domain, String driveDSIC) {
         if (VPN == null) prefs.remove("VPN");
         else prefs.put("VPN", VPN);
         if (user == null) prefs.remove("user");
         else prefs.put("user", user);
-        if (drive == null || drive.equals("*")) prefs.remove("drive");
-        else prefs.put("drive", drive);
+        if (driveW == null || driveW.equals("*")) prefs.remove("driveW");
+        else prefs.put("driveW", driveW);
+        if (driveDSIC == null || driveDSIC.equals("*")) prefs.remove("driveDSIC");
+        else prefs.put("driveDSIC", driveDSIC);
         if (domain == Dominio.ALUMNOS) prefs.remove("non-student");
         else prefs.putBoolean("non-student", true);
     }
     
-    protected void clearPrefs() {
+    public void clearPrefs() {
         prefs.remove("VPN");
         prefs.remove("user");
-        prefs.remove("drive");
+        prefs.remove("driveW");
+        prefs.remove("driveDSIC");
         prefs.remove("non-student");
-    }
-    public void reset() {
-        VPN = null; user = null; drive = null; domain = Dominio.ALUMNOS;
-        clearPrefs();
     }
     
     //Getters
-    public String getVPN() { return VPN; }
-    public String getUser() { return user; }
-    public String getDrive() { return drive; }
-    public Dominio getDomain() { return domain; }
+    public String getVPN() { return VPNService.getVPN(); }
+    public String getUser() { return WService.getUser(); }
+    public String getDriveW() { return WService.getDrive(); }
+    public Dominio getDomain() { return WService.getDomain(); }
+    public String getDriveDSIC() { return DSICService.getDrive(); }
+    public String getPassDSIC() { return DSICService.getPass(); }
+    public boolean getSavePrefsOnExit() { return savePrefsOnExit; }
     
     public boolean isVPNConnected() { return VPNService.isConnected(); }
     public boolean isWConnected() { return WService.isConnected(); }
-      
-    public void updateVPN() {
-        VPNService.setVPN(VPN);
-    }
-    public void updateW() {
-        WService.setUser(user);
-        WService.setDrive(drive);
-        WService.setDomain(domain);
-    }
+    public boolean isDSICConnected() { return DSICService.isConnected(); }
     
     //Setters
     public void setVPN(String v) {
         v = v.trim();
-        VPN = v.isEmpty() ? null : v;  
+        VPNService.setVPN(v.isEmpty() ? null : v);
     }
     public void setUser(String u) {
         u = u.trim();
-        user = u.isEmpty() ? null : u; 
+        String user = u.isEmpty() ? null : u;
+        WService.setUser(user);
+        DSICService.setUser(user);
     }
-    public void setDrive(String d) {
-        drive = d;
+    protected void setDrive(AccesoDriveService serv, String d) {
+        if (serv.equals(WService)) setDriveW(d);
+        else if (serv.equals(DSICService)) setDriveDSIC(d);
+        else throw new IllegalArgumentException("The drive doesn't exist");
     }
-    public void setDomain(Dominio d) {
-        domain = d;        
-    }
+    public void setDriveW(String d) { WService.setDrive(d); }
+    public void setDriveDSIC(String d) { DSICService.setDrive(d); }
+    public void setPassDSIC(String p) { DSICService.setPass(p); } 
+    public void setDomain(Dominio d) { WService.setDomain(d); }
+    public void setSavePrefsOnExit(boolean b) { savePrefsOnExit = b; }
     
     //Properties
     public ReadOnlyBooleanProperty connectedVPNProperty() { return VPNService.connectedProperty(); }
     public ReadOnlyBooleanProperty connectedWProperty() { return WService.connectedProperty(); }
+    public ReadOnlyBooleanProperty connectedDSICProperty() { return DSICService.connectedProperty(); }
     
     //Checks if the drive letter is currently being used (if it is "*", it is never being used, because the system picks the first available drive)
-    public boolean isDriveUsed() { return drive.equals("*") ? false : new File(drive).exists(); }
+    public static boolean isDriveUsed(String drive) { return drive.equals("*") ? false : new File(drive).exists(); }
+    public boolean isDriveWUsed() { return isDriveUsed(getDriveW()); }
+    public boolean isDriveDSICUsed() { return isDriveUsed(getDriveDSIC()); }
     
-    public List<String> getAvailableDrives() {
+    public List<String> getAvailableDrivesW() { return getAvailableDrives(WService); }
+    public List<String> getAvailableDrivesDSIC() { return getAvailableDrives(DSICService); }
+    protected List<String> getAvailableDrives(AccesoDriveService diskService) {
         List<String> drives = new ArrayList<>();
         char letter = 'Z';
         while (letter >= 'D') {
             String d = letter + ":";
-            if (!new File(d).exists() || (isWConnected() && d.equals(drive))) drives.add(d);
+            if (!new File(d).exists() 
+                || (diskService.isConnected() && d.equals(diskService.getDrive()))
+                ) drives.add(d);
             letter--;
         }
         return drives;
@@ -164,6 +185,7 @@ public final class AccesoUPV {
     }
     //VPN RELATED
     public boolean createVPN() {
+        String VPN = getVPN();
         Task<Void> createTask = new CreateVPNTask(VPN);
         LoadingStage stage = new LoadingStage(createTask);
         stage.showAndWait();
@@ -184,8 +206,7 @@ public final class AccesoUPV {
      */
     public boolean connectVPN() {
         if (isVPNConnected()) return true; //If the VPN is already connected, it's not necessary to connect it again
-        if (VPN == null) return false;
-        updateVPN();
+        if (getVPN() == null) return false;
         LoadingStage stage = new LoadingStage(VPNService);
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
@@ -201,7 +222,7 @@ public final class AccesoUPV {
         String inputContentText = (isNew)
                         ? "Introduzca el nombre de la nueva conexión VPN a la UPV: " 
                         : "Introduzca el nombre de la conexión VPN existente a la UPV: ";
-        TextInputDialog dialog = new TextInputDialog(VPN);
+        TextInputDialog dialog = new TextInputDialog(getVPN());
         dialog.setTitle("Introduzca nombre VPN");
         dialog.setHeaderText(null);
         dialog.setContentText(inputContentText);
@@ -211,7 +232,7 @@ public final class AccesoUPV {
     }
     
     public boolean setUserDialog() {
-        TextInputDialog dialog = new TextInputDialog(user);
+        TextInputDialog dialog = new TextInputDialog(getUser());
         dialog.setTitle("Introduzca usuario");
         dialog.setHeaderText(null);
         dialog.setContentText("Introduzca su usuario de la UPV: ");
@@ -220,27 +241,41 @@ public final class AccesoUPV {
         res.ifPresent((newUser) -> setUser(newUser));
         return res.isPresent();
     }
-    public boolean setDriveDialog() {
-        List<String> drives = getAvailableDrives();
-        String def = drives.contains("W:") ? "W:" : null;
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(def, drives);
-        dialog.setTitle("Elegir unidad Disco W");
+    public boolean setPassDialog() {
+        PasswordDialog dialog = new PasswordDialog(DSICService.getPass());
+        dialog.setTitle("Introduzca contraseña");
         dialog.setHeaderText(null);
-        dialog.setContentText("Elija una unidad para su Disco W: ");
+        dialog.setContentText("Introduzca su contraseña del DSIC: ");
+        
         Optional<String> res = dialog.showAndWait();
-        res.ifPresent((newDrive) -> setDrive(newDrive));
+        res.ifPresent((newPass) -> DSICService.setPass(newPass));
         return res.isPresent();
     }
-    // DISCO W RELATED
+    public boolean setDriveDialogW() { return setDriveDialog(WService); }
+    public boolean setDriveDialogDSIC() { return setDriveDialog(DSICService); }
+    protected boolean setDriveDialog(AccesoDriveService serv) {
+        List<String> drives = getAvailableDrives(serv);
+        String def = drives.contains("W:") ? "W:" : null;
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(def, drives);
+        dialog.setTitle("Elegir unidad Disco");
+        dialog.setHeaderText(null);
+        dialog.setContentText("Elija una unidad para su disco: ");
+        Optional<String> res = dialog.showAndWait();
+        res.ifPresent((newDrive) -> setDrive(serv, newDrive));
+        return res.isPresent();
+    }
+    // DRIVE RELATED
     /**
      * Checks if the drive where W should be is set up before this program did it.
+     * @param serv
      * @return Whether the execution should continue or not.
      */
-    public boolean checkDrive() {
-        if (!isWConnected() && isDriveUsed()) {
+    public boolean checkDrive(AccesoDriveService serv) {
+        String drive = serv.getDrive();
+        if (!serv.isConnected() && isDriveUsed(drive)) {
             String WARNING_W = 
-                    "La unidad definida para el disco W (" + drive + ") ya contiene un disco asociado.\n\n"
-                    + "Antes de continuar, desconecte el disco asociado, o cambie la unidad utilizada para el disco W.\n ";
+                    "La unidad definida para el disco (" + drive + ") ya contiene un disco asociado.\n\n"
+                    + "Antes de continuar, desconecte el disco asociado, o cambie la unidad utilizada para el disco.\n ";
             Alert warning = new Alert(Alert.AlertType.WARNING);
             String actDrive = drive;
             warning.setHeaderText("Unidad " + actDrive + " contiene disco");
@@ -251,37 +286,47 @@ public final class AccesoUPV {
             Optional<ButtonType> result = warning.showAndWait();
             if (!result.isPresent() || result.get() == ButtonType.CANCEL) { return false; }
             else if (result.get() == change) { 
-                if (!setDriveDialog()) { return checkDrive(); }
+                if (!setDriveDialog(serv)) { return checkDrive(serv); }
             }
             else {
-                if (isDriveUsed()) {
+                if (isDriveUsed(drive)) {
                     Alert error = new Alert(Alert.AlertType.ERROR, "El disco aún no ha sido desconectado.\n"
                             + "Desconéctelo y vuelva a intentarlo.");
                     error.setHeaderText(null);
                     error.showAndWait();
-                    return checkDrive();
+                    return checkDrive(serv);
                 }
             }
         }
         return true;
     }
-    
-    public boolean accessW() {
-        boolean succeeded = connectW();
+    public boolean accessW() { return accessDrive(WService); }
+    public boolean accessDSIC() { 
+        boolean passDefined = DSICService.isPassDefined();
+        if (!passDefined) passDefined = setPassDialog();
+        return passDefined ? accessDrive(DSICService) : false;
+    }
+    public boolean accessDrive(AccesoDriveService serv) {
+        boolean succeeded = connectDrive(serv);
         if (succeeded) {
             try {
-                Desktop.getDesktop().open(new File(WService.getDrive()));
+                Desktop.getDesktop().open(new File(serv.getDrive()));
             } catch (IOException ex) {
-                new Alert(Alert.AlertType.WARNING, WARNING_FOLDER_W_MSG).show();
+                new Alert(Alert.AlertType.WARNING, WARNING_FOLDER_DRIVE_MSG).show();
             }
         }
         return succeeded;
     }
-    
-    public boolean connectW() {
-        if (isWConnected()) return true; //If W is already connected, it's not necessary to connect it again
-        else if (!checkDrive()) return false; //If the drive isn't available, abort the process
-        while (user == null) {
+    public boolean connectW() { return connectDrive(WService); }
+    public boolean connectDSIC() {
+        boolean passDefined = DSICService.isPassDefined();
+        if (!passDefined) passDefined = setPassDialog();
+        return passDefined ? connectDrive(DSICService) : false;
+    }
+    public boolean connectDrive(AccesoDriveService serv) {
+        if (serv.isConnected()) return true; //If drive is already connected, it's not necessary to connect it again
+        else if (!checkDrive(serv)) return false; //If the drive isn't available, abort the process
+        while (serv.getUser() == null) {
             Alert alert = new Alert(Alert.AlertType.WARNING, "No ha especificado ningún usuario. Establezca uno.");
             alert.setHeaderText(null);
             alert.getButtonTypes().add(ButtonType.CANCEL);
@@ -289,12 +334,11 @@ public final class AccesoUPV {
             if (!res.isPresent() || res.get() != ButtonType.OK) return false;
             setUserDialog();
         }
-        updateW();
-        LoadingStage stage = new LoadingStage(WService);
+        LoadingStage stage = new LoadingStage(serv);
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
-        if (!succeeded && WService.getException() instanceof IllegalArgumentException) {
-            if (setUserDialog()) return connectW(); //Si el usuario no era válido, permite cambiarlo, y si lo cambió, vuelve a intentarlo.
+        if (!succeeded && serv.getException() instanceof IllegalArgumentException) {
+            if (setUserDialog()) return connectDrive(serv); //Si el usuario no era válido, permite cambiarlo, y si lo cambió, vuelve a intentarlo.
         }
         return succeeded;
     }
@@ -303,6 +347,7 @@ public final class AccesoUPV {
         LoadingStage stage = new LoadingStage();
         List<Worker> workerList = stage.getLoadingService().getWorkerList();
         if (isWConnected()) { workerList.add(WService); WService.setDelay(1000); }
+        if (isDSICConnected()) { workerList.add(DSICService); DSICService.setDelay(1000); }
         if (isVPNConnected()) { workerList.add(VPNService); }
         //Si tiene que realizar alguna tarea, la realiza (si no, devuelve true)
         boolean succeeded = true;
@@ -310,6 +355,7 @@ public final class AccesoUPV {
             stage.showAndWait();
             succeeded = stage.isSucceeded();
         }
+        if (succeeded && savePrefsOnExit) savePrefs();
         return succeeded;
     }
     
@@ -318,6 +364,17 @@ public final class AccesoUPV {
         if (isWConnected()) {
             WService.setDelay(0);
             LoadingStage stage = new LoadingStage(WService);
+            stage.showAndWait();
+            succeeded = stage.isSucceeded();
+        }
+        return succeeded;
+    }
+    
+    public boolean disconnectDSIC() {
+        boolean succeeded = true;
+        if (isDSICConnected()) {
+            DSICService.setDelay(0);
+            LoadingStage stage = new LoadingStage(DSICService);
             stage.showAndWait();
             succeeded = stage.isSucceeded();
         }

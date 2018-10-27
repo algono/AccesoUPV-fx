@@ -39,7 +39,7 @@ public class AccesoVPNService extends AccesoService {
     //Timeout for checking if the connected VPN is able to connect the UPV (in ms)
     public static final int PING_TIMEOUT = 4000;
     
-    private String VPN;
+    private String VPN, connectedVPN;
     
     public AccesoVPNService(String vpn) {
         VPN = vpn;
@@ -47,6 +47,13 @@ public class AccesoVPNService extends AccesoService {
 
     public String getVPN() {
         return VPN;
+    }
+    
+    @Override
+    protected void succeeded() {
+        super.succeeded();
+        if (isConnected()) connectedVPN = VPN;
+        else connectedVPN = null;
     }
     
     @Override
@@ -114,14 +121,11 @@ public class AccesoVPNService extends AccesoService {
             protected void doTask() throws Exception {
                 updateErrorMsg(ERROR_DIS_VPN);
                 updateMessage("Desconectando de la UPV...");
-                Process p = ProcessUtils.startProcess("rasdial.exe", "\"" + VPN + "\"", "/DISCONNECT");
+                Process p = ProcessUtils.startProcess("rasdial.exe", "\"" + connectedVPN + "\"", "/DISCONNECT");
                 ProcessUtils.waitAndCheck(p, 1000);
             }
         };
     }
 
-    public void setVPN(String VPN) {
-        checkConnected();
-        this.VPN = VPN;
-    }
+    public void setVPN(String vpn) { this.VPN = vpn; }
 }

@@ -9,8 +9,11 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.BorderPane?>
@@ -24,80 +27,130 @@
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="accesoupv.controller.AjustesController">
    <center>
-      <GridPane alignment="CENTER" hgap="20.0" vgap="10.0">
-        <columnConstraints>
-          <ColumnConstraints hgrow="NEVER" minWidth="10.0" />
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-        </columnConstraints>
-        <rowConstraints>
-            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-          <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        </rowConstraints>
-         <children>
-            <Text fill="GREY" strokeType="OUTSIDE" strokeWidth="0.0" text="Conexión VPN">
-               <font>
-                  <Font name="System Bold" size="13.0" />
-               </font>
-            </Text>
-            <Label text="Nombre conexión VPN:" GridPane.rowIndex="1" />
-            <Text fill="GREY" strokeType="OUTSIDE" strokeWidth="0.0" text="Disco W" GridPane.rowIndex="2">
-               <font>
-                  <Font name="System Bold" size="13.0" />
-               </font>
-            </Text>
-            <Label text="Nombre usuario UPV:" GridPane.rowIndex="3" />
-            <Label text="Unidad:" GridPane.rowIndex="4" />
-            <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-               <children>
-                  <TextField fx:id="textVPN" prefWidth="211.0" />
-                  <Hyperlink fx:id="helpLinkVPN" text="?">
-                     <font>
-                        <Font name="System Bold" size="18.0" />
-                     </font>
-                  </Hyperlink>
-               </children>
-            </HBox>
-            <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
-               <children>
-                  <TextField fx:id="textUser" prefWidth="211.0" />
-                  <Hyperlink fx:id="helpLinkUser" text="?">
-                     <font>
-                        <Font name="System Bold" size="18.0" />
-                     </font>
-                  </Hyperlink>
-               </children>
-            </HBox>
-            <HBox fx:id="driveBox" alignment="CENTER_LEFT" spacing="20.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
-               <children>
-                  <ComboBox fx:id="comboDrive" prefWidth="75.0" />
-                  <CheckBox fx:id="driveCheckBox" mnemonicParsing="false" text="Indiferente" />
-               </children>
-            </HBox>
-            <Label text="Dominio:" GridPane.rowIndex="5" />
-            <HBox alignment="CENTER_LEFT" spacing="20.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
-               <children>
-                  <RadioButton fx:id="alumnoRadioButton" mnemonicParsing="false" text="Alumno">
-                     <toggleGroup>
-                        <ToggleGroup fx:id="dominio" />
-                     </toggleGroup>
-                  </RadioButton>
-                  <RadioButton layoutX="10.0" layoutY="10.0" mnemonicParsing="false" selected="true" text="UPVNET" toggleGroup="$dominio" />
-               </children>
-            </HBox>
-         </children>
+      <VBox spacing="20.0">
          <BorderPane.margin>
             <Insets bottom="10.0" left="20.0" right="20.0" top="20.0" />
          </BorderPane.margin>
-      </GridPane>
+         <children>
+            <GridPane hgap="20.0" vgap="10.0">
+               <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+               </rowConstraints>
+               <children>
+                  <Text fill="GREY" strokeType="OUTSIDE" strokeWidth="0.0" text="Conexión VPN">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                  </Text>
+                  <Label text="Nombre conexión VPN:" GridPane.rowIndex="1" />
+                  <Label text="Nombre usuario UPV:" GridPane.rowIndex="3" />
+                  <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                     <children>
+                        <TextField fx:id="textUser" prefWidth="211.0" />
+                        <Hyperlink fx:id="helpLinkUser" text="?">
+                           <font>
+                              <Font name="System Bold" size="18.0" />
+                           </font>
+                        </Hyperlink>
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                     <children>
+                        <TextField fx:id="textVPN" prefWidth="211.0" />
+                        <Hyperlink fx:id="helpLinkVPN" text="?">
+                           <font>
+                              <Font name="System Bold" size="18.0" />
+                           </font>
+                        </Hyperlink>
+                     </children>
+                  </HBox>
+                  <Text fill="GREY" strokeType="OUTSIDE" strokeWidth="0.0" text="Discos" GridPane.rowIndex="2">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                  </Text>
+               </children>
+            </GridPane>
+            <VBox spacing="5.0">
+               <children>
+                  <TabPane prefWidth="410.0" tabClosingPolicy="UNAVAILABLE">
+                     <tabs>
+                        <Tab closable="false" text="Disco W">
+                           <content>
+                              <GridPane alignment="CENTER" hgap="20.0" vgap="10.0">
+                                <columnConstraints>
+                                  <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="10.0" />
+                                  <ColumnConstraints hgrow="NEVER" minWidth="10.0" />
+                                    <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="100.0" />
+                                </columnConstraints>
+                                <rowConstraints>
+                                  <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                </rowConstraints>
+                                 <children>
+                                    <Label text="Unidad:" />
+                                    <ComboBox fx:id="comboDriveW" prefWidth="75.0" GridPane.columnIndex="1" />
+                                    <CheckBox fx:id="driveWCheckBox" mnemonicParsing="false" text="Indiferente" GridPane.columnIndex="2" />
+                                    <Label text="Dominio:" GridPane.rowIndex="1" />
+                                    <RadioButton fx:id="alumnoRadioButton" mnemonicParsing="false" selected="true" text="Alumno" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                       <toggleGroup>
+                                          <ToggleGroup fx:id="dominio" />
+                                       </toggleGroup>
+                                    </RadioButton>
+                                    <RadioButton mnemonicParsing="false" text="UPVNET" toggleGroup="$dominio" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                                 </children>
+                                 <padding>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                 </padding>
+                              </GridPane>
+                           </content>
+                        </Tab>
+                        <Tab closable="false" text="Disco DSIC">
+                           <content>
+                              <GridPane alignment="CENTER" hgap="20.0" vgap="10.0">
+                                 <columnConstraints>
+                                    <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="10.0" />
+                                    <ColumnConstraints hgrow="NEVER" minWidth="10.0" />
+                                    <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="100.0" />
+                                 </columnConstraints>
+                                 <rowConstraints>
+                                    <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                 </rowConstraints>
+                                 <children>
+                                    <Label text="Unidad:" />
+                                    <ComboBox fx:id="comboDriveDSIC" prefWidth="75.0" GridPane.columnIndex="1" />
+                                    <CheckBox fx:id="driveDSICCheckBox" mnemonicParsing="false" text="Indiferente" GridPane.columnIndex="2" />
+                                    <Label text="Contraseña:" GridPane.rowIndex="1" />
+                                    <PasswordField fx:id="passDriveDSIC" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+                                 </children>
+                                 <padding>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                 </padding>
+                              </GridPane>
+                           </content>
+                        </Tab>
+                     </tabs>
+                  </TabPane>
+               </children>
+            </VBox>
+         </children>
+      </VBox>
    </center>
    <bottom>
       <VBox alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
          <children>
-            <Text fx:id="textWarningConnected" fill="GREY" strokeType="OUTSIDE" strokeWidth="0.0" text="Los cambios a un servicio ya conectado se aplicarán una vez lo reconectes." />
+            <Text fx:id="textWarningConnected" fill="GREY" strokeType="OUTSIDE" strokeWidth="0.0" text="Los cambios a un servicio ya conectado se aplicarán una vez lo reconectes.">
+               <VBox.margin>
+                  <Insets left="5.0" right="5.0" />
+               </VBox.margin></Text>
             <HBox alignment="BOTTOM_CENTER" spacing="50.0">
                <children>
                   <Button fx:id="resetButton" mnemonicParsing="false" text="Reestablecer" />
