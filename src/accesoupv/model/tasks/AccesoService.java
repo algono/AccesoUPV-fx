@@ -36,6 +36,11 @@ public abstract class AccesoService extends Service<Void> {
     
     //Getters
     public boolean isConnected() { return connectedProperty.get(); }
+    
+    protected void checkConnected() {
+        if (isConnected()) throw new IllegalStateException("You cannot change any variable while the service is connected.");
+    }
+    
     public int getDelay() { return delay; }
     
     //Setters

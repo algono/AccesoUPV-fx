@@ -28,7 +28,10 @@ public class AccesoDriveDSICService extends AccesoDriveService {
     
     public String getPass() { return password; }
     public boolean isPassDefined() { return !password.isEmpty(); }
-    public void setPass(String p) { password = p; }
+    public void setPass(String p) {
+        checkConnected();
+        password = p;
+    }
     
     @Override
     public String getDir() {

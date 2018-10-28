@@ -30,7 +30,10 @@ public class AccesoDriveWService extends AccesoDriveService {
         return "\\\\nasupv.upv.es\\" + dom.toString().toLowerCase() + "\\" + user.charAt(0) + "\\" + user;
     }
     
-    public void setDomain(Dominio domain) { dom = domain; }
+    public void setDomain(Dominio domain) {
+        checkConnected();
+        dom = domain;
+    }
     
     @Override
     protected String getConMsg() { return "Accediendo al disco W..."; }

@@ -34,7 +34,7 @@ public abstract class AccesoDriveService extends AccesoService {
             "Existen archivos abiertos y/o búsquedas incompletas de directorios pendientes en el disco. Si no los cierra antes de desconectarse, podría perder datos.\n\n"
             + "¿Desea continuar la desconexión y forzar el cierre?";
     
-    protected String user, drive, connectedDrive;
+    protected String user, drive;
     
     public AccesoDriveService(String wUser, String wDrive) {
         user = wUser;
@@ -44,7 +44,7 @@ public abstract class AccesoDriveService extends AccesoService {
     public String getUser() {
         return user;
     }
-
+    
     public String getDrive() {
         return drive;
     }
@@ -55,13 +55,6 @@ public abstract class AccesoDriveService extends AccesoService {
     
     protected String getConMsg() { return "Accediendo al disco..."; }
     protected String getDisMsg() { return "Desconectando disco..."; }
-    
-    @Override
-    protected void succeeded() {
-        super.succeeded();
-        if (isConnected()) connectedDrive = drive;
-        else connectedDrive = null;
-    }
     
     @Override
     protected Task<Void> createConnectTask() {
@@ -89,7 +82,7 @@ public abstract class AccesoDriveService extends AccesoService {
                 if (drive.equals("*")) { //Si la unidad no estaba determinada, la obtiene del output del proceso.
                     String out = ProcessUtils.getOutput(p);
                     int indexOf = out.indexOf(':');
-                    drive = out.substring(indexOf-1, indexOf+1);
+                    drive = out.charAt(indexOf-1) + ":";
                 }
             }
         };
@@ -102,7 +95,7 @@ public abstract class AccesoDriveService extends AccesoService {
             protected void doTask() throws Exception {
                 updateErrorMsg(ERROR_DIS);
                 updateMessage(getDisMsg());
-                Process p = ProcessUtils.startProcess("cmd.exe", "/c", "net", "use", connectedDrive, "/delete");
+                Process p = ProcessUtils.startProcess("cmd.exe", "/c", "net", "use", drive, "/delete");
                 Thread.sleep(delay);
                 int exitValue = p.waitFor();
                 if (exitValue != 0) {
@@ -135,6 +128,12 @@ public abstract class AccesoDriveService extends AccesoService {
         };
     }
 
-    public void setUser(String user) { this.user = user; }
-    public void setDrive(String drive) { this.drive = drive; }
+    public void setUser(String user) {
+        checkConnected();
+        this.user = user;
+    }
+    public void setDrive(String drive) {
+        checkConnected();
+        this.drive = drive; 
+    }
 }
