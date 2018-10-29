@@ -17,12 +17,18 @@ import javafx.scene.layout.VBox;
  * @author Alejandro
  */
 public abstract class AlertingTask extends Task<Void> {
-    
-    //Timeout
-    public static final int PROCESS_TIMEOUT = 5000; //5 seconds
-    
+      
     private String errorMsg;
-    protected boolean showError = true;
+    protected boolean showError;
+    
+    public AlertingTask() { this(null); }
+    public AlertingTask(String errMsg) {
+        super();
+        if (errMsg != null) {
+            showError = true;
+            errorMsg = errMsg;
+        }
+    }
     
     @Override
     protected final Void call() throws Exception {
@@ -49,10 +55,13 @@ public abstract class AlertingTask extends Task<Void> {
     }
     
     protected abstract void doTask() throws Exception;
-    
+            
     //Getters
     public String getErrorMessage() { return errorMsg; }   
-    public Alert getErrorAlert() { return getErrorAlert(getException()); }
+    
+    public Alert getErrorAlert() {
+        return getErrorAlert(getException());
+    }
     protected final Alert getErrorAlert(Throwable exception) {
         Alert errorAlert = new Alert(Alert.AlertType.ERROR, errorMsg);
         errorAlert.setHeaderText(null);
@@ -66,8 +75,7 @@ public abstract class AlertingTask extends Task<Void> {
     }
     
     //Setters
-    public void showErrorMessage(boolean show) { showError = show; }
+    public void showErrorMessage(boolean show) { showError = show; } 
     protected void updateErrorMsg(String errMsg) { errorMsg = errMsg; }
-    
-    
+          
 }

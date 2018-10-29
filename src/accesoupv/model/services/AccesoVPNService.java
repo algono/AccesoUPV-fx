@@ -3,9 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package accesoupv.model.tasks;
+package accesoupv.model.services;
 
 import accesoupv.model.ProcessUtils;
+import accesoupv.model.tasks.AlertingTask;
 import java.awt.Desktop;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -51,10 +52,9 @@ public class AccesoVPNService extends AccesoService {
     
     @Override
     protected Task<Void> createConnectTask() {
-        return new AlertingTask() {
+        return new AlertingTask(ERROR_CON_VPN) {
             @Override
             protected void doTask() throws Exception {
-                updateErrorMsg(ERROR_CON_VPN);
                 updateMessage("Conectando con la UPV...");
                 Process p = ProcessUtils.startProcess("rasphone.exe", "-d", "\"" + VPN + "\"");
                 ProcessUtils.waitAndCheck(p);
