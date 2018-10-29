@@ -306,14 +306,54 @@ public final class AccesoUPV {
         }
         return true;
     }
-    public boolean accessW() { return accessDrive(WService); }
-    public boolean accessDSIC() {
+    
+    public boolean connectW() { 
+        if (!checkUser()) return false;
+        boolean succeeded = connectDrive(WService);
+        if (!succeeded) {
+            Throwable ex = WService.getException();
+            if (ex != null) {
+                ex = ex.getCause();
+                if (ex instanceof IllegalArgumentException) {
+                    if (setUserDialog()) return connectW(); //Si el usuario no era válido, permite cambiarlo, y si puso alguno, vuelve a intentarlo.
+                }
+            }
+        }
+        return succeeded;
+    }
+    public boolean connectDSIC() {
+        if (!checkUser()) return false;
         boolean passDefined = passDSIC != null;
         if (!passDefined) passDefined = setPassDialog();
-        return passDefined ? accessDrive(DSICService) : false;
+        if (!passDefined) return false;
+        boolean succeeded = connectDrive(DSICService);
+        if (!succeeded) {
+            Throwable ex = DSICService.getException();
+            if (ex != null) {
+                ex = ex.getCause();
+                if (ex instanceof IllegalArgumentException) {
+                    //Si algún dato no era válido, permite cambiarlo, y si puso los datos, vuelve a intentarlo.
+                    if (setUserDialog() && setPassDialog()) return connectDSIC();
+                }
+            }
+        }
+        return succeeded;
     }
-    public boolean accessDrive(AccesoDriveService serv) {
-        boolean succeeded = connectDrive(serv);
+    
+    protected boolean checkUser() {
+        boolean userDefined = user != null;
+        if (!userDefined) userDefined = setUserDialog();
+        return userDefined;
+    }
+    
+    protected boolean connectDrive(AccesoDriveService serv) {
+        if (serv.isConnected()) return true; //If drive is already connected, it's not necessary to connect it again
+        update();
+        if (!checkDrive(serv)) return false; //If the drive isn't available, abort the process
+        LoadingStage stage = new LoadingStage(serv);
+        stage.showAndWait();
+        
+        boolean succeeded = stage.isSucceeded();
         if (succeeded) {
             try {
                 Desktop.getDesktop().open(new File(serv.getDrive()));
@@ -321,32 +361,7 @@ public final class AccesoUPV {
                 new Alert(Alert.AlertType.WARNING, WARNING_FOLDER_DRIVE_MSG).show();
             }
         }
-        return succeeded;
-    }
-    public boolean connectW() { return connectDrive(WService); }
-    public boolean connectDSIC() {
-        boolean passDefined = passDSIC == null;
-        if (!passDefined) passDefined = setPassDialog();
-        return passDefined ? connectDrive(DSICService) : false;
-    }
-    public boolean connectDrive(AccesoDriveService serv) {
-        if (serv.isConnected()) return true; //If drive is already connected, it's not necessary to connect it again
-        while (serv.getUser() == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING, "No ha especificado ningún usuario. Establezca uno.");
-            alert.setHeaderText(null);
-            alert.getButtonTypes().add(ButtonType.CANCEL);
-            Optional<ButtonType> res = alert.showAndWait();
-            if (!res.isPresent() || res.get() != ButtonType.OK) return false;
-            setUserDialog();
-        }
-        update();
-        if (!checkDrive(serv)) return false; //If the drive isn't available, abort the process
-        LoadingStage stage = new LoadingStage(serv);
-        stage.showAndWait();
-        boolean succeeded = stage.isSucceeded();
-        if (!succeeded && serv.getException() instanceof IllegalArgumentException) {
-            if (setUserDialog()) return connectDrive(serv); //Si el usuario no era válido, permite cambiarlo, y si lo cambió, vuelve a intentarlo.
-        }
+        
         return succeeded;
     }
     //DISCONNECTING METHODS

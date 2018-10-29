@@ -71,13 +71,14 @@ public abstract class AccesoDriveService extends AccesoService {
                 ProcessUtils.waitAndCheck(p, delay);
             } catch (IOException ex) {
                 String out = ex.getMessage();
+                Throwable cause = null;
                 // 55 - Error del sistema "El recurso no se encuentra disponible" (es decir, la dirW no existe, por tanto, el usuario no es válido).
                 if (out.contains("55")) {
                     updateErrorMsg(ERROR_INVALID_USER);
-                    throw new IllegalArgumentException();
-                } else {
-                    throw new IOException(out);
+                    out = null;
+                    cause = new IllegalArgumentException();
                 }
+                throw new IOException(out, cause);
             } 
             if (drive.equals("*")) { //Si la unidad no estaba determinada, la obtiene del output del proceso.
                 String out = ProcessUtils.getOutput(p);

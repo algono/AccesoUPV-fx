@@ -59,7 +59,7 @@ public class PasswordDialog extends Dialog<String> {
 
         // -- textfield
         this.textField = new PasswordField();
-        this.textField.setPromptText(defaultValue);
+        this.textField.setText(defaultValue);
         this.textField.setMaxWidth(Double.MAX_VALUE);
         GridPane.setHgrow(textField, Priority.ALWAYS);
         GridPane.setFillWidth(textField, true);

@@ -5,6 +5,7 @@
  */
 package accesoupv.model.services.drives;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import javafx.concurrent.Task;
@@ -14,6 +15,8 @@ import javafx.concurrent.Task;
  * @author aleja
  */
 public class AccesoDriveDSICService extends AccesoDriveService {
+    
+    public static final String ERROR_INVALID_DATA = "El usuario o la contraseña son incorrectos.";
     
     private String password = "";
     
@@ -49,7 +52,21 @@ public class AccesoDriveDSICService extends AccesoDriveService {
             @Override
             protected void doTask() throws Exception {
                 initMsg = "Accediendo al disco del DSIC...";
-                super.doTask();
+                try {
+                    super.doTask();
+                } catch (IOException ex) {
+                    String out = ex.getMessage();
+                    Throwable cause = null;
+                    // 86 - Error del sistema "La contraseña de red es incorrecta"
+                    // 1326 - Error del sistema "El usuario o la contraseña son incorrectos"
+                    //Cuando las credenciales son erróneas, da uno de estos dos errores de forma arbitraria.
+                    if (out.contains("86") || out.contains("1326")) {
+                        updateErrorMsg(ERROR_INVALID_DATA);
+                        out = null;
+                        cause = new IllegalArgumentException();
+                    }
+                    throw new IOException(out, cause);
+                } 
             }
         };
     }

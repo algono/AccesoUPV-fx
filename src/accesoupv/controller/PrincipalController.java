@@ -167,11 +167,11 @@ public class PrincipalController implements Initializable {
         
         menuAjustes.setOnAction(e -> showAjustes());
         
-        buttonAccessW.setOnAction(e -> acceso.accessW());
-        menuAccessW.setOnAction(e -> acceso.accessW());
+        buttonAccessW.setOnAction(e -> acceso.connectW());
+        menuAccessW.setOnAction(e -> acceso.connectW());
         
-        buttonAccessDSIC.setOnAction(e -> acceso.accessDSIC());
-        menuAccessDSIC.setOnAction(e -> acceso.accessDSIC());
+        buttonAccessDSIC.setOnAction(e -> acceso.connectDSIC());
+        menuAccessDSIC.setOnAction(e -> acceso.connectDSIC());
         
         buttonDisconnectW.setOnAction(e -> acceso.disconnectW());
         menuDisconnectW.setOnAction(e -> acceso.disconnectW());
