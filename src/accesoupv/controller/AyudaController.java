@@ -5,9 +5,14 @@
  */
 package accesoupv.controller;
 
+import java.awt.Desktop;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -29,13 +34,17 @@ import javafx.stage.Stage;
 public class AyudaController implements Initializable {
     
     @FXML
-    private TitledPane paneVPN;
+    private TitledPane paneVpnUPV;
     @FXML
     private TitledPane paneDSIC;
     @FXML
-    private WebView vpnWeb;
+    private WebView VpnUPVWeb;
     @FXML
-    private Hyperlink vpnLink;
+    private Hyperlink VpnUPVLink;
+    @FXML
+    private TitledPane paneVpnDSIC;
+    @FXML
+    private Hyperlink VpnDSICLink;
     @FXML
     private Hyperlink evirLink;
     @FXML
@@ -50,7 +59,8 @@ public class AyudaController implements Initializable {
     private Button buttonClose;
     
     //Constants
-    public static final String VPN_WEB = "https://www.upv.es/contenidos/INFOACCESO/infoweb/infoacceso/dat/697481normalc.html";
+    public static final String VPN_UPV_WEB = "https://www.upv.es/contenidos/INFOACCESO/infoweb/infoacceso/dat/697481normalc.html";
+    public static final String VPN_DSIC_WEB = "http://www.dsic.upv.es/docs/infraestructura/portal-ng/manual_portal2_usuario_v8.pdf";
     public static final String EVIR_ERROR_MESSAGE = "Hubo un error al tratar de abrir el Escritorio Remoto.";
     public static final String EVIR_LINUX = "linuxdesktop.dsic.upv.es";
     public static final String EVIR_WINDOWS = "windesktop.dsic.upv.es";
@@ -62,7 +72,8 @@ public class AyudaController implements Initializable {
         primaryStage = stage;
         primaryStage.setTitle("Ayuda");
         switch(page) {
-            case "VPN": Platform.runLater(() -> paneVPN.setExpanded(true)); break;
+            case "VPN-upv": Platform.runLater(() -> paneVpnUPV.setExpanded(true)); break;
+            case "VPN-dsic": Platform.runLater(() -> paneVpnDSIC.setExpanded(true)); break;
             case "DSIC": Platform.runLater(() -> paneDSIC.setExpanded(true)); break;
         }
     }
@@ -78,8 +89,14 @@ public class AyudaController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        vpnWeb.getEngine().load(VPN_WEB);
-        vpnLink.setOnAction(e -> vpnWeb.getEngine().load(VPN_WEB));
+        VpnUPVWeb.getEngine().load(VPN_UPV_WEB);
+        VpnUPVLink.setOnAction(e -> VpnUPVWeb.getEngine().load(VPN_UPV_WEB));
+        VpnDSICLink.setOnAction(e -> {
+            try {
+                Desktop.getDesktop().browse(new URI(VPN_DSIC_WEB));
+            } catch (URISyntaxException | IOException ex) {
+            }
+        });
         evirLink.setOnAction(e -> {
             try { Runtime.getRuntime().exec("mstsc");
             } catch (IOException ex) { new Alert(Alert.AlertType.ERROR, EVIR_ERROR_MESSAGE).show(); }
@@ -95,6 +112,7 @@ public class AyudaController implements Initializable {
             copiedWindows.setVisible(true);
         });
         buttonClose.setOnAction((evt) -> primaryStage.hide());
-        paneVPN.expandedProperty().addListener((obs, oldValue, newValue) -> primaryStage.setMaximized(newValue));
+        paneVpnUPV.expandedProperty().addListener((obs, oldValue, newValue) -> primaryStage.setMaximized(newValue));
+        paneVpnDSIC.expandedProperty().addListener((obs, oldValue, newValue) -> primaryStage.setMaximized(newValue));
     }
 }

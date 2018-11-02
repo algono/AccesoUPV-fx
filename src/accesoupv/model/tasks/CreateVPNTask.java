@@ -7,7 +7,7 @@ package accesoupv.model.tasks;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Scanner;
 import javafx.concurrent.Task;
@@ -16,41 +16,34 @@ import javafx.concurrent.Task;
  *
  * @author Alejandro
  */
-public class CreateVPNTask extends Task<Void> {
+public abstract class CreateVPNTask extends Task<Void> {
     
-    private static final String SCRIPT = 
-    "$importXML = New-Object XML" + "\n"
-    + "$importXML.Load(\"${env:temp}\\XMLNAME\")" + "\n"
-    + "Add-VpnConnection -Name \"VPNNAME\" -ServerAddress \"vpn.upv.es\" -AuthenticationMethod Eap -EncryptionLevel Required -RememberCredential -TunnelType Sstp -EapConfigXmlStream $importXML" + "\n";
-    private final String vpn;
+    protected final String name, server;
     
-    public CreateVPNTask(String vpnName) {
-        vpn = vpnName;
+    protected CreateVPNTask(String vpnName, String vpnServer) {
+        name = vpnName; 
+        server = vpnServer;
     }
     
-    @Override
-    protected Void call() throws Exception {
-        updateMessage("Creando conexión VPN...");
-        InputStream xmlIn = getClass().getResourceAsStream("/accesoupv/resources/VPN_config.xml");
+    public String getName() { return name; }
+    public String getServer() { return server; }
+    
+    protected final void runScript(String script) throws IOException, InterruptedException {
         File temp = File.createTempFile("temp", ".ps1");
-        File tempXml = File.createTempFile("temp", ".xml");
-        //Just in case the task throws an exception, it ensures the temp files are deleted
-        temp.deleteOnExit(); tempXml.deleteOnExit();
-        //Copies both files
-        try (Scanner sc = new Scanner(SCRIPT); PrintWriter pw = new PrintWriter(new FileOutputStream(temp), true)) {
+        //Just in case the task throws an exception, it ensures the temp file is deleted
+        temp.deleteOnExit();
+        //Fills the new file with the script
+        try (Scanner sc = new Scanner(script); PrintWriter pw = new PrintWriter(new FileOutputStream(temp), true)) {
             while (sc.hasNext()) {
-                pw.println(sc.nextLine().replaceAll("VPNNAME", vpn).replaceAll("XMLNAME", tempXml.getName()));
+                pw.println(sc.nextLine().replaceAll("VPNNAME", name)
+                        .replaceAll("VPNSERVER", server));
             }
-        }
-        try (Scanner sc = new Scanner(xmlIn); PrintWriter pw = new PrintWriter(new FileOutputStream(tempXml), true)) {
-            while (sc.hasNext()) { pw.println(sc.nextLine()); }
         }
         //Runs the script and waits for its completion               
         Process p = new ProcessBuilder("powershell.exe", "-ExecutionPolicy", "ByPass", "-Command", temp.getAbsolutePath()).start();
         p.waitFor();
-        //Deletes the temp files
-        temp.delete(); tempXml.delete();
-        return null;
+        //Deletes the temp file
+        temp.delete();
     }
     
 }

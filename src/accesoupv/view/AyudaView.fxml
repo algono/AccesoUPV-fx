@@ -18,18 +18,28 @@
    <center>
       <Accordion maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
          <panes>
-            <TitledPane fx:id="paneVPN" animated="false" expanded="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo crear una VPN a la UPV">
+            <TitledPane fx:id="paneVpnUPV" animated="false" expanded="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo crear una VPN a la UPV">
                <content>
                   <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="578.0">
                      <children>
                         <Label text="Siga las instrucciones que ofrece la web de la UPV:" VBox.vgrow="ALWAYS" />
-                        <Hyperlink fx:id="vpnLink" focusTraversable="false" text="Pinche aquí para volver a la web original" />
-                        <WebView fx:id="vpnWeb" minHeight="-1.0" minWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS" />
+                        <Hyperlink fx:id="VpnUPVLink" focusTraversable="false" text="Pinche aquí para volver a la web original" />
+                        <WebView fx:id="VpnUPVWeb" minHeight="-1.0" minWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS" />
                      </children>
                   </VBox>
                </content>
             </TitledPane>
-            <TitledPane fx:id="paneDSIC" animated="false" expanded="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo guardar el usuario y contraseña del DSIC">
+            <TitledPane fx:id="paneVpnDSIC" animated="false" expanded="false" layoutX="10.0" layoutY="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo crear una VPN al DSIC">
+               <content>
+                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="55.0" prefWidth="536.0">
+                     <children>
+                        <Label text="Siga las instrucciones que ofrece la web del DSIC:" VBox.vgrow="ALWAYS" />
+                        <Hyperlink fx:id="VpnDSICLink" focusTraversable="false" text="Pinche aquí para acceder a la web (PDF)" />
+                     </children>
+                  </VBox>
+               </content>
+            </TitledPane>
+            <TitledPane fx:id="paneDSIC" animated="false" expanded="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo guardar el usuario y contraseña del DSIC (Escritorios)">
                <content>
                   <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="100.0" spacing="5.0">
                      <children>

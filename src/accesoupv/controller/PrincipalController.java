@@ -88,59 +88,21 @@ public class PrincipalController implements Initializable {
         } catch (IOException ex) {}
     }
     
-    private void showAyuda(String page) {
+    public static void showAyuda(String page) {
         try {
             Stage stage = new Stage();
-            FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/AyudaView.fxml"));
+            FXMLLoader myLoader = new FXMLLoader(PrincipalController.class.getResource("/accesoupv/view/AyudaView.fxml"));
             Parent root = (Parent) myLoader.load();
             AyudaController dialogue = myLoader.<AyudaController>getController();
             dialogue.init(stage, page);
             Scene scene = new Scene(root);
 
             stage.setScene(scene);
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/icons/help-icon.png")));
+            stage.getIcons().add(new Image(PrincipalController.class.getResourceAsStream("/accesoupv/resources/icons/help-icon.png")));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.show();
         } catch (IOException ex) {
             new Alert(Alert.AlertType.ERROR, "Ha habido un error inesperado al tratar de abrir la ventana.").show();
-        }
-    }
-    
-    private void establishVPN() {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setHeaderText(null);
-        Label content = new Label("Debe establecer una red VPN para poder acceder a la UPV desde fuera del campus.\n\n"
-                + "¿Desea que se cree la VPN automáticamente?\n\n"
-                + "Si ya tiene una creada o prefiere crearla manualmente, elija \"No\".");
-        Hyperlink help = new Hyperlink("Para saber cómo crear una VPN manualmente, pulse aquí");
-        help.setOnAction((evt) -> showAyuda("VPN"));
-        alert.getDialogPane().setContent(new VBox(content, help));
-        alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO,ButtonType.CANCEL);
-        Optional<ButtonType> alertRes = alert.showAndWait();
-        
-        //Si el usuario canceló o cerró el diálogo, sale del programa
-        if (!alertRes.isPresent() || alertRes.get() == ButtonType.CANCEL) System.exit(0);
-        
-        //Si pulsó que sí, se debe crear una VPN nueva. Si pulsó que no, se debe introducir una existente.
-        boolean setNewVPN = alertRes.get() == ButtonType.YES;
-        boolean hasNewVPN = acceso.setVPNDialog(setNewVPN);
-        
-        //Si la VPN ha sido cambiada, continúa. Si no, vuelve a la primera Alert.
-        if (hasNewVPN) {
-            //Si se ha elegido crear una VPN nueva, la crea.
-            if (setNewVPN) acceso.createVPN();
-            connectVPN();
-        } else { establishVPN(); }
-    }
-    
-    private void connectVPN() {
-        if (acceso.getVPN() == null) establishVPN();
-        boolean succeeded = acceso.connectVPN();
-        //Si la ejecución falló, permite cambiar el valor de la VPN por si lo puso mal
-        if (!succeeded) {
-            boolean hasNewVPN = acceso.setVPNDialog(false);
-            if (hasNewVPN) connectVPN();
-            else establishVPN();
         }
     }
     
@@ -187,7 +149,7 @@ public class PrincipalController implements Initializable {
         
         //Si no está ya conectado a la UPV, trata de conectarse a la VPN
         Platform.setImplicitExit(false); //Se asegura de que el programa no se cierre solo
-        if (!acceso.isConnectedToUPV()) connectVPN();
+        if (!acceso.isConnectedToUPV()) acceso.connectVpnUPV();
         Platform.runLater(() -> Platform.setImplicitExit(true));
     }
 }

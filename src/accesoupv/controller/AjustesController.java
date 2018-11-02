@@ -7,7 +7,6 @@ package accesoupv.controller;
 
 import accesoupv.model.AccesoUPV;
 import accesoupv.model.Dominio;
-import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -17,11 +16,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -34,11 +30,8 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 
 /**
  * FXML Controller class
@@ -50,7 +43,9 @@ public class AjustesController implements Initializable {
     @FXML
     private Text textWarningConnected;
     @FXML
-    private TextField textVPN;
+    private TextField textVpnUPV;
+    @FXML
+    private TextField textVpnDSIC;
     @FXML
     private ComboBox<String> comboDriveW;
     @FXML
@@ -60,11 +55,15 @@ public class AjustesController implements Initializable {
     @FXML
     private MenuItem menuAyuda;
     @FXML
-    private MenuItem menuAyudaVPN;
+    private MenuItem menuAyudaVpnUPV;
+    @FXML
+    private MenuItem menuAyudaVpnDSIC;
     @FXML
     private MenuItem menuAyudaDSIC;
     @FXML
-    private Hyperlink helpLinkVPN;
+    private Hyperlink helpLinkVpnUPV;
+    @FXML
+    private Hyperlink helpLinkVpnDSIC;
     @FXML
     private Hyperlink helpLinkUser;
     @FXML
@@ -105,7 +104,8 @@ public class AjustesController implements Initializable {
     
     @FXML
     private void savePrefs(ActionEvent evt) {
-            if (VPNChanged()) acceso.setVPN(textVPN.getText());
+            if (VpnUPVChanged()) acceso.setVpnUPV(textVpnUPV.getText());
+            if (VpnDSICChanged()) acceso.setVpnDSIC(textVpnDSIC.getText());
             if (userChanged()) acceso.setUser(textUser.getText());
             if (driveWChanged()) acceso.setDriveW(driveWCheckBox.isSelected() ? "*" : comboDriveW.getValue());
             if (domainChanged()) acceso.setDomain(alumnoRadioButton.isSelected() ? Dominio.ALUMNOS : Dominio.UPVNET);
@@ -115,26 +115,14 @@ public class AjustesController implements Initializable {
             ((Node) evt.getSource()).getScene().getWindow().hide();
     }
     
-    private void showAyuda(String page) {
-        try {
-            Stage stage = new Stage();
-            FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/AyudaView.fxml"));
-            Parent root = (Parent) myLoader.load();
-            AyudaController dialogue = myLoader.<AyudaController>getController();
-            dialogue.init(stage, page);
-            Scene scene = new Scene(root);
-
-            stage.setScene(scene);
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/icons/help-icon.png")));
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.show();
-        } catch (IOException ex) {
-        }
+    private boolean VpnUPVChanged() {
+        String vpn = acceso.getVpnUPV();
+        return !textVpnUPV.getText().equals(vpn == null ? "" : vpn);
     }
     
-    private boolean VPNChanged() {
-        String vpn = acceso.getVPN();
-        return !textVPN.getText().equals(vpn == null ? "" : vpn);
+    private boolean VpnDSICChanged() {
+        String vpn = acceso.getVpnDSIC();
+        return !textVpnDSIC.getText().equals(vpn == null ? "" : vpn);
     }
     
     private boolean userChanged() {
@@ -167,7 +155,7 @@ public class AjustesController implements Initializable {
     }
     
     private boolean anyChanges() {
-        return VPNChanged() || userChanged() || driveWChanged() || driveDSICChanged() || domainChanged();
+        return VpnUPVChanged() || VpnDSICChanged() || userChanged() || driveWChanged() || driveDSICChanged() || domainChanged();
     }
     
     @FXML
@@ -218,19 +206,21 @@ public class AjustesController implements Initializable {
         
         //Si se ha cambiado algún valor de un servicio que se encuentra conectado, muestra un mensaje.
         textWarningConnected.visibleProperty().bind(Bindings.createBooleanBinding(() ->
-            (acceso.isVPNConnected() && VPNChanged())
+            (acceso.isVpnUPVConnected() && VpnUPVChanged())
             || (acceso.isWConnected() && (userChanged() || driveWChanged() || domainChanged()))
             || (acceso.isDSICConnected() && (userChanged() || driveDSICChanged()))
-        ,textVPN.textProperty(), textUser.textProperty(), 
+        ,textVpnUPV.textProperty(), textVpnDSIC.textProperty(), textUser.textProperty(), 
         comboDriveW.getSelectionModel().selectedItemProperty(), driveWCheckBox.selectedProperty(),
         comboDriveDSIC.getSelectionModel().selectedItemProperty(), driveDSICCheckBox.selectedProperty(),
         passDriveDSIC.textProperty(), dominio.selectedToggleProperty()));
         
-        menuAyuda.setOnAction(evt -> showAyuda(""));
-        menuAyudaDSIC.setOnAction(evt -> showAyuda("DSIC"));
-        menuAyudaVPN.setOnAction(evt -> showAyuda("VPN"));
-        helpLinkVPN.setOnAction(evt -> showAyuda("VPN"));
-        helpLinkVPN.setTooltip(new Tooltip("Click para ver cómo \"" + menuAyudaVPN.getText() + "\""));
+        menuAyuda.setOnAction(evt -> PrincipalController.showAyuda(""));
+        menuAyudaDSIC.setOnAction(evt -> PrincipalController.showAyuda("DSIC"));
+        menuAyudaVpnUPV.setOnAction(evt -> PrincipalController.showAyuda("VPN-upv"));
+        helpLinkVpnUPV.setOnAction(evt -> PrincipalController.showAyuda("VPN-upv"));
+        helpLinkVpnUPV.setTooltip(new Tooltip("Click para ver cómo \"" + menuAyudaVpnUPV.getText() + "\""));
+        helpLinkVpnDSIC.setOnAction(evt -> PrincipalController.showAyuda("VPN-dsic"));
+        helpLinkVpnDSIC.setTooltip(new Tooltip("Click para ver cómo \"" + menuAyudaVpnDSIC.getText() + "\""));
         
         resetButton.setOnAction(evt -> {
             //Ventana de confirmación
@@ -264,12 +254,12 @@ public class AjustesController implements Initializable {
         }
         textUser.setText(user);
         
-        String vpn = acceso.getVPN();
+        String vpn = acceso.getVpnUPV();
         if (vpn == null) {
-            Platform.runLater(() -> textVPN.requestFocus());
+            Platform.runLater(() -> textVpnUPV.requestFocus());
             vpn = "";
         }
-        textVPN.setText(vpn);
+        textVpnUPV.setText(vpn);
         
         String pass = acceso.getPassDSIC();
         if (pass == null) {
