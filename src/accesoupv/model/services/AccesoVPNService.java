@@ -40,7 +40,8 @@ public class AccesoVPNService extends AccesoService {
     //Timeout for checking if the connected VPN is able to connect the UPV (in ms)
     public static final int PING_TIMEOUT = 4000;
     
-    private String VPN;
+    private String VPN, connectedVPN;
+    private String conMsg = "Conectando VPN...", disMsg = "Desconectando VPN...";
     
     public AccesoVPNService(String vpn) {
         VPN = vpn;
@@ -50,12 +51,31 @@ public class AccesoVPNService extends AccesoService {
         return VPN;
     }
     
+    public String getConnectedVPN() {
+        return isConnected() ? connectedVPN : VPN;
+    }
+    
+    public String[] getMessages() {
+        String[] msgs = {conMsg, disMsg};
+        return msgs;
+    }
+    public void setMessages(String connectMsg, String disconnectMsg) {
+        conMsg = connectMsg;
+        disMsg = disconnectMsg;
+    }
+    
+    @Override
+    protected void succeeded() {
+        super.succeeded();
+        connectedVPN = isConnected() ? VPN : null;
+    }
+    
     @Override
     protected Task<Void> createConnectTask() {
         return new AlertingTask(ERROR_CON_VPN) {
             @Override
             protected void doTask() throws Exception {
-                updateMessage("Conectando con la UPV...");
+                updateMessage(conMsg);
                 Process p = ProcessUtils.startProcess("rasphone.exe", "-d", "\"" + VPN + "\"");
                 ProcessUtils.waitAndCheck(p);
                 //Si el proceso fue correctamente pero la VPN no esta conectada, se entiende que el usuario canceló la operación
@@ -113,15 +133,14 @@ public class AccesoVPNService extends AccesoService {
             @Override
             protected void doTask() throws Exception {
                 updateErrorMsg(ERROR_DIS_VPN);
-                updateMessage("Desconectando de la UPV...");
-                Process p = ProcessUtils.startProcess("rasdial.exe", "\"" + VPN + "\"", "/DISCONNECT");
+                updateMessage(disMsg);
+                Process p = ProcessUtils.startProcess("rasdial.exe", "\"" + connectedVPN + "\"", "/DISCONNECT");
                 ProcessUtils.waitAndCheck(p, 1000);
             }
         };
     }
 
     public void setVPN(String vpn) {
-        checkConnected();
         this.VPN = vpn;
     }
 }

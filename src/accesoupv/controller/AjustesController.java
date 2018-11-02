@@ -217,6 +217,7 @@ public class AjustesController implements Initializable {
         menuAyuda.setOnAction(evt -> PrincipalController.showAyuda(""));
         menuAyudaDSIC.setOnAction(evt -> PrincipalController.showAyuda("DSIC"));
         menuAyudaVpnUPV.setOnAction(evt -> PrincipalController.showAyuda("VPN-upv"));
+        menuAyudaVpnDSIC.setOnAction(evt -> PrincipalController.showAyuda("VPN-dsic"));
         helpLinkVpnUPV.setOnAction(evt -> PrincipalController.showAyuda("VPN-upv"));
         helpLinkVpnUPV.setTooltip(new Tooltip("Click para ver cómo \"" + menuAyudaVpnUPV.getText() + "\""));
         helpLinkVpnDSIC.setOnAction(evt -> PrincipalController.showAyuda("VPN-dsic"));
@@ -248,25 +249,16 @@ public class AjustesController implements Initializable {
         
         //Escribe las preferencias guardadas
         String user = acceso.getUser();
-        if (user == null) {
-            Platform.runLater(() -> textUser.requestFocus());
-            user = "";
-        }
-        textUser.setText(user);
+        textUser.setText(user == null ? "" : user);
         
         String vpn = acceso.getVpnUPV();
-        if (vpn == null) {
-            Platform.runLater(() -> textVpnUPV.requestFocus());
-            vpn = "";
-        }
-        textVpnUPV.setText(vpn);
+        textVpnUPV.setText(vpn == null ? "" : vpn);
+        
+        vpn = acceso.getVpnDSIC();
+        textVpnDSIC.setText(vpn == null ? "" : vpn);
         
         String pass = acceso.getPassDSIC();
-        if (pass == null) {
-            Platform.runLater(() -> passDriveDSIC.requestFocus());
-            pass = "";
-        }
-        passDriveDSIC.setText(pass);
+        passDriveDSIC.setText(pass == null ? "" : pass);
         
         //Si el dominio guardado es ALUMNOS, marca el RadioButton adecuado
         if (acceso.getDomain() == Dominio.ALUMNOS) alumnoRadioButton.setSelected(true);

@@ -54,6 +54,7 @@ public final class AccesoUPV {
     public static final String LINUX_DSIC = "linuxdesktop.dsic.upv.es";
     public static final String WIN_DSIC = "windesktop.dsic.upv.es";
     public static final String UPV_SERVER = "www.upv.es";
+    public static final String PORTAL_DSIC_WEB = "https://portal-ng.dsic.cloud";
     //Messages
     public static final String WARNING_FOLDER_DRIVE_MSG = 
             "El disco ha sido conectado correctamente, pero no se ha podido abrir la carpeta.\n"
@@ -68,7 +69,9 @@ public final class AccesoUPV {
     //Creating a new object loads all prefs
     private AccesoUPV() {
         VpnUPVService = new AccesoVPNService(prefs.get("VPN", null));
+        VpnUPVService.setMessages("Conectando con la UPV...", "Desconectando de la UPV...");
         VpnDSICService = new AccesoVPNService(prefs.get("VPN-dsic", null));
+        VpnDSICService.setMessages("Conectando con el DSIC...", "Desconectando del DSIC...");
         user = prefs.get("user", null);
         WService = new AccesoDriveWService(user, prefs.get("driveW", "*"), prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS);
         DSICService = new AccesoDriveDSICService(user, prefs.get("driveDSIC", "*"));
@@ -93,7 +96,7 @@ public final class AccesoUPV {
         else prefs.put("VPN", VpnUPV);
         String VpnDSIC = getVpnDSIC();
         if (VpnDSIC == null) prefs.remove("VPN-dsic");
-        else prefs.put("VPN", VpnDSIC);
+        else prefs.put("VPN-dsic", VpnDSIC);
         if (user == null) prefs.remove("user");
         else prefs.put("user", user);
         String driveW = getDriveW();
@@ -190,7 +193,7 @@ public final class AccesoUPV {
         return false;
     }
     //VPN RELATED
-    protected void establishVPN(AccesoVPNService serv) {
+    protected boolean establishVPN(AccesoVPNService serv) {
         boolean hasNewVPN = false;
         while (!hasNewVPN) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -201,13 +204,13 @@ public final class AccesoUPV {
                     + "¿Desea que se cree la VPN automáticamente?\n\n"
                     + "Si ya tiene una creada o prefiere crearla manualmente, elija \"No\".");
             Hyperlink help = new Hyperlink("Para saber cómo crear una VPN manualmente, pulse aquí");
-            help.setOnAction((evt) -> Platform.runLater(() -> PrincipalController.showAyuda("VPN")));
+            help.setOnAction((evt) -> Platform.runLater(() -> PrincipalController.showAyuda("")));
             alert.getDialogPane().setContent(new VBox(content, help));
             alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO,ButtonType.CANCEL);
             Optional<ButtonType> alertRes = alert.showAndWait();
 
-            //Si el usuario canceló o cerró el diálogo, sale del programa
-            if (!alertRes.isPresent() || alertRes.get() == ButtonType.CANCEL) System.exit(0);
+            //Si el usuario canceló o cerró el diálogo, sale
+            if (!alertRes.isPresent() || alertRes.get() == ButtonType.CANCEL) return false;
 
             //Si pulsó que sí, se debe crear una VPN nueva. Si pulsó que no, se debe introducir una existente.
             boolean setNewVPN = alertRes.get() == ButtonType.YES;
@@ -216,6 +219,7 @@ public final class AccesoUPV {
             //Si la VPN ha sido cambiada, continúa. Si no, vuelve a la primera Alert.
             if (hasNewVPN && setNewVPN) createVPN(serv);
         }
+        return true;
     }    
     protected boolean createVPN(AccesoVPNService serv) {
         if (serv.equals(VpnUPVService)) return createVpnUPV();
@@ -244,7 +248,9 @@ public final class AccesoUPV {
      */
     protected boolean connectVPN(AccesoVPNService serv) {
         if (serv.isConnected()) return true; //If the VPN is already connected, it's not necessary to connect it again
-        if (serv.getVPN() == null) establishVPN(serv);
+        if (serv.getVPN() == null) {
+            if (!establishVPN(serv)) return false;
+        }
         
         LoadingStage stage = new LoadingStage(serv);
         stage.showAndWait();
@@ -252,16 +258,22 @@ public final class AccesoUPV {
         
         //Si la ejecución falló, permite cambiar el valor de la VPN por si lo puso mal
         if (!succeeded) {
-            if (VpnUPVService.getException() instanceof IllegalArgumentException) {
+            if (serv.getException() instanceof IllegalArgumentException) {
                 if (setVPNDialog(serv, false)) return connectVPN(serv); //Si la VPN no era válida, permite cambiarla, y si la cambió, vuelve a intentarlo.
             }
         }
         return succeeded;
     }
     public boolean connectVpnUPV() {
-        boolean succeeded = connectVPN(VpnUPVService);
+        AccesoVPNService serv = VpnUPVService;
+        if (serv.isConnected()) return true; //If the VPN is already connected, it's not necessary to connect it again
+        if (serv.getVPN() == null) {
+            if (!establishVPN(serv)) System.exit(0);
+        }
+        boolean succeeded = connectVPN(serv);
         //Si el usuario ha cancelado el proceso de conexión o desconexión a la UPV, sale del programa
         if (VpnUPVService.getState() == Worker.State.CANCELLED) System.exit(0);
+        if (!succeeded) System.exit(-1); //Si falló por algo que desconocemos, sale del programa
         return succeeded;
     }
     public boolean connectVpnDSIC() { return connectVPN(VpnDSICService); }
@@ -390,13 +402,14 @@ public final class AccesoUPV {
     }
     
     protected boolean connectDrive(AccesoDriveService serv) {
-        if (serv.isConnected()) return true; //If drive is already connected, it's not necessary to connect it again
-        if (!checkDrive(serv)) return false; //If the drive isn't available, abort the process
-        LoadingStage stage = new LoadingStage(serv);
-        stage.showAndWait();
-        
-        boolean succeeded = stage.isSucceeded();
-        if (succeeded) {
+        boolean connected = serv.isConnected();
+        if (!connected) {//If drive is already connected, it's not necessary to connect it again
+            if (!checkDrive(serv)) return false; //If the drive isn't available, abort the process
+            LoadingStage stage = new LoadingStage(serv);
+            stage.showAndWait();
+        connected = stage.isSucceeded();
+        }
+        if (connected) {
             try {
                 Desktop.getDesktop().open(new File(serv.getDrive()));
             } catch (IOException ex) {
@@ -404,7 +417,7 @@ public final class AccesoUPV {
             }
         }
         
-        return succeeded;
+        return connected;
     }
     //DISCONNECTING METHODS
     public boolean shutdown() {

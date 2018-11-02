@@ -31,9 +31,10 @@
             </TitledPane>
             <TitledPane fx:id="paneVpnDSIC" animated="false" expanded="false" layoutX="10.0" layoutY="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo crear una VPN al DSIC">
                <content>
-                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="55.0" prefWidth="536.0">
+                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="55.0" prefWidth="536.0" spacing="10.0">
                      <children>
                         <Label text="Siga las instrucciones que ofrece la web del DSIC:" VBox.vgrow="ALWAYS" />
+                        <Label layoutX="20.0" layoutY="20.0" text="(debe seguir la opción de Windows, que es lo que utiliza este programa)" />
                         <Hyperlink fx:id="VpnDSICLink" focusTraversable="false" text="Pinche aquí para acceder a la web (PDF)" />
                      </children>
                   </VBox>

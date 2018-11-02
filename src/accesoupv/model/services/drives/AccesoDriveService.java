@@ -35,7 +35,7 @@ public abstract class AccesoDriveService extends AccesoService {
             "Existen archivos abiertos y/o búsquedas incompletas de directorios pendientes en el disco. Si no los cierra antes de desconectarse, podría perder datos.\n\n"
             + "¿Desea continuar la desconexión y forzar el cierre?";
     
-    protected String user, drive;
+    protected String user, drive, connectedDrive;
     
     public AccesoDriveService(String wUser, String wDrive) {
         user = wUser;
@@ -48,6 +48,16 @@ public abstract class AccesoDriveService extends AccesoService {
     
     public String getDrive() {
         return drive;
+    }
+    
+    public String getConnectedDrive() {
+        return isConnected() ? connectedDrive : drive;
+    }
+    
+    @Override
+    protected void succeeded() {
+        super.succeeded();
+        connectedDrive = isConnected() ? drive : null;
     }
     
     abstract class DriveConnectTask extends AlertingTask {
@@ -98,7 +108,7 @@ public abstract class AccesoDriveService extends AccesoService {
         @Override
         protected void doTask() throws Exception {
             updateMessage(initMsg);
-            Process p = ProcessUtils.startProcess("cmd.exe", "/c", "net", "use", drive, "/delete");
+            Process p = ProcessUtils.startProcess("cmd.exe", "/c", "net", "use", connectedDrive, "/delete");
             Thread.sleep(delay);
             int exitValue = p.waitFor();
             if (exitValue != 0) {
@@ -131,11 +141,9 @@ public abstract class AccesoDriveService extends AccesoService {
     }
 
     public void setUser(String user) {
-        checkConnected();
         this.user = user;
     }
     public void setDrive(String drive) {
-        checkConnected();
         this.drive = drive; 
     }
 }

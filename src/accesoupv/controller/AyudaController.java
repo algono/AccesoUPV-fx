@@ -11,8 +11,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -62,6 +60,7 @@ public class AyudaController implements Initializable {
     public static final String VPN_UPV_WEB = "https://www.upv.es/contenidos/INFOACCESO/infoweb/infoacceso/dat/697481normalc.html";
     public static final String VPN_DSIC_WEB = "http://www.dsic.upv.es/docs/infraestructura/portal-ng/manual_portal2_usuario_v8.pdf";
     public static final String EVIR_ERROR_MESSAGE = "Hubo un error al tratar de abrir el Escritorio Remoto.";
+    public static final String VPN_DSIC_ERROR_MESSAGE = "Hubo un error al tratar de abrir la página web.";
     public static final String EVIR_LINUX = "linuxdesktop.dsic.upv.es";
     public static final String EVIR_WINDOWS = "windesktop.dsic.upv.es";
     //Private instances
@@ -86,6 +85,8 @@ public class AyudaController implements Initializable {
     
     /**
      * Initializes the controller class.
+     * @param url
+     * @param rb
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -95,6 +96,7 @@ public class AyudaController implements Initializable {
             try {
                 Desktop.getDesktop().browse(new URI(VPN_DSIC_WEB));
             } catch (URISyntaxException | IOException ex) {
+                new Alert(Alert.AlertType.ERROR, VPN_DSIC_ERROR_MESSAGE).show();
             }
         });
         evirLink.setOnAction(e -> {
@@ -113,6 +115,5 @@ public class AyudaController implements Initializable {
         });
         buttonClose.setOnAction((evt) -> primaryStage.hide());
         paneVpnUPV.expandedProperty().addListener((obs, oldValue, newValue) -> primaryStage.setMaximized(newValue));
-        paneVpnDSIC.expandedProperty().addListener((obs, oldValue, newValue) -> primaryStage.setMaximized(newValue));
     }
 }
