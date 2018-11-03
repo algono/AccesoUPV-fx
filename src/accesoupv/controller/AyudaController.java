@@ -65,7 +65,6 @@ public class AyudaController implements Initializable {
     public static final String EVIR_WINDOWS = "windesktop.dsic.upv.es";
     //Private instances
     private Stage primaryStage;
-    private final Clipboard clipboard = Clipboard.getSystemClipboard();
     
     public void init(Stage stage, String page) {
         primaryStage = stage;
@@ -77,10 +76,10 @@ public class AyudaController implements Initializable {
         }
     }
     
-    private void addToClipboard(String text) {
+    public static void addToClipboard(String text) {
         ClipboardContent content = new ClipboardContent();
         content.putString(text);
-        clipboard.setContent(content);
+        Clipboard.getSystemClipboard().setContent(content);
     }
     
     /**

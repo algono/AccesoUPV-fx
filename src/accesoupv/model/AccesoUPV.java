@@ -5,13 +5,10 @@
  */
 package accesoupv.model;
 
-import accesoupv.model.services.drives.AccesoDriveDSICService;
-import accesoupv.model.services.drives.AccesoDriveWService;
-import accesoupv.model.services.drives.AccesoDriveService;
-import accesoupv.model.services.AccesoVPNService;
+import accesoupv.model.services.*;
+import accesoupv.model.services.drives.*;
 import accesoupv.controller.AjustesController;
 import accesoupv.controller.PrincipalController;
-import accesoupv.model.services.AccesoService;
 import accesoupv.model.tasks.*;
 import java.awt.Desktop;
 import java.io.File;
@@ -70,6 +67,8 @@ public final class AccesoUPV {
     private AccesoUPV() {
         VpnUPVService = new AccesoVPNService(prefs.get("VPN", null));
         VpnUPVService.setMessages("Conectando con la UPV...", "Desconectando de la UPV...");
+        VpnUPVService.setOnCancelled((evt) -> System.exit(0));
+        VpnUPVService.setOnFailed((evt) -> System.exit(-1));
         VpnDSICService = new AccesoVPNService(prefs.get("VPN-dsic", null));
         VpnDSICService.setMessages("Conectando con el DSIC...", "Desconectando del DSIC...");
         user = prefs.get("user", null);
@@ -83,27 +82,27 @@ public final class AccesoUPV {
     }
     //Load and save variables (prefs)
     public void loadPrefs() {
-        setVpnUPV(prefs.get("VPN", null));
-        setVpnDSIC(prefs.get("VPN-dsic", null));
-        setUser(prefs.get("user", null));
+        setVpnUPV(prefs.get("VPN", ""));
+        setVpnDSIC(prefs.get("VPN-dsic", ""));
+        setUser(prefs.get("user", ""));
         setDriveW(prefs.get("driveW", "*"));
         setDriveDSIC(prefs.get("driveDSIC", "*"));
         setDomain(prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS);
     }
     public void savePrefs() {
         String VpnUPV = getVpnUPV();
-        if (VpnUPV == null) prefs.remove("VPN");
+        if (VpnUPV.isEmpty()) prefs.remove("VPN");
         else prefs.put("VPN", VpnUPV);
         String VpnDSIC = getVpnDSIC();
-        if (VpnDSIC == null) prefs.remove("VPN-dsic");
+        if (VpnDSIC.isEmpty()) prefs.remove("VPN-dsic");
         else prefs.put("VPN-dsic", VpnDSIC);
-        if (user == null) prefs.remove("user");
+        if (user.isEmpty()) prefs.remove("user");
         else prefs.put("user", user);
         String driveW = getDriveW();
-        if (driveW == null || driveW.equals("*")) prefs.remove("driveW");
+        if (driveW.equals("*")) prefs.remove("driveW");
         else prefs.put("driveW", driveW);
         String driveDSIC = getDriveDSIC();
-        if (driveDSIC == null || driveDSIC.equals("*")) prefs.remove("driveDSIC");
+        if (driveDSIC.equals("*")) prefs.remove("driveDSIC");
         else prefs.put("driveDSIC", driveDSIC);
         if (getDomain() == Dominio.ALUMNOS) prefs.remove("non-student");
         else prefs.putBoolean("non-student", true);
@@ -230,16 +229,13 @@ public final class AccesoUPV {
     protected boolean createVPN(CreateVPNTask createTask) {
         LoadingStage stage = new LoadingStage(createTask);
         stage.showAndWait();
-        if (createTask.getState() == Worker.State.SUCCEEDED) {
+        boolean succeeded = stage.isSucceeded();
+        if (succeeded) {
             Alert successAlert = new Alert(Alert.AlertType.INFORMATION, "La conexión VPN (con nombre \"" + createTask.getName() + "\") ha sido creada con éxito.");
             successAlert.setHeaderText(null);
             successAlert.showAndWait();
-        } else if (createTask.getState() == Worker.State.FAILED) {
-            Alert failedAlert = new Alert(Alert.AlertType.ERROR, "Ha habido un error mientras se creaba la conexión VPN.");
-            failedAlert.setHeaderText(null);
-            failedAlert.showAndWait();
         }
-        return stage.isSucceeded();
+        return succeeded;
     }
     
     /**
@@ -257,26 +253,23 @@ public final class AccesoUPV {
         boolean succeeded = stage.isSucceeded();
         
         //Si la ejecución falló, permite cambiar el valor de la VPN por si lo puso mal
-        if (!succeeded) {
-            if (serv.getException() instanceof IllegalArgumentException) {
-                if (setVPNDialog(serv, false)) return connectVPN(serv); //Si la VPN no era válida, permite cambiarla, y si la cambió, vuelve a intentarlo.
+        if (!succeeded) { 
+            if (setVPNDialog(serv, false)) return connectVPN(serv); //Si la VPN no era válida, permite cambiarla, y si la cambió, vuelve a intentarlo.
+            else {
+                if (establishVPN(serv)) return connectVPN(serv);
+                else return false;
             }
         }
         return succeeded;
     }
     public boolean connectVpnUPV() {
-        AccesoVPNService serv = VpnUPVService;
-        if (serv.isConnected()) return true; //If the VPN is already connected, it's not necessary to connect it again
-        if (serv.getVPN() == null) {
-            if (!establishVPN(serv)) System.exit(0);
-        }
-        boolean succeeded = connectVPN(serv);
-        //Si el usuario ha cancelado el proceso de conexión o desconexión a la UPV, sale del programa
-        if (VpnUPVService.getState() == Worker.State.CANCELLED) System.exit(0);
-        if (!succeeded) System.exit(-1); //Si falló por algo que desconocemos, sale del programa
-        return succeeded;
+        if (connectVPN(VpnUPVService)) return true;
+        else System.exit(0);
+        return false;
     }
-    public boolean connectVpnDSIC() { return connectVPN(VpnDSICService); }
+    public boolean connectVpnDSIC() { 
+        return connectVPN(VpnDSICService); 
+    }
     
     //DIALOGS
     public boolean setVPNDialog(AccesoVPNService serv, boolean isNew) {
@@ -378,7 +371,7 @@ public final class AccesoUPV {
     }
     public boolean connectDSIC() {
         if (!checkUser()) return false;
-        boolean passDefined = getPassDSIC() != null;
+        boolean passDefined = !getPassDSIC().isEmpty();
         if (!passDefined) passDefined = setPassDialog();
         if (!passDefined) return false;
         boolean succeeded = connectDrive(DSICService);
@@ -423,7 +416,7 @@ public final class AccesoUPV {
     public boolean shutdown() {
         LoadingStage stage = new LoadingStage();
         List<Worker> workerList = stage.getLoadingService().getWorkerList();
-        AccesoService[] services = {WService, DSICService, VpnUPVService, VpnDSICService};
+        AccesoService[] services = {WService, DSICService, VpnDSICService, VpnUPVService};
         for (AccesoService serv : services) if (serv.isConnected()) workerList.add(serv);
         if (WService.isConnected()) WService.setDelay(1000);
         if (DSICService.isConnected()) DSICService.setDelay(1000);

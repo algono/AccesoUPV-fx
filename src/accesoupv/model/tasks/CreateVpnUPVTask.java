@@ -28,12 +28,11 @@ public class CreateVpnUPVTask extends CreateVPNTask {
     }
     
     @Override
-    protected Void call() throws Exception {
+    protected void doTask() throws Exception {
         updateMessage("Creando conexión VPN...");
         File tempXml = createXml();
         runScript(SCRIPT);
         tempXml.delete();
-        return null;
     }
     
     protected File createXml() throws IOException {

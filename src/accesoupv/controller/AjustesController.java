@@ -117,17 +117,17 @@ public class AjustesController implements Initializable {
     
     private boolean VpnUPVChanged() {
         String vpn = acceso.getVpnUPV();
-        return !textVpnUPV.getText().equals(vpn == null ? "" : vpn);
+        return !textVpnUPV.getText().equals(vpn);
     }
     
     private boolean VpnDSICChanged() {
         String vpn = acceso.getVpnDSIC();
-        return !textVpnDSIC.getText().equals(vpn == null ? "" : vpn);
+        return !textVpnDSIC.getText().equals(vpn);
     }
     
     private boolean userChanged() {
         String user = acceso.getUser();
-        return !textUser.getText().equals(user == null ? "" : user);
+        return !textUser.getText().equals(user);
     }
     
     private boolean driveWChanged() {
@@ -146,7 +146,7 @@ public class AjustesController implements Initializable {
     
     private boolean passDSICChanged() {
         String pass = acceso.getPassDSIC();
-        return !passDriveDSIC.getText().equals(pass == null ? "" : pass);
+        return !passDriveDSIC.getText().equals(pass);
     }
     
     private boolean domainChanged() {
@@ -249,16 +249,16 @@ public class AjustesController implements Initializable {
         
         //Escribe las preferencias guardadas
         String user = acceso.getUser();
-        textUser.setText(user == null ? "" : user);
+        textUser.setText(user);
         
         String vpn = acceso.getVpnUPV();
-        textVpnUPV.setText(vpn == null ? "" : vpn);
+        textVpnUPV.setText(vpn);
         
         vpn = acceso.getVpnDSIC();
-        textVpnDSIC.setText(vpn == null ? "" : vpn);
+        textVpnDSIC.setText(vpn);
         
         String pass = acceso.getPassDSIC();
-        passDriveDSIC.setText(pass == null ? "" : pass);
+        passDriveDSIC.setText(pass);
         
         //Si el dominio guardado es ALUMNOS, marca el RadioButton adecuado
         if (acceso.getDomain() == Dominio.ALUMNOS) alumnoRadioButton.setSelected(true);

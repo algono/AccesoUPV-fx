@@ -6,9 +6,11 @@
 package accesoupv.controller;
 
 import accesoupv.model.AccesoUPV;
+import java.awt.Desktop;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.security.GeneralSecurityException;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -19,19 +21,14 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar.ButtonData;
-import javafx.scene.control.ButtonType;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
-import javafx.scene.layout.StackPane;
-import javafx.scene.web.WebView;
+import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 /**
  *
@@ -65,6 +62,8 @@ public class PrincipalController implements Initializable {
     @FXML
     private MenuItem menuPortalDSIC;
     @FXML
+    private MenuItem menuDisconnectVpnDSIC;
+    @FXML
     private Button buttonAccessW;
     @FXML
     private Button buttonDisconnectW;
@@ -78,9 +77,12 @@ public class PrincipalController implements Initializable {
     private Button buttonWinDSIC;
     @FXML
     private Button buttonPortalDSIC;
+    @FXML
+    private Button buttonDisconnectVpnDSIC;
     
     //Messages
-    public static final String ERROR_DSIC_MSG = "No se ha podido acceder al servidor DSIC.";
+    public static final String ERROR_DSIC_MSG = "No se ha podido acceder al escritorio virtual del DSIC.";
+    public static final String ERROR_PORTAL_DSIC_MSG = "Ha habido un error al tratar de acceder a la web del Portal.";
     //AccesoUPV Instance
     private static final AccesoUPV acceso = AccesoUPV.getInstance();
     
@@ -126,53 +128,19 @@ public class PrincipalController implements Initializable {
     }
     
     private void accessPortal() {
-        // Create a trust manager that does not validate certificate chains
-        TrustManager[] trustAllCerts = new TrustManager[] { 
-            new X509TrustManager() {     
-                @Override
-                public java.security.cert.X509Certificate[] getAcceptedIssuers() { 
-                    return null;
-                } 
-                @Override
-                public void checkClientTrusted( 
-                    java.security.cert.X509Certificate[] certs, String authType) {
-                    } 
-                @Override
-                public void checkServerTrusted( 
-                    java.security.cert.X509Certificate[] certs, String authType) {
-                }
-            } 
-        }; 
-        SSLSocketFactory defaultSSLSocketFactory = HttpsURLConnection.getDefaultSSLSocketFactory();
-        // Install the all-trusting trust manager
-        try {
-            SSLContext sc = SSLContext.getInstance("SSL"); 
-            sc.init(null, trustAllCerts, new java.security.SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-        } catch (GeneralSecurityException e) {
-        } 
-        
-        WebView webView = new WebView();
-
-        StackPane root = new StackPane();
-        root.getChildren().add(webView);
-
-        Scene scene = new Scene(root, 300, 250);
-        Stage portal = new Stage();
-        portal.setTitle("Portal DSIC (portal-ng.dsic.upv.es)");
-        portal.setScene(scene);
-        
         if (acceso.connectVpnDSIC()) {
-            portal.setOnShown((evt) -> {
-                Platform.runLater(() -> {
-                    webView.getEngine().load(AccesoUPV.PORTAL_DSIC_WEB);
-                    portal.setMaximized(true);
-                });
-            });
-            portal.showAndWait();
-            acceso.disconnectVpnDSIC();
+            try {
+                Desktop.getDesktop().browse(new URI(AccesoUPV.PORTAL_DSIC_WEB));
+            } catch (URISyntaxException | IOException ex) {
+                Alert a = new Alert(Alert.AlertType.ERROR, ERROR_PORTAL_DSIC_MSG);
+                Hyperlink link = new Hyperlink(AccesoUPV.PORTAL_DSIC_WEB);
+                link.setOnAction((evt) -> AyudaController.addToClipboard(AccesoUPV.PORTAL_DSIC_WEB));
+                HBox box = new HBox(new Label("Link (click para copiar al portapapeles): "), link);
+                a.getDialogPane().getChildren().add(box);
+                a.getDialogPane().setExpandableContent(new TextArea(ex.getMessage()));
+                a.show();
+            }
         }
-        HttpsURLConnection.setDefaultSSLSocketFactory(defaultSSLSocketFactory);
     }
     
     @Override
@@ -206,11 +174,16 @@ public class PrincipalController implements Initializable {
         buttonPortalDSIC.setOnAction(e -> accessPortal());
         menuPortalDSIC.setOnAction(e -> accessPortal());
         
+        buttonDisconnectVpnDSIC.setOnAction(e -> acceso.disconnectVpnDSIC());
+        menuDisconnectVpnDSIC.setOnAction(e -> acceso.disconnectVpnDSIC());
+        
         //Setting bindings for buttons
         buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.connectedWProperty()));
         menuDisconnectW.disableProperty().bind(Bindings.not(acceso.connectedWProperty()));
         buttonDisconnectDSIC.disableProperty().bind(Bindings.not(acceso.connectedDSICProperty()));
         menuDisconnectDSIC.disableProperty().bind(Bindings.not(acceso.connectedDSICProperty()));
+        buttonDisconnectVpnDSIC.disableProperty().bind(Bindings.not(acceso.connectedVpnDSICProperty()));
+        menuDisconnectVpnDSIC.disableProperty().bind(Bindings.not(acceso.connectedVpnDSICProperty()));
         
         //Si no está ya conectado a la UPV, trata de conectarse a la VPN
         Platform.setImplicitExit(false); //Se asegura de que el programa no se cierre solo

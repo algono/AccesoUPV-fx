@@ -15,13 +15,13 @@ public class CreateVpnDSICTask extends CreateVPNTask {
     
     public CreateVpnDSICTask(String vpnName) {
         super(vpnName, "r1-vpn.dsic.upv.es");
+        input = Input.ENTER;
     }
     
     @Override
-    protected Void call() throws Exception {
+    protected void doTask() throws Exception {
         updateMessage("Creando VPN al DSIC...");
         runScript(SCRIPT);
-        return null;
     }
     
 }

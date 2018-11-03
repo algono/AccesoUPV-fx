@@ -58,7 +58,12 @@
                               </MenuItem>
                           </items>
                         </Menu>
-                        <MenuItem fx:id="menuPortalDSIC" mnemonicParsing="false" text="Acceder Portal" />
+                        <Menu mnemonicParsing="false" text="Portal">
+                          <items>
+                              <MenuItem fx:id="menuPortalDSIC" mnemonicParsing="false" text="Acceder" />
+                            <MenuItem fx:id="menuDisconnectVpnDSIC" mnemonicParsing="false" text="Desconectar" />
+                          </items>
+                        </Menu>
                     </items>
                   </Menu>
               </items>
@@ -105,12 +110,12 @@
             </Text>
             <HBox alignment="CENTER" spacing="10.0" GridPane.rowIndex="1">
                <children>
-                  <Button fx:id="buttonAccessW" mnemonicParsing="false" prefHeight="32.0" prefWidth="75.0" text="Acceder" textFill="#3a7c0b">
+                  <Button fx:id="buttonAccessW" mnemonicParsing="false" prefHeight="32.0" prefWidth="75.0" text="Acceder" textFill="#649c0e">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </Button>
-                  <Button fx:id="buttonDisconnectW" disable="true" mnemonicParsing="false" prefHeight="30.0" prefWidth="97.0" text="Desconectar" textFill="#b22828">
+                  <Button fx:id="buttonDisconnectW" disable="true" mnemonicParsing="false" prefHeight="30.0" prefWidth="97.0" text="Desconectar" textFill="#b03d28">
                      <font>
                         <Font size="14.0" />
                      </font>
@@ -125,12 +130,12 @@
             </Text>
             <HBox alignment="CENTER" spacing="10.0" GridPane.columnIndex="2" GridPane.rowIndex="1">
                <children>
-                  <Button fx:id="buttonAccessDSIC" mnemonicParsing="false" prefHeight="32.0" prefWidth="75.0" text="Acceder" textFill="#3a7c0b">
+                  <Button fx:id="buttonAccessDSIC" mnemonicParsing="false" prefHeight="32.0" prefWidth="75.0" text="Acceder" textFill="#6e9056">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </Button>
-                  <Button fx:id="buttonDisconnectDSIC" mnemonicParsing="false" prefHeight="30.0" prefWidth="97.0" text="Desconectar" textFill="#b22828" HBox.hgrow="ALWAYS">
+                  <Button fx:id="buttonDisconnectDSIC" disable="true" mnemonicParsing="false" prefHeight="30.0" prefWidth="97.0" text="Desconectar" textFill="#9e4646" HBox.hgrow="ALWAYS">
                      <font>
                         <Font size="14.0" />
                      </font>
@@ -162,11 +167,20 @@
                   <Font size="18.0" />
                </font>
             </Text>
-            <Button fx:id="buttonPortalDSIC" mnemonicParsing="false" prefHeight="32.0" prefWidth="75.0" text="Acceder" textFill="#7a0b62" GridPane.columnIndex="2" GridPane.rowIndex="4">
-               <font>
-                  <Font size="14.0" />
-               </font>
-            </Button>
+            <HBox alignment="CENTER" spacing="10.0" GridPane.columnIndex="2" GridPane.rowIndex="4">
+               <children>
+                  <Button fx:id="buttonPortalDSIC" mnemonicParsing="false" prefHeight="32.0" prefWidth="75.0" text="Acceder" textFill="#7a0b62">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Button>
+                  <Button fx:id="buttonDisconnectVpnDSIC" disable="true" mnemonicParsing="false" prefHeight="30.0" prefWidth="97.0" text="Desconectar" textFill="#b02857">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Button>
+               </children>
+            </HBox>
             <Separator layoutX="211.0" layoutY="10.0" orientation="VERTICAL" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.rowSpan="2" />
          </children>
          <BorderPane.margin>

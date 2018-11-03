@@ -10,17 +10,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Scanner;
-import javafx.concurrent.Task;
 
 /**
  *
  * @author Alejandro
  */
-public abstract class CreateVPNTask extends Task<Void> {
+public abstract class CreateVPNTask extends AlertingTask {
     
     protected final String name, server;
+    protected Input input = Input.NONE;
     
     protected CreateVPNTask(String vpnName, String vpnServer) {
+        super("Ha habido un error mientras se creaba la conexión VPN.");
         name = vpnName; 
         server = vpnServer;
     }
@@ -39,8 +40,14 @@ public abstract class CreateVPNTask extends Task<Void> {
                         .replaceAll("VPNSERVER", server));
             }
         }
-        //Runs the script and waits for its completion               
+        //Runs the script and waits for its completion
         Process p = new ProcessBuilder("powershell.exe", "-ExecutionPolicy", "ByPass", "-Command", temp.getAbsolutePath()).start();
+        //If the script needs an input, it is passed through a pipe.
+        if (input != Input.NONE) {
+            try (PrintWriter pw = new PrintWriter(p.getOutputStream(), true)) {
+                pw.println(input.getInput());
+            }
+        }
         p.waitFor();
         //Deletes the temp file
         temp.delete();
