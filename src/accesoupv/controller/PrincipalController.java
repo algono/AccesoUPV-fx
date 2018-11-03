@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -21,6 +22,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -83,6 +85,9 @@ public class PrincipalController implements Initializable {
     //Messages
     public static final String ERROR_DSIC_MSG = "No se ha podido acceder al escritorio virtual del DSIC.";
     public static final String ERROR_PORTAL_DSIC_MSG = "Ha habido un error al tratar de acceder a la web del Portal.";
+    public static final String EVIR_VPN_DSIC_WARNING = 
+            "El acceso a Portal (VPN DSIC) no puede estar conectado mientras se accede a un Escritorio Remoto del DSIC.\n\n"
+            + "Si continúa, este será desconectado automáticamente.";
     //AccesoUPV Instance
     private static final AccesoUPV acceso = AccesoUPV.getInstance();
     
@@ -119,11 +124,21 @@ public class PrincipalController implements Initializable {
         }
     }
     
-    private void accessDSIC(String server) {
-        try {
-            new ProcessBuilder("cmd.exe", "/c", "mstsc /v:" + server).start();
-        } catch (IOException ex) {
-            new Alert(Alert.AlertType.ERROR, ERROR_DSIC_MSG).show();
+    private void accessEVIR(String server) {
+        if (acceso.isVpnDSICConnected()) { //Si la VPN del DSIC está conectada muestra un aviso al usuario, pues no funcionaría.
+            Alert conf = new Alert(Alert.AlertType.WARNING, EVIR_VPN_DSIC_WARNING, ButtonType.OK, ButtonType.CANCEL);
+            conf.setHeaderText(null);
+            Optional<ButtonType> confRes = conf.showAndWait();
+            if (confRes.isPresent() && confRes.get() == ButtonType.OK) { //Si aceptó trata de desconectar la VPN del DSIC.
+                acceso.disconnectVpnDSIC();
+            } else return; //Si decidió cancelar se termina el proceso de acceder al EVIR.
+        }
+        if (!acceso.isVpnDSICConnected()) { //Si tras todo lo anterior se desconectó correctamente, continúa con el proceso.
+            try {
+                new ProcessBuilder("cmd.exe", "/c", "mstsc", "/v:" + server).start();
+            } catch (IOException ex) {
+                new Alert(Alert.AlertType.ERROR, ERROR_DSIC_MSG).show();
+            }
         }
     }
     
@@ -146,11 +161,11 @@ public class PrincipalController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         //Assigns actions to buttons and menu items
-        menuLinuxDSIC.setOnAction(e -> accessDSIC(AccesoUPV.LINUX_DSIC));
-        buttonLinuxDSIC.setOnAction(e -> accessDSIC(AccesoUPV.LINUX_DSIC));
+        menuLinuxDSIC.setOnAction(e -> accessEVIR(AccesoUPV.LINUX_DSIC));
+        buttonLinuxDSIC.setOnAction(e -> accessEVIR(AccesoUPV.LINUX_DSIC));
         
-        menuWinDSIC.setOnAction(e -> accessDSIC(AccesoUPV.WIN_DSIC));
-        buttonWinDSIC.setOnAction(e -> accessDSIC(AccesoUPV.WIN_DSIC));
+        menuWinDSIC.setOnAction(e -> accessEVIR(AccesoUPV.WIN_DSIC));
+        buttonWinDSIC.setOnAction(e -> accessEVIR(AccesoUPV.WIN_DSIC));
         
         menuAyuda.setOnAction(e -> showAyuda(""));
         menuAyudaDSIC.setOnAction(e -> showAyuda("DSIC"));

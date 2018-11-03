@@ -118,9 +118,8 @@ public abstract class AccesoDriveService extends AccesoService {
                     final AtomicBoolean res = new AtomicBoolean();
                     final CountDownLatch latch = new CountDownLatch(1);
                     Platform.runLater(() -> {
-                        Alert conf = new Alert(Alert.AlertType.WARNING, OPEN_FILES_WARNING);
+                        Alert conf = new Alert(Alert.AlertType.WARNING, OPEN_FILES_WARNING, ButtonType.OK, ButtonType.CANCEL);
                         conf.setHeaderText(null);
-                        conf.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
                         Optional<ButtonType> confRes = conf.showAndWait();
                         res.set(confRes.isPresent() && confRes.get() == ButtonType.OK);
                         latch.countDown();

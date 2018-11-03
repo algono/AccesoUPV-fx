@@ -70,7 +70,7 @@ public final class AccesoUPV {
         VpnUPVService.setOnCancelled((evt) -> System.exit(0));
         VpnUPVService.setOnFailed((evt) -> System.exit(-1));
         VpnDSICService = new AccesoVPNService(prefs.get("VPN-dsic", null));
-        VpnDSICService.setMessages("Conectando con el DSIC...", "Desconectando del DSIC...");
+        VpnDSICService.setMessages("Conectando con el DSIC...", "Desconectando VPN del DSIC...");
         user = prefs.get("user", null);
         WService = new AccesoDriveWService(user, prefs.get("driveW", "*"), prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS);
         DSICService = new AccesoDriveDSICService(user, prefs.get("driveDSIC", "*"));
@@ -129,8 +129,8 @@ public final class AccesoUPV {
     
     public boolean isVpnUPVConnected() { return VpnUPVService.isConnected(); }
     public boolean isVpnDSICConnected() { return VpnDSICService.isConnected(); }
-    public boolean isWConnected() { return WService.isConnected(); }
-    public boolean isDSICConnected() { return DSICService.isConnected(); }
+    public boolean isDriveWConnected() { return WService.isConnected(); }
+    public boolean isDriveDSICConnected() { return DSICService.isConnected(); }
     
     //Setters
     public void setVpnUPV(String v) {

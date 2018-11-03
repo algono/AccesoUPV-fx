@@ -207,8 +207,8 @@ public class AjustesController implements Initializable {
         //Si se ha cambiado algún valor de un servicio que se encuentra conectado, muestra un mensaje.
         textWarningConnected.visibleProperty().bind(Bindings.createBooleanBinding(() ->
             (acceso.isVpnUPVConnected() && VpnUPVChanged())
-            || (acceso.isWConnected() && (userChanged() || driveWChanged() || domainChanged()))
-            || (acceso.isDSICConnected() && (userChanged() || driveDSICChanged()))
+            || (acceso.isDriveWConnected() && (userChanged() || driveWChanged() || domainChanged()))
+            || (acceso.isDriveDSICConnected() && (userChanged() || driveDSICChanged()))
         ,textVpnUPV.textProperty(), textVpnDSIC.textProperty(), textUser.textProperty(), 
         comboDriveW.getSelectionModel().selectedItemProperty(), driveWCheckBox.selectedProperty(),
         comboDriveDSIC.getSelectionModel().selectedItemProperty(), driveDSICCheckBox.selectedProperty(),
