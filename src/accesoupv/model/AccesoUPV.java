@@ -237,12 +237,12 @@ public final class AccesoUPV {
     
     public boolean createVpnUPV() { return create(VpnUPVService); }
     public boolean createVpnDSIC() { return create(VpnDSICService); }
-    protected boolean create(Creatable serv) {
+    protected boolean create(AccesoVPNService serv) {
         LoadingStage stage = new LoadingStage(serv.getCreateTask());
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
         if (succeeded) {
-            Alert successAlert = new Alert(Alert.AlertType.INFORMATION, "La conexión (con nombre \"" + getVpnUPV() + "\") ha sido creada con éxito.");
+            Alert successAlert = new Alert(Alert.AlertType.INFORMATION, "La conexión (con nombre \"" + serv.getVPN() + "\") ha sido creada con éxito.");
             successAlert.setHeaderText(null);
             successAlert.showAndWait();
         }

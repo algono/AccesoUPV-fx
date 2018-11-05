@@ -5,6 +5,7 @@
  */
 package accesoupv.model.services;
 
+import accesoupv.model.Input;
 import javafx.concurrent.Task;
 
 /**
@@ -19,7 +20,7 @@ public class AccesoVpnDSICService extends AccesoVPNService {
 
     @Override
     public Task getCreateTask() {
-        return new CreateVPNTask(VPN, "r1-vpn.dsic.upv.es") {
+        return new CreateVPNTask(VPN, "r1-vpn.dsic.upv.es", Input.ENTER) {
             @Override
             protected void doTask() throws Exception {
                 updateMessage("Creando VPN al DSIC...");

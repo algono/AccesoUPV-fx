@@ -152,12 +152,21 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
     abstract class CreateVPNTask extends AlertingTask {
     
         protected final String name, server;
-        protected Input input = Input.NONE;
+        protected Input input;
 
         protected CreateVPNTask(String vpnName, String vpnServer) {
-            super("Ha habido un error mientras se creaba la conexión VPN.");
+            this(vpnName, vpnServer, Input.NONE);
+        }
+        
+        protected CreateVPNTask(String vpnName, String vpnServer, Input in) {
+            this(vpnName, vpnServer, in, "Ha habido un error mientras se creaba la conexión VPN.");
+        }
+        
+        protected CreateVPNTask(String vpnName, String vpnServer, Input in, String errMsg) {
+            super(errMsg);
             name = vpnName; 
             server = vpnServer;
+            input = in;
         }
 
         public String getName() { return name; }
