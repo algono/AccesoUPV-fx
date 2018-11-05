@@ -202,7 +202,7 @@ public class PrincipalController implements Initializable {
         
         //Si no está ya conectado a la UPV, trata de conectarse a la VPN
         Platform.setImplicitExit(false); //Se asegura de que el programa no se cierre solo
-        if (!acceso.isConnectedToUPV()) acceso.connectVpnUPV();
+        acceso.init();
         Platform.runLater(() -> Platform.setImplicitExit(true));
     }
 }

@@ -9,7 +9,6 @@ import accesoupv.model.services.*;
 import accesoupv.model.services.drives.*;
 import accesoupv.controller.AjustesController;
 import accesoupv.controller.PrincipalController;
-import accesoupv.model.tasks.*;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
@@ -65,11 +64,9 @@ public final class AccesoUPV {
     
     //Creating a new object loads all prefs
     private AccesoUPV() {
-        VpnUPVService = new AccesoVPNService(prefs.get("VPN", null));
+        VpnUPVService = new AccesoVpnUPVService(prefs.get("VPN", null));
         VpnUPVService.setMessages("Conectando con la UPV...", "Desconectando de la UPV...");
-        VpnUPVService.setOnCancelled((evt) -> System.exit(0));
-        VpnUPVService.setOnFailed((evt) -> System.exit(-1));
-        VpnDSICService = new AccesoVPNService(prefs.get("VPN-dsic", null));
+        VpnDSICService = new AccesoVpnDSICService(prefs.get("VPN-dsic", null));
         VpnDSICService.setMessages("Conectando con el DSIC...", "Desconectando VPN del DSIC...");
         user = prefs.get("user", null);
         WService = new AccesoDriveWService(user, prefs.get("driveW", "*"), prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS);
@@ -191,6 +188,23 @@ public final class AccesoUPV {
         } catch (IOException ex) {}
         return false;
     }
+    
+    public void init() {
+        AccesoVPNService serv = VpnUPVService;
+        boolean succeeded = isConnectedToUPV();
+        if (!succeeded) {
+            if (serv.getVPN() == null) {
+                if (!establishVPN(serv)) System.exit(0);
+            }
+            serv.setOnCancelled((evt) -> System.exit(0));
+            succeeded = connectVpnUPV();
+            serv.setOnCancelled(null);
+        }
+        if (!succeeded) {
+            System.exit(-1);
+        }
+    }
+    
     //VPN RELATED
     protected boolean establishVPN(AccesoVPNService serv) {
         boolean hasNewVPN = false;
@@ -215,23 +229,20 @@ public final class AccesoUPV {
             boolean setNewVPN = alertRes.get() == ButtonType.YES;
             hasNewVPN = setVPNDialog(serv, setNewVPN);
 
-            //Si la VPN ha sido cambiada, continúa. Si no, vuelve a la primera Alert.
-            if (hasNewVPN && setNewVPN) createVPN(serv);
+            //Si la VPN ha sido cambiada (y es nueva), la crea.
+            if (hasNewVPN && setNewVPN) create(serv);
         }
         return true;
     }    
-    protected boolean createVPN(AccesoVPNService serv) {
-        if (serv.equals(VpnUPVService)) return createVpnUPV();
-        else return createVpnDSIC();
-    }
-    public boolean createVpnUPV() { return createVPN(new CreateVpnUPVTask(getVpnUPV())); }
-    public boolean createVpnDSIC() { return createVPN(new CreateVpnDSICTask(getVpnDSIC())); }
-    protected boolean createVPN(CreateVPNTask createTask) {
-        LoadingStage stage = new LoadingStage(createTask);
+    
+    public boolean createVpnUPV() { return create(VpnUPVService); }
+    public boolean createVpnDSIC() { return create(VpnDSICService); }
+    protected boolean create(Creatable serv) {
+        LoadingStage stage = new LoadingStage(serv.getCreateTask());
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
         if (succeeded) {
-            Alert successAlert = new Alert(Alert.AlertType.INFORMATION, "La conexión VPN (con nombre \"" + createTask.getName() + "\") ha sido creada con éxito.");
+            Alert successAlert = new Alert(Alert.AlertType.INFORMATION, "La conexión (con nombre \"" + getVpnUPV() + "\") ha sido creada con éxito.");
             successAlert.setHeaderText(null);
             successAlert.showAndWait();
         }
@@ -263,9 +274,7 @@ public final class AccesoUPV {
         return succeeded;
     }
     public boolean connectVpnUPV() {
-        if (connectVPN(VpnUPVService)) return true;
-        else System.exit(0);
-        return false;
+        return connectVPN(VpnUPVService);
     }
     public boolean connectVpnDSIC() { 
         return connectVPN(VpnDSICService); 

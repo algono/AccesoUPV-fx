@@ -6,12 +6,17 @@
 package accesoupv.model.services;
 
 import accesoupv.model.ProcessUtils;
-import accesoupv.model.tasks.AlertingTask;
+import accesoupv.model.AlertingTask;
+import accesoupv.model.Input;
 import java.awt.Desktop;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Scanner;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Hyperlink;
@@ -22,7 +27,7 @@ import javafx.scene.layout.VBox;
  *
  * @author aleja
  */
-public class AccesoVPNService extends AccesoService {
+public abstract class AccesoVPNService extends AccesoService implements Creatable {
     //Error messages
     public static final String ERROR_CON_VPN
             = "Se ha producido un error al tratar de conectarse a la VPN.\n\n"
@@ -40,7 +45,7 @@ public class AccesoVPNService extends AccesoService {
     //Timeout for checking if the connected VPN is able to connect the UPV (in ms)
     public static final int PING_TIMEOUT = 4000;
     
-    private String VPN, connectedVPN;
+    protected String VPN, connectedVPN;
     private String conMsg = "Conectando VPN...", disMsg = "Desconectando VPN...";
     
     public AccesoVPNService(String vpn) {
@@ -62,6 +67,10 @@ public class AccesoVPNService extends AccesoService {
     public void setMessages(String connectMsg, String disconnectMsg) {
         conMsg = connectMsg;
         disMsg = disconnectMsg;
+    }
+    
+    public void setVPN(String vpn) {
+        this.VPN = vpn;
     }
     
     @Override
@@ -139,8 +148,44 @@ public class AccesoVPNService extends AccesoService {
             }
         };
     }
+    //Initial class for creating VPN (Creatable impl)
+    abstract class CreateVPNTask extends AlertingTask {
+    
+        protected final String name, server;
+        protected Input input = Input.NONE;
 
-    public void setVPN(String vpn) {
-        this.VPN = vpn;
+        protected CreateVPNTask(String vpnName, String vpnServer) {
+            super("Ha habido un error mientras se creaba la conexión VPN.");
+            name = vpnName; 
+            server = vpnServer;
+        }
+
+        public String getName() { return name; }
+        public String getServer() { return server; }
+
+        protected final void runScript(String script) throws IOException, InterruptedException {
+            File temp = File.createTempFile("temp", ".ps1");
+            //Just in case the task throws an exception, it ensures the temp file is deleted
+            temp.deleteOnExit();
+            //Fills the new file with the script
+            try (Scanner sc = new Scanner(script); PrintWriter pw = new PrintWriter(new FileOutputStream(temp), true)) {
+                while (sc.hasNext()) {
+                    pw.println(sc.nextLine().replaceAll("VPNNAME", name)
+                            .replaceAll("VPNSERVER", server));
+                }
+            }
+            //Runs the script and waits for its completion
+            Process p = new ProcessBuilder("powershell.exe", "-ExecutionPolicy", "ByPass", "-Command", temp.getAbsolutePath()).start();
+            //If the script needs an input, it is passed through a pipe.
+            if (input != Input.NONE) {
+                try (PrintWriter pw = new PrintWriter(p.getOutputStream(), true)) {
+                    pw.println(input.getInput());
+                }
+            }
+            p.waitFor();
+            //Deletes the temp file
+            temp.delete();
+        }
     }
+    
 }
