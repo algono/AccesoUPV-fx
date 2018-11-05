@@ -64,11 +64,11 @@ public final class AccesoUPV {
     
     //Creating a new object loads all prefs
     private AccesoUPV() {
-        VpnUPVService = new AccesoVpnUPVService(prefs.get("VPN", null));
+        VpnUPVService = new AccesoVpnUPVService(prefs.get("VPN", ""));
         VpnUPVService.setMessages("Conectando con la UPV...", "Desconectando de la UPV...");
-        VpnDSICService = new AccesoVpnDSICService(prefs.get("VPN-dsic", null));
+        VpnDSICService = new AccesoVpnDSICService(prefs.get("VPN-dsic", ""));
         VpnDSICService.setMessages("Conectando con el DSIC...", "Desconectando VPN del DSIC...");
-        user = prefs.get("user", null);
+        user = prefs.get("user", "");
         WService = new AccesoDriveWService(user, prefs.get("driveW", "*"), prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS);
         DSICService = new AccesoDriveDSICService(user, prefs.get("driveDSIC", "*"));
     }
@@ -131,24 +131,20 @@ public final class AccesoUPV {
     
     //Setters
     public void setVpnUPV(String v) {
-        v = v.trim();
-        VpnUPVService.setVPN(v.isEmpty() ? null : v);
+        VpnUPVService.setVPN(v.trim());
     }
     public void setVpnDSIC(String v) {
-        v = v.trim();
-        VpnDSICService.setVPN(v.isEmpty() ? null : v);
+        VpnDSICService.setVPN(v.trim());
     }
     public void setUser(String u) {
-        u = u.trim();
-        user = u.isEmpty() ? null : u;
+        user = u.trim();
         WService.setUser(user);
         DSICService.setUser(user);
     }
     public void setDriveW(String d) { WService.setDrive(d); }
     public void setDriveDSIC(String d) { DSICService.setDrive(d); }
     public void setPassDSIC(String p) {
-        p = p.trim();
-        DSICService.setPass(p.isEmpty() ? null : p);
+        DSICService.setPass(p.trim());
     }
     public void setDomain(Dominio d) { WService.setDomain(d); }
     public void setSavePrefsOnExit(boolean b) { savePrefsOnExit = b; }
@@ -193,7 +189,7 @@ public final class AccesoUPV {
         AccesoVPNService serv = VpnUPVService;
         boolean succeeded = isConnectedToUPV();
         if (!succeeded) {
-            if (serv.getVPN() == null) {
+            if (serv.getVPN().isEmpty()) {
                 if (!establishVPN(serv)) System.exit(0);
             }
             serv.setOnCancelled((evt) -> System.exit(0));
@@ -204,65 +200,37 @@ public final class AccesoUPV {
             System.exit(-1);
         }
     }
-    
-    //VPN RELATED
-    protected boolean establishVPN(AccesoVPNService serv) {
-        boolean hasNewVPN = false;
-        while (!hasNewVPN) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setHeaderText(null);
-            String warningText = "Debe establecer una red VPN para poder acceder a"
-                    + (serv.equals(VpnUPVService) ? " la UPV desde fuera del campus." : "l portal DSIC.");
-            Label content = new Label(warningText + "\n\n"
-                    + "¿Desea que se cree la VPN automáticamente?\n\n"
-                    + "Si ya tiene una creada o prefiere crearla manualmente, elija \"No\".");
-            Hyperlink help = new Hyperlink("Para saber cómo crear una VPN manualmente, pulse aquí");
-            help.setOnAction((evt) -> Platform.runLater(() -> PrincipalController.showAyuda("")));
-            alert.getDialogPane().setContent(new VBox(content, help));
-            alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO,ButtonType.CANCEL);
-            Optional<ButtonType> alertRes = alert.showAndWait();
-
-            //Si el usuario canceló o cerró el diálogo, sale
-            if (!alertRes.isPresent() || alertRes.get() == ButtonType.CANCEL) return false;
-
-            //Si pulsó que sí, se debe crear una VPN nueva. Si pulsó que no, se debe introducir una existente.
-            boolean setNewVPN = alertRes.get() == ButtonType.YES;
-            hasNewVPN = setVPNDialog(serv, setNewVPN);
-
-            //Si la VPN ha sido cambiada (y es nueva), la crea.
-            if (hasNewVPN && setNewVPN) create(serv);
-        }
-        return true;
-    }    
-    
+    //CREATING METHODS
     public boolean createVpnUPV() { return create(VpnUPVService); }
     public boolean createVpnDSIC() { return create(VpnDSICService); }
-    protected boolean create(AccesoVPNService serv) {
-        LoadingStage stage = new LoadingStage(serv.getCreateTask());
+    protected boolean create(Creatable cr) {
+        LoadingStage stage = new LoadingStage(cr.getCreateTask());
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
         if (succeeded) {
-            Alert successAlert = new Alert(Alert.AlertType.INFORMATION, "La conexión (con nombre \"" + serv.getVPN() + "\") ha sido creada con éxito.");
+            Alert successAlert = new Alert(Alert.AlertType.INFORMATION, "La conexión ha sido creada con éxito.");
             successAlert.setHeaderText(null);
             successAlert.showAndWait();
         }
         return succeeded;
     }
-    
+    //CONNECTING METHODS
+    protected boolean connect(AccesoService serv) {
+        LoadingStage stage = new LoadingStage(serv);
+        stage.showAndWait();
+        return stage.isSucceeded();
+    }
+    //VPN RELATED 
     /**
      * @param serv
      * @return If the operation completed successfully.
      */
     protected boolean connectVPN(AccesoVPNService serv) {
         if (serv.isConnected()) return true; //If the VPN is already connected, it's not necessary to connect it again
-        if (serv.getVPN() == null) {
+        if (serv.getVPN().isEmpty()) {
             if (!establishVPN(serv)) return false;
         }
-        
-        LoadingStage stage = new LoadingStage(serv);
-        stage.showAndWait();
-        boolean succeeded = stage.isSucceeded();
-        
+        boolean succeeded = connect(serv);        
         //Si la ejecución falló, permite cambiar el valor de la VPN por si lo puso mal
         if (!succeeded) { 
             if (setVPNDialog(serv, false)) return connectVPN(serv); //Si la VPN no era válida, permite cambiarla, y si la cambió, vuelve a intentarlo.
@@ -279,54 +247,7 @@ public final class AccesoUPV {
     public boolean connectVpnDSIC() { 
         return connectVPN(VpnDSICService); 
     }
-    
-    //DIALOGS
-    public boolean setVPNDialog(AccesoVPNService serv, boolean isNew) {
-        String inputContentText = (isNew)
-                        ? "Introduzca el nombre de la nueva conexión VPN a la UPV: " 
-                        : "Introduzca el nombre de la conexión VPN existente a la UPV: ";
-        TextInputDialog dialog = new TextInputDialog(serv.getVPN());
-        dialog.setTitle("Introduzca nombre VPN");
-        dialog.setHeaderText(null);
-        dialog.setContentText(inputContentText);
-        Optional<String> res = dialog.showAndWait();
-        res.ifPresent((newVPN) -> serv.setVPN(newVPN));
-        return res.isPresent();
-    }
-    
-    public boolean setUserDialog() {
-        TextInputDialog dialog = new TextInputDialog(user);
-        dialog.setTitle("Introduzca usuario");
-        dialog.setHeaderText(null);
-        dialog.setContentText("Introduzca su usuario de la UPV: ");
-        dialog.getDialogPane().setExpandableContent(new Label(AjustesController.HELP_USER_TOOLTIP));
-        Optional<String> res = dialog.showAndWait();
-        res.ifPresent((newUser) -> setUser(newUser));
-        return res.isPresent();
-    }
-    public boolean setPassDialog() {
-        PasswordDialog dialog = new PasswordDialog(getPassDSIC());
-        dialog.setTitle("Introduzca contraseña");
-        dialog.setHeaderText(null);
-        dialog.setContentText("Introduzca su contraseña del DSIC: ");
-        
-        Optional<String> res = dialog.showAndWait();
-        res.ifPresent((newPass) -> setPassDSIC(newPass));
-        return res.isPresent();
-    }
-    public boolean setDriveDialogW() { return setDriveDialog(WService); }
-    public boolean setDriveDialogDSIC() { return setDriveDialog(DSICService); }
-    protected boolean setDriveDialog(AccesoDriveService serv) {
-        List<String> drives = getAvailableDrives(serv);
-        String def = drives.contains("W:") ? "W:" : null;
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(def, drives);
-        dialog.setTitle("Elegir unidad Disco");
-        dialog.setHeaderText(null);
-        dialog.setContentText("Elija una unidad para su disco: ");
-        Optional<String> res = dialog.showAndWait();
-        res.ifPresent((newDrive) -> serv.setDrive(newDrive));
-        return res.isPresent();
-    }
+
     // DRIVE RELATED
     /**
      * Checks if the drive where W should be is already set up before this program did it.
@@ -398,7 +319,7 @@ public final class AccesoUPV {
     }
     
     protected boolean checkUser() {
-        boolean userDefined = user != null;
+        boolean userDefined = !user.isEmpty();
         if (!userDefined) userDefined = setUserDialog();
         return userDefined;
     }
@@ -407,9 +328,7 @@ public final class AccesoUPV {
         boolean connected = serv.isConnected();
         if (!connected) {//If drive is already connected, it's not necessary to connect it again
             if (!checkDrive(serv)) return false; //If the drive isn't available, abort the process
-            LoadingStage stage = new LoadingStage(serv);
-            stage.showAndWait();
-        connected = stage.isSucceeded();
+            connected = connect(serv);
         }
         if (connected) {
             try {
@@ -460,5 +379,81 @@ public final class AccesoUPV {
             succeeded = stage.isSucceeded();
         }
         return succeeded;
+    }
+    
+    //DIALOGS
+    protected boolean establishVPN(AccesoVPNService serv) {
+        boolean hasNewVPN = false;
+        while (!hasNewVPN) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setHeaderText(null);
+            String warningText = "Debe establecer una red VPN para poder acceder a"
+                    + (serv.equals(VpnUPVService) ? " la UPV desde fuera del campus." : "l portal DSIC.");
+            Label content = new Label(warningText + "\n\n"
+                    + "¿Desea que se cree la VPN automáticamente?\n\n"
+                    + "Si ya tiene una creada o prefiere crearla manualmente, elija \"No\".");
+            Hyperlink help = new Hyperlink("Para saber cómo crear una VPN manualmente, pulse aquí");
+            help.setOnAction((evt) -> Platform.runLater(() -> PrincipalController.showAyuda("")));
+            alert.getDialogPane().setContent(new VBox(content, help));
+            alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO,ButtonType.CANCEL);
+            Optional<ButtonType> alertRes = alert.showAndWait();
+
+            //Si el usuario canceló o cerró el diálogo, sale
+            if (!alertRes.isPresent() || alertRes.get() == ButtonType.CANCEL) return false;
+
+            //Si pulsó que sí, se debe crear una VPN nueva. Si pulsó que no, se debe introducir una existente.
+            boolean setNewVPN = alertRes.get() == ButtonType.YES;
+            hasNewVPN = setVPNDialog(serv, setNewVPN);
+
+            //Si la VPN ha sido cambiada (y es nueva), la crea.
+            if (hasNewVPN && setNewVPN) create(serv);
+        }
+        return true;
+    }    
+    public boolean setVPNDialog(AccesoVPNService serv, boolean isNew) {
+        String inputContentText = (isNew)
+                        ? "Introduzca el nombre de la nueva conexión VPN a la UPV: " 
+                        : "Introduzca el nombre de la conexión VPN existente a la UPV: ";
+        TextInputDialog dialog = new TextInputDialog(serv.getVPN());
+        dialog.setTitle("Introduzca nombre VPN");
+        dialog.setHeaderText(null);
+        dialog.setContentText(inputContentText);
+        Optional<String> res = dialog.showAndWait();
+        res.ifPresent((newVPN) -> serv.setVPN(newVPN));
+        return res.isPresent();
+    }
+    
+    public boolean setUserDialog() {
+        TextInputDialog dialog = new TextInputDialog(user);
+        dialog.setTitle("Introduzca usuario");
+        dialog.setHeaderText(null);
+        dialog.setContentText("Introduzca su usuario de la UPV: ");
+        dialog.getDialogPane().setExpandableContent(new Label(AjustesController.HELP_USER_TOOLTIP));
+        Optional<String> res = dialog.showAndWait();
+        res.ifPresent((newUser) -> setUser(newUser));
+        return res.isPresent();
+    }
+    public boolean setPassDialog() {
+        PasswordDialog dialog = new PasswordDialog(getPassDSIC());
+        dialog.setTitle("Introduzca contraseña");
+        dialog.setHeaderText(null);
+        dialog.setContentText("Introduzca su contraseña del DSIC: ");
+        
+        Optional<String> res = dialog.showAndWait();
+        res.ifPresent((newPass) -> setPassDSIC(newPass));
+        return res.isPresent();
+    }
+    public boolean setDriveDialogW() { return setDriveDialog(WService); }
+    public boolean setDriveDialogDSIC() { return setDriveDialog(DSICService); }
+    protected boolean setDriveDialog(AccesoDriveService serv) {
+        List<String> drives = getAvailableDrives(serv);
+        String def = drives.contains("W:") ? "W:" : null;
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(def, drives);
+        dialog.setTitle("Elegir unidad Disco");
+        dialog.setHeaderText(null);
+        dialog.setContentText("Elija una unidad para su disco: ");
+        Optional<String> res = dialog.showAndWait();
+        res.ifPresent((newDrive) -> serv.setDrive(newDrive));
+        return res.isPresent();
     }
 }
