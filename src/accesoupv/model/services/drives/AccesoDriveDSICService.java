@@ -37,7 +37,7 @@ public class AccesoDriveDSICService extends AccesoDriveService {
     }
     
     @Override
-    protected Task<Void> createConnectTask() {
+    protected Task<Boolean> createConnectTask() {
         return new DriveConnectTask() {            
             @Override
             public String getDir() {
@@ -50,10 +50,11 @@ public class AccesoDriveDSICService extends AccesoDriveService {
             }
             
             @Override
-            protected void doTask() throws Exception {
+            protected Boolean doTask() throws Exception {
                 initMsg = "Accediendo al disco del DSIC...";
+                Boolean res = false;
                 try {
-                    super.doTask();
+                    res = super.doTask();
                 } catch (IOException ex) {
                     String out = ex.getMessage();
                     Throwable cause = null;
@@ -66,18 +67,19 @@ public class AccesoDriveDSICService extends AccesoDriveService {
                         cause = new IllegalArgumentException();
                     }
                     throw new IOException(out, cause);
-                } 
+                }
+                return res;
             }
         };
     }
 
     @Override
-    protected Task<Void> createDisconnectTask() {
+    protected Task<Boolean> createDisconnectTask() {
         return new DriveDisconnectTask() {
             @Override
-            protected void doTask() throws Exception {
+            protected Boolean doTask() throws Exception {
                 initMsg = "Desconectando disco del DSIC...";
-                super.doTask();
+                return super.doTask();
             }
         };
     }

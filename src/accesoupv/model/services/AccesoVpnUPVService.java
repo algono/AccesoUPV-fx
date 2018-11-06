@@ -27,13 +27,14 @@ public class AccesoVpnUPVService extends AccesoVPNService {
     public Task getCreateTask() {
         return new CreateVPNTask(VPN, "vpn.upv.es") {
             @Override
-            protected void doTask() throws Exception {
+            protected String doTask() throws Exception {
                 updateMessage("Creando conexión VPN...");
                 File tempXml = createXml();
                 runScript("$importXML = New-Object XML" + "\n"
                     + "$importXML.Load(\"${env:temp}\\" + tempXml.getName() +"\")" + "\n"
                     + "Add-VpnConnection -Name \"VPNNAME\" -ServerAddress \"VPNSERVER\" -AuthenticationMethod Eap -EncryptionLevel Required -RememberCredential -TunnelType Sstp -EapConfigXmlStream $importXML" + "\n");
                 tempXml.delete();
+                return name;
             }
 
             protected File createXml() throws IOException {
@@ -49,6 +50,11 @@ public class AccesoVpnUPVService extends AccesoVPNService {
                 return temp;
             }
         };
+    }
+
+    @Override
+    protected Task<Boolean> createConnectTask() {
+        return new VPNConnectTask();
     }
     
 }

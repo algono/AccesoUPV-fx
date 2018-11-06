@@ -9,14 +9,14 @@ import java.util.concurrent.CountDownLatch;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
-import javafx.scene.control.TextArea;
-import javafx.scene.layout.VBox;
+import myLibrary.javafx.ErrorAlert;
 
 /**
  *
  * @author Alejandro
+ * @param <T>
  */
-public abstract class AlertingTask extends Task<Void> {
+public abstract class AlertingTask<T> extends Task<T> {
       
     private String errorMsg;
     protected boolean showError;
@@ -31,9 +31,10 @@ public abstract class AlertingTask extends Task<Void> {
     }
     
     @Override
-    protected final Void call() throws Exception {
+    protected final T call() throws Exception {
+        T res;
         try {
-            doTask();
+            res = doTask();
         } catch (Exception ex) {
             //Antes de que la task termine y se considere como 'failed', muestra el mensaje de error si su flag (showError) lo habilita,
             //y después vuelve a lanzar la excepción para que los demás la traten debidamente
@@ -51,27 +52,16 @@ public abstract class AlertingTask extends Task<Void> {
             }
             throw ex;
         }
-        return null;
+        return res;
     }
     
-    protected abstract void doTask() throws Exception;
+    protected abstract T doTask() throws Exception;
             
     //Getters
     public String getErrorMessage() { return errorMsg; }   
     
-    public Alert getErrorAlert() {
-        return getErrorAlert(getException());
-    }
-    protected final Alert getErrorAlert(Throwable exception) {
-        Alert errorAlert = new Alert(Alert.AlertType.ERROR, errorMsg);
-        errorAlert.setHeaderText(null);
-        String errorOutput = (exception == null) ? null : exception.getMessage();
-        if (errorOutput != null && !errorOutput.isEmpty()) {
-            TextArea errorContent = new TextArea(errorOutput);
-            errorContent.setEditable(false);
-            errorAlert.getDialogPane().setExpandableContent(new VBox(errorContent));
-        }
-        return errorAlert;
+    protected Alert getErrorAlert(Throwable ex) {
+        return new ErrorAlert(ex, errorMsg);
     }
     
     //Setters

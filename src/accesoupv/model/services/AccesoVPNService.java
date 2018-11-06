@@ -22,17 +22,18 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import myLibrary.javafx.ErrorAlert;
 
 /**
  *
  * @author aleja
  */
-public abstract class AccesoVPNService extends AccesoService implements Creatable {
+public abstract class AccesoVPNService extends AccesoService implements Creatable<String> {
     //Error messages
     public static final String ERROR_CON_VPN
             = "Se ha producido un error al tratar de conectarse a la VPN.\n\n"
             + "Compruebe que tiene conexión a Internet,\n"
-            + "que el nombre de la VPN está bien escrito\ny vuelva a intentarlo.\n ";
+            + "que el nombre de la VPN está bien escrito\ny vuelva a intentarlo.\n\n";
     
     public static final String ERROR_INVALID_VPN = 
             "La VPN proporcionada no es válida, pues no es capaz de acceder a la UPV.\n"
@@ -79,77 +80,79 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
         connectedVPN = isConnected() ? VPN : null;
     }
     
-    @Override
-    protected Task<Void> createConnectTask() {
-        return new AlertingTask(ERROR_CON_VPN) {
-            @Override
-            protected void doTask() throws Exception {
-                updateMessage(conMsg);
-                Process p = ProcessUtils.startProcess("rasphone.exe", "-d", "\"" + VPN + "\"");
-                ProcessUtils.waitAndCheck(p);
-                //Si el proceso fue correctamente pero la VPN no esta conectada, se entiende que el usuario canceló la operación
-                p = ProcessUtils.startProcess("rasdial.exe");
-                ProcessUtils.waitAndCheck(p);
-                //Si el usuario no canceló la operación (lo cual implica que la VPN se conectó con éxito), continúa.
-                if (ProcessUtils.getOutput(p).contains(VPN)) {
-                    //Si desde la VPN a la que se conectó no se puede acceder a la UPV, se entiende que ha elegido una incorrecta.
-                    boolean reachable = false;
-                    try {
-                        reachable = InetAddress.getByName("www.upv.es").isReachable(PING_TIMEOUT);
-                    } finally {
-                        //Tanto si no era alcanzable como si hubo un error al realizar el ping
-                        //(o si fue cancelado desde fuera), desconecta la VPN por si acaso.
-                        if (!reachable || isCancelled()) {
-                            p = ProcessUtils.startProcess("rasdial.exe", "\"" + VPN + "\"", "/DISCONNECT");
-                            ProcessUtils.waitAndCheck(p);
-                        }
+    class VPNConnectTask extends AlertingTask<Boolean> {
+        
+        public VPNConnectTask() {
+            super(ERROR_CON_VPN);
+        }
+        
+        @Override
+        protected Boolean doTask() throws Exception {
+            updateMessage(conMsg);
+            Process p = ProcessUtils.startProcess("rasphone.exe", "-d", "\"" + VPN + "\"");
+            ProcessUtils.waitAndCheck(p);
+            //Si el proceso fue correctamente pero la VPN no esta conectada, se entiende que el usuario canceló la operación
+            p = ProcessUtils.startProcess("rasdial.exe");
+            ProcessUtils.waitAndCheck(p);
+            //Si el usuario no canceló la operación (lo cual implica que la VPN se conectó con éxito), continúa.
+            if (ProcessUtils.getOutput(p).contains(VPN)) {
+                //Si desde la VPN a la que se conectó no se puede acceder a la UPV, se entiende que ha elegido una incorrecta.
+                boolean reachable = false;
+                try {
+                    reachable = InetAddress.getByName("www.upv.es").isReachable(PING_TIMEOUT);
+                } finally {
+                    //Tanto si no era alcanzable como si hubo un error al realizar el ping
+                    //(o si fue cancelado desde fuera), desconecta la VPN por si acaso.
+                    if (!reachable || isCancelled()) {
+                        p = ProcessUtils.startProcess("rasdial.exe", "\"" + VPN + "\"", "/DISCONNECT");
+                        ProcessUtils.waitAndCheck(p);
                     }
-                    //Si no era alcanzable, lanza la excepción adecuada
-                    if (!reachable) {
-                        updateErrorMsg(ERROR_INVALID_VPN);
-                        throw new IllegalArgumentException();
-                    }
-                } else {
-                    cancel(); 
                 }
-            }
-            
-            @Override
-            public Alert getErrorAlert() {
-                Alert alert = super.getErrorAlert();
-                if (getErrorMessage().equals(ERROR_CON_VPN)) {
-                    Hyperlink helpLink = new Hyperlink("Para más información acerca de posibles errores, pulse aquí");
-                    helpLink.setOnAction(e -> {
-                        try {
-                            Desktop desktop = Desktop.getDesktop();
-                            URI oURL = new URI(AccesoVPNService.WEB_ERROR_VPN);
-                            desktop.browse(oURL);
-                        } catch (IOException | URISyntaxException ex) {
-                            new Alert(Alert.AlertType.ERROR, "Ha ocurrido un error al tratar de abrir el navegador.").show();
-                        }
-                    });
-                    VBox box = new VBox(new Label(getErrorMessage()), helpLink);
-                    alert.getDialogPane().setContent(box);
+                //Si no era alcanzable, lanza la excepción adecuada
+                if (!reachable) {
+                    updateErrorMsg(ERROR_INVALID_VPN);
+                    throw new IllegalArgumentException();
                 }
-                return alert;
+            } else {
+                cancel(); 
             }
-        };
-    }
+            return true;
+        }
+
+        @Override
+        public Alert getErrorAlert(Throwable ex) {
+            Alert alert = super.getErrorAlert(ex);
+            Hyperlink helpLink = new Hyperlink("Para más información acerca de posibles errores, pulse aquí");
+            helpLink.setOnAction(e -> {
+                try {
+                    Desktop desktop = Desktop.getDesktop();
+                    URI oURL = new URI(AccesoVPNService.WEB_ERROR_VPN);
+                    desktop.browse(oURL);
+                } catch (IOException | URISyntaxException linkEx) {
+                    new ErrorAlert(linkEx, "Ha ocurrido un error al tratar de abrir el navegador.").show();
+                }
+            });
+            VBox box = new VBox(new Label(getErrorMessage()), helpLink);
+            alert.getDialogPane().setContent(box);
+            return alert;
+        }
+    };
     
     @Override
-    protected Task<Void> createDisconnectTask() {
-        return new AlertingTask() {
+    protected Task<Boolean> createDisconnectTask() {
+        return new AlertingTask<Boolean>() {
             @Override
-            protected void doTask() throws Exception {
+            protected Boolean doTask() throws Exception {
                 updateErrorMsg(ERROR_DIS_VPN);
                 updateMessage(disMsg);
                 Process p = ProcessUtils.startProcess("rasdial.exe", "\"" + connectedVPN + "\"", "/DISCONNECT");
                 ProcessUtils.waitAndCheck(p, 1000);
+                return true;
             }
         };
     }
     //Initial class for creating VPN (Creatable impl)
-    abstract class CreateVPNTask extends AlertingTask {
+    abstract class CreateVPNTask extends AlertingTask<String> {
     
         protected final String name, server;
         protected Input input;
@@ -171,7 +174,7 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
 
         public String getName() { return name; }
         public String getServer() { return server; }
-
+        
         protected final void runScript(String script) throws IOException, InterruptedException {
             File temp = File.createTempFile("temp", ".ps1");
             //Just in case the task throws an exception, it ensures the temp file is deleted

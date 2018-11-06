@@ -60,7 +60,7 @@ public abstract class AccesoDriveService extends AccesoService {
         connectedDrive = isConnected() ? drive : null;
     }
     
-    abstract class DriveConnectTask extends AlertingTask {
+    abstract class DriveConnectTask extends AlertingTask<Boolean> {
         
         protected String initMsg = "Accediendo al disco...";
         
@@ -71,7 +71,7 @@ public abstract class AccesoDriveService extends AccesoService {
         public List<String> getExtraArgs() { return null; }
     
         @Override
-        protected void doTask() throws Exception {
+        protected Boolean doTask() throws Exception {
             updateMessage(initMsg);
             List<String> args = new ArrayList<>(Arrays.asList("cmd.exe", "/c", "net", "use", drive, getDir()));
             List<String> extraArgs = getExtraArgs();
@@ -95,10 +95,11 @@ public abstract class AccesoDriveService extends AccesoService {
                 int indexOf = out.indexOf(':');
                 drive = out.charAt(indexOf-1) + ":";
             }
+            return true;
         }
     }
     
-    class DriveDisconnectTask extends AlertingTask {
+    class DriveDisconnectTask extends AlertingTask<Boolean> {
         
         protected String initMsg = "Desconectando disco...";
         
@@ -106,7 +107,7 @@ public abstract class AccesoDriveService extends AccesoService {
         public DriveDisconnectTask(String errMsg) { super(errMsg); }
         
         @Override
-        protected void doTask() throws Exception {
+        protected Boolean doTask() throws Exception {
             updateMessage(initMsg);
             Process p = ProcessUtils.startProcess("cmd.exe", "/c", "net", "use", connectedDrive, "/delete");
             Thread.sleep(delay);
@@ -136,6 +137,7 @@ public abstract class AccesoDriveService extends AccesoService {
                     throw new IOException(out);
                 }
             }
+            return true;
         }
     }
 

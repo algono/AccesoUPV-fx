@@ -6,7 +6,6 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -18,7 +17,7 @@
 
 <BorderPane focusTraversable="true" prefHeight="252.0" prefWidth="428.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="accesoupv.controller.PrincipalController">
    <top>
-      <MenuBar BorderPane.alignment="CENTER">
+      <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
         <menus>
             <Menu mnemonicParsing="false" text="Inicio">
               <items>
@@ -74,15 +73,6 @@
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
-            </items>
-          </Menu>
-          <Menu mnemonicParsing="false" text="Ayuda">
-            <items>
-                  <MenuItem fx:id="menuAyuda" mnemonicParsing="false" text="Índice de ayuda" />
-                  <SeparatorMenuItem mnemonicParsing="false" />
-              <MenuItem fx:id="menuAyudaVpnUPV" mnemonicParsing="false" text="Crear la conexión VPN (UPV)" />
-                  <MenuItem fx:id="menuAyudaVpnDSIC" mnemonicParsing="false" text="Crear la conexión VPN (DSIC)" />
-                  <MenuItem fx:id="menuAyudaDSIC" mnemonicParsing="false" text="Guardar credenciales DSIC" />
             </items>
           </Menu>
         </menus>

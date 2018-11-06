@@ -24,6 +24,8 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.RadioButton;
@@ -41,6 +43,8 @@ import javafx.scene.text.Text;
 public class AjustesController implements Initializable {
     
     @FXML
+    private MenuBar menuBar;
+    @FXML
     private Text textWarningConnected;
     @FXML
     private TextField textVpnUPV;
@@ -52,14 +56,6 @@ public class AjustesController implements Initializable {
     private ComboBox<String> comboDriveDSIC;
     @FXML
     private TextField textUser;
-    @FXML
-    private MenuItem menuAyuda;
-    @FXML
-    private MenuItem menuAyudaVpnUPV;
-    @FXML
-    private MenuItem menuAyudaVpnDSIC;
-    @FXML
-    private MenuItem menuAyudaDSIC;
     @FXML
     private Hyperlink helpLinkVpnUPV;
     @FXML
@@ -214,14 +210,22 @@ public class AjustesController implements Initializable {
         comboDriveDSIC.getSelectionModel().selectedItemProperty(), driveDSICCheckBox.selectedProperty(),
         passDriveDSIC.textProperty(), dominio.selectedToggleProperty()));
         
-        menuAyuda.setOnAction(evt -> PrincipalController.showAyuda(""));
-        menuAyudaDSIC.setOnAction(evt -> PrincipalController.showAyuda("DSIC"));
-        menuAyudaVpnUPV.setOnAction(evt -> PrincipalController.showAyuda("VPN-upv"));
-        menuAyudaVpnDSIC.setOnAction(evt -> PrincipalController.showAyuda("VPN-dsic"));
-        helpLinkVpnUPV.setOnAction(evt -> PrincipalController.showAyuda("VPN-upv"));
-        helpLinkVpnUPV.setTooltip(new Tooltip("Click para ver cómo \"" + menuAyudaVpnUPV.getText() + "\""));
-        helpLinkVpnDSIC.setOnAction(evt -> PrincipalController.showAyuda("VPN-dsic"));
-        helpLinkVpnDSIC.setTooltip(new Tooltip("Click para ver cómo \"" + menuAyudaVpnDSIC.getText() + "\""));
+        Menu ayudaMenu = AyudaController.getInstance().getMenu(); 
+        //Inicializa los links de ayuda
+        for (MenuItem item : ayudaMenu.getItems()) {
+            String text = item.getText();
+            if (text != null && text.contains("crear una VPN")) {
+                if (text.contains("UPV")) {
+                    helpLinkVpnUPV.setOnAction(evt -> item.fire());
+                    helpLinkVpnUPV.setTooltip(new Tooltip("Click para ver \"" + text + "\""));
+                } else if (text.contains("DSIC")) {
+                    helpLinkVpnDSIC.setOnAction(evt -> item.fire());
+                    helpLinkVpnDSIC.setTooltip(new Tooltip("Click para ver \"" + text + "\""));
+                }
+            }
+        }
+        //Añade un menú de ayuda a la barra de menú
+        menuBar.getMenus().add(ayudaMenu);
         
         resetButton.setOnAction(evt -> {
             //Ventana de confirmación

@@ -25,6 +25,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
@@ -38,7 +39,8 @@ import javafx.stage.Stage;
  */
 public class PrincipalController implements Initializable {
     
-    
+    @FXML
+    private MenuBar menuBar;
     @FXML
     private MenuItem menuAccessW;
     @FXML
@@ -53,14 +55,6 @@ public class PrincipalController implements Initializable {
     private MenuItem menuWinDSIC;
     @FXML
     private MenuItem menuAjustes;
-    @FXML
-    private MenuItem menuAyuda;
-    @FXML
-    private MenuItem menuAyudaVpnUPV;
-    @FXML
-    private MenuItem menuAyudaVpnDSIC;
-    @FXML
-    private MenuItem menuAyudaDSIC;
     @FXML
     private MenuItem menuPortalDSIC;
     @FXML
@@ -106,24 +100,6 @@ public class PrincipalController implements Initializable {
         } catch (IOException ex) {}
     }
     
-    public static void showAyuda(String page) {
-        try {
-            Stage stage = new Stage();
-            FXMLLoader myLoader = new FXMLLoader(PrincipalController.class.getResource("/accesoupv/view/AyudaView.fxml"));
-            Parent root = (Parent) myLoader.load();
-            AyudaController dialogue = myLoader.<AyudaController>getController();
-            dialogue.init(stage, page);
-            Scene scene = new Scene(root);
-
-            stage.setScene(scene);
-            stage.getIcons().add(new Image(PrincipalController.class.getResourceAsStream("/accesoupv/resources/icons/help-icon.png")));
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.show();
-        } catch (IOException ex) {
-            new Alert(Alert.AlertType.ERROR, "Ha habido un error inesperado al tratar de abrir la ventana.").show();
-        }
-    }
-    
     private void accessEVIR(String server) {
         if (acceso.isVpnDSICConnected()) { //Si la VPN del DSIC está conectada muestra un aviso al usuario, pues no funcionaría.
             Alert conf = new Alert(Alert.AlertType.WARNING, EVIR_VPN_DSIC_WARNING, ButtonType.OK, ButtonType.CANCEL);
@@ -167,10 +143,8 @@ public class PrincipalController implements Initializable {
         menuWinDSIC.setOnAction(e -> accessEVIR(AccesoUPV.WIN_DSIC));
         buttonWinDSIC.setOnAction(e -> accessEVIR(AccesoUPV.WIN_DSIC));
         
-        menuAyuda.setOnAction(e -> showAyuda(""));
-        menuAyudaDSIC.setOnAction(e -> showAyuda("DSIC"));
-        menuAyudaVpnUPV.setOnAction(e -> showAyuda("VPN"));
-        menuAyudaVpnDSIC.setOnAction(e -> showAyuda("VPN-dsic"));
+        //Añade un menú de ayuda a la barra de menú
+        menuBar.getMenus().add(AyudaController.getInstance().getMenu());
         
         menuAjustes.setOnAction(e -> showAjustes());
         

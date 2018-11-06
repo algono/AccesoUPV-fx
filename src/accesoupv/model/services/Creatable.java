@@ -10,8 +10,9 @@ import javafx.concurrent.Task;
 /**
  *
  * @author Alejandro
+ * @param <T> Task result type
  */
-public interface Creatable {
+public interface Creatable<T> {
     //The AccesoService has a Task associated to create the Acceso.
-    public Task getCreateTask();
+    public Task<T> getCreateTask();
 }

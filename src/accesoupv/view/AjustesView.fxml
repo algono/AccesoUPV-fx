@@ -6,12 +6,9 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
-<?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.RadioButton?>
-<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextField?>
@@ -231,18 +228,6 @@
       </VBox>
    </bottom>
    <top>
-      <MenuBar>
-        <menus>
-          <Menu mnemonicParsing="false" text="Ayuda">
-            <items>
-                  <MenuItem fx:id="menuAyuda" mnemonicParsing="false" text="Índice de ayuda" />
-                  <SeparatorMenuItem mnemonicParsing="false" />
-                  <MenuItem fx:id="menuAyudaVpnUPV" mnemonicParsing="false" text="Crear la conexión VPN (UPV)" />
-                  <MenuItem fx:id="menuAyudaVpnDSIC" mnemonicParsing="false" text="Crear la conexión VPN (DSIC)" />
-                  <MenuItem fx:id="menuAyudaDSIC" mnemonicParsing="false" text="Guardar credenciales DSIC" />
-            </items>
-          </Menu>
-        </menus>
-      </MenuBar>
+      <MenuBar fx:id="menuBar" />
    </top>
 </BorderPane>

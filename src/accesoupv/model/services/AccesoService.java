@@ -14,7 +14,7 @@ import javafx.concurrent.Task;
  *
  * @author Alejandro
  */
-public abstract class AccesoService extends Service<Void> {
+public abstract class AccesoService extends Service<Boolean> {
     
     //Task delay (being used or not depends on task implementation)
     protected int delay = 0;
@@ -27,12 +27,12 @@ public abstract class AccesoService extends Service<Void> {
     }
     
     @Override
-    public final Task<Void> createTask() {
+    public final Task<Boolean> createTask() {
         return connectedProperty.get() ? createDisconnectTask() : createConnectTask();
     }
     
-    protected abstract Task<Void> createConnectTask();
-    protected abstract Task<Void> createDisconnectTask();
+    protected abstract Task<Boolean> createConnectTask();
+    protected abstract Task<Boolean> createDisconnectTask();
     
     //Getters
     public boolean isConnected() { return connectedProperty.get(); }

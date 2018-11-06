@@ -8,6 +8,7 @@ package accesoupv.model;
 import accesoupv.model.services.*;
 import accesoupv.model.services.drives.*;
 import accesoupv.controller.AjustesController;
+import accesoupv.controller.AyudaController;
 import accesoupv.controller.PrincipalController;
 import java.awt.Desktop;
 import java.io.File;
@@ -393,7 +394,7 @@ public final class AccesoUPV {
                     + "¿Desea que se cree la VPN automáticamente?\n\n"
                     + "Si ya tiene una creada o prefiere crearla manualmente, elija \"No\".");
             Hyperlink help = new Hyperlink("Para saber cómo crear una VPN manualmente, pulse aquí");
-            help.setOnAction((evt) -> Platform.runLater(() -> PrincipalController.showAyuda("")));
+            help.setOnAction((evt) -> Platform.runLater(() -> AyudaController.getInstance().getStage().show()));
             alert.getDialogPane().setContent(new VBox(content, help));
             alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO,ButtonType.CANCEL);
             Optional<ButtonType> alertRes = alert.showAndWait();

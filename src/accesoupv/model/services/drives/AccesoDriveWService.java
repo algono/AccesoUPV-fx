@@ -31,27 +31,27 @@ public class AccesoDriveWService extends AccesoDriveService {
     }
     
     @Override
-    protected Task<Void> createConnectTask() {
+    protected Task<Boolean> createConnectTask() {
         return new DriveConnectTask() {
             @Override
             public String getDir() {
                 return "\\\\nasupv.upv.es\\" + dom.toString().toLowerCase() + "\\" + user.charAt(0) + "\\" + user;
             }
             @Override
-            protected void doTask() throws Exception {
+            protected Boolean doTask() throws Exception {
                 initMsg = "Accediendo al disco W...";
-                super.doTask();
+                return super.doTask();
             }
         };
     }
 
     @Override
-    protected Task<Void> createDisconnectTask() {
+    protected Task<Boolean> createDisconnectTask() {
         return new DriveDisconnectTask() {
             @Override
-            protected void doTask() throws Exception {
+            protected Boolean doTask() throws Exception {
                 initMsg = "Desconectando disco W...";
-                super.doTask();
+                return super.doTask();
             }
         };
     }
