@@ -6,6 +6,7 @@
 package accesoupv.controller;
 
 import accesoupv.model.AccesoUPV;
+import static accesoupv.model.services.AccesoVpnDSICService.PORTAL_DSIC_WEB;
 import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
@@ -121,11 +122,11 @@ public class PrincipalController implements Initializable {
     private void accessPortal() {
         if (acceso.connectVpnDSIC()) {
             try {
-                Desktop.getDesktop().browse(new URI(AccesoUPV.PORTAL_DSIC_WEB));
+                Desktop.getDesktop().browse(new URI(PORTAL_DSIC_WEB));
             } catch (URISyntaxException | IOException ex) {
                 Alert a = new Alert(Alert.AlertType.ERROR, ERROR_PORTAL_DSIC_MSG);
-                Hyperlink link = new Hyperlink(AccesoUPV.PORTAL_DSIC_WEB);
-                link.setOnAction((evt) -> AyudaController.addToClipboard(AccesoUPV.PORTAL_DSIC_WEB));
+                Hyperlink link = new Hyperlink(PORTAL_DSIC_WEB);
+                link.setOnAction((evt) -> AyudaController.addToClipboard(PORTAL_DSIC_WEB));
                 HBox box = new HBox(new Label("Link (click para copiar al portapapeles): "), link);
                 a.getDialogPane().getChildren().add(box);
                 a.getDialogPane().setExpandableContent(new TextArea(ex.getMessage()));

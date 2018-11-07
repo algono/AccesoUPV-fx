@@ -43,11 +43,11 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
     
     //Webpage for possible VPN errors
     public static final String WEB_ERROR_VPN = "https://www.upv.es/contenidos/INFOACCESO/infoweb/infoacceso/dat/723787normalc.html";
-    //Timeout for checking if the connected VPN is able to connect the UPV (in ms)
+    //Timeout for checking if the connected VPN is able to connect the server (in ms)
     public static final int PING_TIMEOUT = 4000;
     
     protected String VPN, connectedVPN;
-    private String conMsg = "Conectando VPN...", disMsg = "Desconectando VPN...";
+    protected String conMsg = "Conectando VPN...", disMsg = "Desconectando VPN...", iServer;
     
     public AccesoVPNService(String vpn) {
         VPN = vpn;
@@ -59,15 +59,6 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
     
     public String getConnectedVPN() {
         return isConnected() ? connectedVPN : VPN;
-    }
-    
-    public String[] getMessages() {
-        String[] msgs = {conMsg, disMsg};
-        return msgs;
-    }
-    public void setMessages(String connectMsg, String disconnectMsg) {
-        conMsg = connectMsg;
-        disMsg = disconnectMsg;
     }
     
     public void setVPN(String vpn) {
@@ -96,10 +87,10 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
             ProcessUtils.waitAndCheck(p);
             //Si el usuario no canceló la operación (lo cual implica que la VPN se conectó con éxito), continúa.
             if (ProcessUtils.getOutput(p).contains(VPN)) {
-                //Si desde la VPN a la que se conectó no se puede acceder a la UPV, se entiende que ha elegido una incorrecta.
+                //Si desde la VPN a la que se conectó no se puede acceder al servidor, se entiende que ha elegido una incorrecta.
                 boolean reachable = false;
                 try {
-                    reachable = InetAddress.getByName("www.upv.es").isReachable(PING_TIMEOUT);
+                    reachable = ProcessUtils.startProcess("ping", "-n", "1", "-w", String.valueOf(PING_TIMEOUT), iServer).waitFor() == 0;
                 } finally {
                     //Tanto si no era alcanzable como si hubo un error al realizar el ping
                     //(o si fue cancelado desde fuera), desconecta la VPN por si acaso.

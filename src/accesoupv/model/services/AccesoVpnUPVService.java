@@ -18,9 +18,14 @@ import javafx.concurrent.Task;
  * @author Alejandro
  */
 public class AccesoVpnUPVService extends AccesoVPNService {
-
+    
+    public static final String UPV_SERVER = "www.upv.es";
+    
     public AccesoVpnUPVService(String vpn) {
         super(vpn);
+        conMsg = "Conectando con la UPV...";
+        disMsg = "Desconectando de la UPV...";
+        iServer = UPV_SERVER;
     }
 
     @Override

@@ -7,7 +7,6 @@ package accesoupv.model.services;
 
 import accesoupv.controller.AyudaController;
 import accesoupv.model.Input;
-import java.io.IOException;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Hyperlink;
@@ -21,8 +20,13 @@ import javafx.scene.layout.VBox;
  */
 public class AccesoVpnDSICService extends AccesoVPNService {
 
+    public static final String PORTAL_DSIC_WEB = "portal-ng.dsic.cloud";
+    
     public AccesoVpnDSICService(String vpn) {
         super(vpn);
+        conMsg = "Conectando con el DSIC...";
+        disMsg = "Desconectando VPN del DSIC...";
+        iServer = PORTAL_DSIC_WEB;
     }
 
     @Override

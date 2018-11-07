@@ -16,19 +16,20 @@ import java.util.Scanner;
  */
 public final class ProcessUtils {
     
-    public static void waitAndCheck(Process p) throws Exception {
-        waitAndCheck(p, 0);
+    public static boolean waitAndCheck(Process p) throws IOException, InterruptedException {
+        return waitAndCheck(p, 0);
     }
-    public static void waitAndCheck(Process p, int tMin) throws Exception {
-        waitAndCheck(p, tMin, true);
+    public static boolean waitAndCheck(Process p, int tMin) throws IOException, InterruptedException {
+        return waitAndCheck(p, tMin, true);
     }
-    public static void waitAndCheck(Process p, int tMin, boolean showExMsg) throws Exception {
+    public static boolean waitAndCheck(Process p, int tMin, boolean showExMsg) throws IOException, InterruptedException {
         if (tMin > 0) Thread.sleep(tMin);
         int exitValue = p.waitFor();
         if (exitValue != 0) {
             String msg = showExMsg ? getOutput(p) : "";
             throw new IOException(msg);
         }
+        return exitValue == 0;
     }
     public static String getOutput(Process p) throws IOException {
         String res = "";

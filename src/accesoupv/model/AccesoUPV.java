@@ -9,14 +9,14 @@ import accesoupv.model.services.*;
 import accesoupv.model.services.drives.*;
 import accesoupv.controller.AjustesController;
 import accesoupv.controller.AyudaController;
-import accesoupv.controller.PrincipalController;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -50,13 +50,11 @@ public final class AccesoUPV {
     //Servers
     public static final String LINUX_DSIC = "linuxdesktop.dsic.upv.es";
     public static final String WIN_DSIC = "windesktop.dsic.upv.es";
-    public static final String UPV_SERVER = "www.upv.es";
-    public static final String PORTAL_DSIC_WEB = "https://portal-ng.dsic.cloud";
     //Messages
     public static final String WARNING_FOLDER_DRIVE_MSG = 
             "El disco ha sido conectado correctamente, pero no se ha podido abrir la carpeta.\n"
             + "Ábrala manualmente.";
-    //Timeout for checking if the user is already connected to the UPV (in ms)
+    //Timeout for checking if the user is already connected to a server (in ms)
     public static final int PING_TIMEOUT = 500;
     
     
@@ -66,9 +64,7 @@ public final class AccesoUPV {
     //Creating a new object loads all prefs
     private AccesoUPV() {
         VpnUPVService = new AccesoVpnUPVService(prefs.get("VPN", ""));
-        VpnUPVService.setMessages("Conectando con la UPV...", "Desconectando de la UPV...");
         VpnDSICService = new AccesoVpnDSICService(prefs.get("VPN-dsic", ""));
-        VpnDSICService.setMessages("Conectando con el DSIC...", "Desconectando VPN del DSIC...");
         user = prefs.get("user", "");
         WService = new AccesoDriveWService(user, prefs.get("driveW", "*"), prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS);
         DSICService = new AccesoDriveDSICService(user, prefs.get("driveDSIC", "*"));
@@ -176,19 +172,19 @@ public final class AccesoUPV {
         return drives;
     }
     
-    public boolean isConnectedToUPV() {
-        //Si ya es posible acceder a la UPV, estamos conectados
+    public static boolean isReachable(String server) {
+        //Si ya es posible acceder al servidor, estamos conectados
         try {
-            if (InetAddress.getByName("www.upv.es").isReachable(PING_TIMEOUT)) {
-                return true;
-            }
-        } catch (IOException ex) {}
+            return ProcessUtils.startProcess("ping", "-n", "1", "-w", String.valueOf(PING_TIMEOUT), server).waitFor() == 0;
+        } catch (IOException | InterruptedException ex) {
+            Logger.getLogger(AccesoUPV.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return false;
     }
     
     public void init() {
         AccesoVPNService serv = VpnUPVService;
-        boolean succeeded = isConnectedToUPV();
+        boolean succeeded = isReachable(AccesoVpnUPVService.UPV_SERVER);
         if (!succeeded) {
             if (serv.getVPN().isEmpty()) {
                 if (!establishVPN(serv)) System.exit(0);
@@ -199,7 +195,7 @@ public final class AccesoUPV {
         }
         if (!succeeded) {
             System.exit(-1);
-        }
+    }
     }
     //CREATING METHODS
     public boolean createVpnUPV() { return create(VpnUPVService); }
@@ -243,10 +239,11 @@ public final class AccesoUPV {
         return succeeded;
     }
     public boolean connectVpnUPV() {
-        return connectVPN(VpnUPVService);
+        return isReachable(AccesoVpnUPVService.UPV_SERVER) ? true : connectVPN(VpnUPVService);
     }
-    public boolean connectVpnDSIC() { 
-        return connectVPN(VpnDSICService); 
+    public boolean connectVpnDSIC() {
+        //Por algún extraño motivo, usar || no funciona bien en esta situación, así que la salvamos así
+        return isReachable(AccesoVpnDSICService.PORTAL_DSIC_WEB) ? true : connectVPN(VpnDSICService); 
     }
 
     // DRIVE RELATED
