@@ -122,7 +122,7 @@ public class PrincipalController implements Initializable {
     private void accessPortal() {
         if (acceso.connectVpnDSIC()) {
             try {
-                Desktop.getDesktop().browse(new URI(PORTAL_DSIC_WEB));
+                Desktop.getDesktop().browse(new URI("https://" + PORTAL_DSIC_WEB));
             } catch (URISyntaxException | IOException ex) {
                 Alert a = new Alert(Alert.AlertType.ERROR, ERROR_PORTAL_DSIC_MSG);
                 Hyperlink link = new Hyperlink(PORTAL_DSIC_WEB);
