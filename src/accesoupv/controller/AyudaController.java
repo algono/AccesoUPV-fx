@@ -84,7 +84,10 @@ public class AyudaController implements Initializable {
     private Stage primaryStage;
     
     public Stage getStage() { return primaryStage; }
-    public void initStage(Stage stage) { primaryStage = stage; }
+    public void initStage(Stage stage) {
+        primaryStage = stage;
+        primaryStage.setTitle("Ayuda");
+    }
     
     public static final AyudaController getInstance() {
         AyudaController dialogue = null;
@@ -107,17 +110,21 @@ public class AyudaController implements Initializable {
         return dialogue;
     }
     
-    public Menu getMenu() {
+    public static Menu getMenu() {
         Menu menu = new Menu("Ayuda");
-        MenuItem indice = new MenuItem("Índice de ayuda");
-        indice.setOnAction((evt) -> primaryStage.show());
+        MenuItem menuIndice = new MenuItem("Índice de ayuda");
+        menuIndice.setOnAction((evt) -> getInstance().getStage().show());
+        
         ObservableList<MenuItem> items = menu.getItems();
-        items.addAll(indice, new SeparatorMenuItem());
-        for (TitledPane t : index.getPanes()) {
+        items.addAll(menuIndice, new SeparatorMenuItem());
+        
+        Accordion indice = getInstance().getIndex();
+        for (TitledPane t : indice.getPanes()) {
             MenuItem page = new MenuItem(t.getText());
             page.setOnAction((evt) -> {
-                primaryStage.show();
-                t.setExpanded(true);
+                AyudaController instance = getInstance();
+                instance.getStage().show();
+                instance.setExpandedPage(t.getText());
             });
             items.add(page);
         }
@@ -125,6 +132,14 @@ public class AyudaController implements Initializable {
     }
     
     public Accordion getIndex() { return index; }
+    
+    public void setExpandedPage(String text) {
+        for (TitledPane t : index.getPanes()) {
+            if (t.getText().equals(text)) {
+                t.setExpanded(true); break;
+            }
+        }
+    }
     
     public static final void addToClipboard(String text) {
         ClipboardContent content = new ClipboardContent();

@@ -10,6 +10,9 @@ import accesoupv.model.Dominio;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.prefs.BackingStoreException;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
@@ -34,6 +37,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
+import myLibrary.javafx.ErrorAlert;
 
 /**
  * FXML Controller class
@@ -210,11 +214,11 @@ public class AjustesController implements Initializable {
         comboDriveDSIC.getSelectionModel().selectedItemProperty(), driveDSICCheckBox.selectedProperty(),
         passDriveDSIC.textProperty(), dominio.selectedToggleProperty()));
         
-        Menu ayudaMenu = AyudaController.getInstance().getMenu(); 
+        Menu ayudaMenu = AyudaController.getMenu(); 
         //Inicializa los links de ayuda
         for (MenuItem item : ayudaMenu.getItems()) {
             String text = item.getText();
-            if (text != null && text.contains("crear una VPN")) {
+            if (text != null && text.matches(".*crear.*VPN.*")) {
                 if (text.contains("UPV")) {
                     helpLinkVpnUPV.setOnAction(evt -> item.fire());
                     helpLinkVpnUPV.setTooltip(new Tooltip("Click para ver \"" + text + "\""));
@@ -234,10 +238,14 @@ public class AjustesController implements Initializable {
             Optional<ButtonType> res = confirm.showAndWait();
             //Si confirma, resetea y cierra la ventana de ajustes
             if (res.isPresent() && res.get() == ButtonType.OK) {
-                acceso.clearPrefs();
-                acceso.setSavePrefsOnExit(false);
-                acceso.shutdown();
-                System.exit(0);
+                try {
+                    acceso.clearPrefs();
+                    acceso.setSavePrefsOnExit(false);
+                    acceso.shutdown();
+                    System.exit(0);
+                } catch (BackingStoreException ex) {
+                    new ErrorAlert(ex, "Hubo un error al tratar de borrar las preferencias.\nPara más información, pulse 'más detalles'.").show();
+                }
             }
         });
         

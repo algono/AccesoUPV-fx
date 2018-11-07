@@ -5,6 +5,7 @@
  */
 package accesoupv.model;
 
+import accesoupv.Launcher;
 import accesoupv.model.services.*;
 import accesoupv.model.services.drives.*;
 import accesoupv.controller.AjustesController;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -39,7 +41,7 @@ import lib.PasswordDialog;
 public final class AccesoUPV {
    
     //Preferences
-    private final Preferences prefs = Preferences.userNodeForPackage(this.getClass());
+    private final Preferences prefs = Preferences.userNodeForPackage(Launcher.class);
     //Variables
     private String user; //I also save the user here because it is the same for all Services
     private boolean savePrefsOnExit = true;
@@ -63,11 +65,11 @@ public final class AccesoUPV {
     
     //Creating a new object loads all prefs
     private AccesoUPV() {
-        VpnUPVService = new AccesoVpnUPVService(prefs.get("VPN", ""));
-        VpnDSICService = new AccesoVpnDSICService(prefs.get("VPN-dsic", ""));
+        VpnUPVService = new AccesoVpnUPVService(prefs.get("vpn-upv", ""));
+        VpnDSICService = new AccesoVpnDSICService(prefs.get("vpn-dsic", ""));
         user = prefs.get("user", "");
-        WService = new AccesoDriveWService(user, prefs.get("driveW", "*"), prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS);
-        DSICService = new AccesoDriveDSICService(user, prefs.get("driveDSIC", "*"));
+        WService = new AccesoDriveWService(user, prefs.get("drive-w", "*"), prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS);
+        DSICService = new AccesoDriveDSICService(user, prefs.get("drive-dsic", "*"));
     }
     // Returns the object instance stored here
     public static AccesoUPV getInstance() {
@@ -76,39 +78,34 @@ public final class AccesoUPV {
     }
     //Load and save variables (prefs)
     public void loadPrefs() {
-        setVpnUPV(prefs.get("VPN", ""));
-        setVpnDSIC(prefs.get("VPN-dsic", ""));
+        setVpnUPV(prefs.get("vpn-upv", ""));
+        setVpnDSIC(prefs.get("vpn-dsic", ""));
         setUser(prefs.get("user", ""));
-        setDriveW(prefs.get("driveW", "*"));
-        setDriveDSIC(prefs.get("driveDSIC", "*"));
+        setDriveW(prefs.get("drive-w", "*"));
+        setDriveDSIC(prefs.get("drive-dsic", "*"));
         setDomain(prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS);
     }
     public void savePrefs() {
         String VpnUPV = getVpnUPV();
-        if (VpnUPV.isEmpty()) prefs.remove("VPN");
-        else prefs.put("VPN", VpnUPV);
+        if (VpnUPV.isEmpty()) prefs.remove("vpn-upv");
+        else prefs.put("vpn-upv", VpnUPV);
         String VpnDSIC = getVpnDSIC();
-        if (VpnDSIC.isEmpty()) prefs.remove("VPN-dsic");
-        else prefs.put("VPN-dsic", VpnDSIC);
+        if (VpnDSIC.isEmpty()) prefs.remove("vpn-dsic");
+        else prefs.put("vpn-dsic", VpnDSIC);
         if (user.isEmpty()) prefs.remove("user");
         else prefs.put("user", user);
         String driveW = getDriveW();
-        if (driveW.equals("*")) prefs.remove("driveW");
-        else prefs.put("driveW", driveW);
+        if (driveW.equals("*")) prefs.remove("drive-w");
+        else prefs.put("drive-w", driveW);
         String driveDSIC = getDriveDSIC();
-        if (driveDSIC.equals("*")) prefs.remove("driveDSIC");
-        else prefs.put("driveDSIC", driveDSIC);
+        if (driveDSIC.equals("*")) prefs.remove("drive-dsic");
+        else prefs.put("drive-dsic", driveDSIC);
         if (getDomain() == Dominio.ALUMNOS) prefs.remove("non-student");
         else prefs.putBoolean("non-student", true);
     }
     
-    public void clearPrefs() {
-        prefs.remove("VPN");
-        prefs.remove("VPN-dsic");
-        prefs.remove("user");
-        prefs.remove("driveW");
-        prefs.remove("driveDSIC");
-        prefs.remove("non-student");
+    public void clearPrefs() throws BackingStoreException {
+        prefs.removeNode(); prefs.flush();
     }
     
     //Getters
