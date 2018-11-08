@@ -10,8 +10,6 @@ import accesoupv.model.Dominio;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;

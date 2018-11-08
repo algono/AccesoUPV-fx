@@ -56,10 +56,5 @@ public class AccesoVpnUPVService extends AccesoVPNService {
             }
         };
     }
-
-    @Override
-    protected Task<Boolean> createConnectTask() {
-        return new VPNConnectTask();
-    }
     
 }

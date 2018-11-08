@@ -6,14 +6,13 @@
 package accesoupv.model.services;
 
 import accesoupv.model.ProcessUtils;
-import accesoupv.model.AlertingTask;
+import myLibrary.javafx.AlertingTask;
 import accesoupv.model.Input;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Scanner;
@@ -44,10 +43,10 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
     //Webpage for possible VPN errors
     public static final String WEB_ERROR_VPN = "https://www.upv.es/contenidos/INFOACCESO/infoweb/infoacceso/dat/723787normalc.html";
     //Timeout for checking if the connected VPN is able to connect the server (in ms)
-    public static final int PING_TIMEOUT = 4000;
+    public static final int PING_TIMEOUT = 500;
     
-    protected String VPN, connectedVPN;
-    protected String conMsg = "Conectando VPN...", disMsg = "Desconectando VPN...", iServer;
+    protected String VPN, connectedVPN, iServer;
+    protected String conMsg = "Conectando VPN...", disMsg = "Desconectando VPN...";
     
     public AccesoVPNService(String vpn) {
         VPN = vpn;
@@ -59,6 +58,15 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
     
     public String getConnectedVPN() {
         return isConnected() ? connectedVPN : VPN;
+    }
+    
+    public boolean isReachable() {
+        //Si ya es posible acceder al servidor, estamos conectados
+        try {
+            return ProcessUtils.startProcess("ping", "-n", "1", "-w", String.valueOf(PING_TIMEOUT), iServer).waitFor() == 0;
+        } catch (IOException | InterruptedException ex) {}
+        
+        return false;
     }
     
     public void setVPN(String vpn) {
@@ -88,21 +96,15 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
             //Si el usuario no canceló la operación (lo cual implica que la VPN se conectó con éxito), continúa.
             if (ProcessUtils.getOutput(p).contains(VPN)) {
                 //Si desde la VPN a la que se conectó no se puede acceder al servidor, se entiende que ha elegido una incorrecta.
-                boolean reachable = false;
-                try {
-                    reachable = ProcessUtils.startProcess("ping", "-n", "1", "-w", String.valueOf(PING_TIMEOUT), iServer).waitFor() == 0;
-                } finally {
-                    //Tanto si no era alcanzable como si hubo un error al realizar el ping
-                    //(o si fue cancelado desde fuera), desconecta la VPN por si acaso.
-                    if (!reachable || isCancelled()) {
-                        p = ProcessUtils.startProcess("rasdial.exe", "\"" + VPN + "\"", "/DISCONNECT");
-                        ProcessUtils.waitAndCheck(p);
+                boolean reachable = isReachable();
+                if (!reachable || isCancelled()) {
+                    p = ProcessUtils.startProcess("rasdial.exe", "\"" + VPN + "\"", "/DISCONNECT");
+                    ProcessUtils.waitAndCheck(p);
+                    //Si no era alcanzable, lanza la excepción adecuada
+                    if (!reachable) {
+                        updateErrorMsg(ERROR_INVALID_VPN);
+                        throw new IllegalArgumentException();
                     }
-                }
-                //Si no era alcanzable, lanza la excepción adecuada
-                if (!reachable) {
-                    updateErrorMsg(ERROR_INVALID_VPN);
-                    throw new IllegalArgumentException();
                 }
             } else {
                 cancel(); 
@@ -128,6 +130,11 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
             return alert;
         }
     };
+    
+    @Override
+    protected Task<Boolean> createConnectTask() {
+        return new VPNConnectTask();
+    }
     
     @Override
     protected Task<Boolean> createDisconnectTask() {

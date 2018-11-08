@@ -110,7 +110,8 @@ public class PrincipalController implements Initializable {
                 acceso.disconnectVpnDSIC();
             } else return; //Si decidió cancelar se termina el proceso de acceder al EVIR.
         }
-        if (!acceso.isVpnDSICConnected()) { //Si tras todo lo anterior se desconectó correctamente, continúa con el proceso.
+        //Si tras todo lo anterior se desconectó correctamente, continúa con el proceso.
+        if (!acceso.isVpnDSICConnected() && acceso.connectVpnUPV()) {
             try {
                 new ProcessBuilder("cmd.exe", "/c", "mstsc", "/v:" + server).start();
             } catch (IOException ex) {
@@ -145,7 +146,7 @@ public class PrincipalController implements Initializable {
         buttonWinDSIC.setOnAction(e -> accessEVIR(AccesoUPV.WIN_DSIC));
         
         //Añade un menú de ayuda a la barra de menú
-        menuBar.getMenus().add(AyudaController.getInstance().getMenu());
+        menuBar.getMenus().add(AyudaController.getMenu());
         
         menuAjustes.setOnAction(e -> showAjustes());
         
@@ -175,9 +176,5 @@ public class PrincipalController implements Initializable {
         buttonDisconnectVpnDSIC.disableProperty().bind(Bindings.not(acceso.connectedVpnDSICProperty()));
         menuDisconnectVpnDSIC.disableProperty().bind(Bindings.not(acceso.connectedVpnDSICProperty()));
         
-        //Si no está ya conectado a la UPV, trata de conectarse a la VPN
-        Platform.setImplicitExit(false); //Se asegura de que el programa no se cierre solo
-        acceso.init();
-        Platform.runLater(() -> Platform.setImplicitExit(true));
     }
 }

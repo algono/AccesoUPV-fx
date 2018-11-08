@@ -23,14 +23,15 @@ public abstract class AccesoService extends Service<Boolean> {
     
     @Override
     protected void succeeded() {
-        connectedProperty.set(!connectedProperty.get()); //Si todo fue bien, invierte el estado entre conectado y desconectado
+        //Si todo fue bien, invierte el estado entre conectado y desconectado
+        if (getValue()) connectedProperty.set(!connectedProperty.get());
     }
     
     @Override
     public final Task<Boolean> createTask() {
         return connectedProperty.get() ? createDisconnectTask() : createConnectTask();
     }
-    
+    //La Task devuelve si la acción de conexión/desconexión se tuvo que realizar (puede que no hiciera falta)
     protected abstract Task<Boolean> createConnectTask();
     protected abstract Task<Boolean> createDisconnectTask();
     

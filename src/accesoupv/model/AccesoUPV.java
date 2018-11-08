@@ -16,8 +16,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import javafx.application.Platform;
@@ -169,31 +167,6 @@ public final class AccesoUPV {
         return drives;
     }
     
-    public static boolean isReachable(String server) {
-        //Si ya es posible acceder al servidor, estamos conectados
-        try {
-            return ProcessUtils.startProcess("ping", "-n", "1", "-w", String.valueOf(PING_TIMEOUT), server).waitFor() == 0;
-        } catch (IOException | InterruptedException ex) {
-            Logger.getLogger(AccesoUPV.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return false;
-    }
-    
-    public void init() {
-        AccesoVPNService serv = VpnUPVService;
-        boolean succeeded = isReachable(AccesoVpnUPVService.UPV_SERVER);
-        if (!succeeded) {
-            if (serv.getVPN().isEmpty()) {
-                if (!establishVPN(serv)) System.exit(0);
-            }
-            serv.setOnCancelled((evt) -> System.exit(0));
-            succeeded = connectVpnUPV();
-            serv.setOnCancelled(null);
-        }
-        if (!succeeded) {
-            System.exit(-1);
-    }
-    }
     //CREATING METHODS
     public boolean createVpnUPV() { return create(VpnUPVService); }
     public boolean createVpnDSIC() { return create(VpnDSICService); }
@@ -209,24 +182,17 @@ public final class AccesoUPV {
         return succeeded;
     }
     //CONNECTING METHODS
-    protected boolean connect(AccesoService serv) {
+    //VPN RELATED
+    protected boolean connectVPN(AccesoVPNService serv) {
+        //If the VPN is already connected (or is reachable), it's not necessary to connect it.
+        if (serv.isConnected() || serv.isReachable()) return true;
+        //If the VPN is not set and the establishVPN dialogue doesn't set it, it aborts.
+        if (serv.getVPN().isEmpty() && !establishVPN(serv)) return false;
         LoadingStage stage = new LoadingStage(serv);
         stage.showAndWait();
-        return stage.isSucceeded();
-    }
-    //VPN RELATED 
-    /**
-     * @param serv
-     * @return If the operation completed successfully.
-     */
-    protected boolean connectVPN(AccesoVPNService serv) {
-        if (serv.isConnected()) return true; //If the VPN is already connected, it's not necessary to connect it again
-        if (serv.getVPN().isEmpty()) {
-            if (!establishVPN(serv)) return false;
-        }
-        boolean succeeded = connect(serv);        
+        boolean succeeded = stage.isSucceeded();        
         //Si la ejecución falló, permite cambiar el valor de la VPN por si lo puso mal
-        if (!succeeded) { 
+        if (!succeeded && serv.getState() == Worker.State.FAILED) { 
             if (setVPNDialog(serv, false)) return connectVPN(serv); //Si la VPN no era válida, permite cambiarla, y si la cambió, vuelve a intentarlo.
             else {
                 if (establishVPN(serv)) return connectVPN(serv);
@@ -236,16 +202,15 @@ public final class AccesoUPV {
         return succeeded;
     }
     public boolean connectVpnUPV() {
-        return isReachable(AccesoVpnUPVService.UPV_SERVER) ? true : connectVPN(VpnUPVService);
+        return connectVPN(VpnUPVService);
     }
     public boolean connectVpnDSIC() {
-        //Por algún extraño motivo, usar || no funciona bien en esta situación, así que la salvamos así
-        return isReachable(AccesoVpnDSICService.PORTAL_DSIC_WEB) ? true : connectVPN(VpnDSICService); 
+        return connectVPN(VpnDSICService); 
     }
 
     // DRIVE RELATED
     /**
-     * Checks if the drive where W should be is already set up before this program did it.
+     * Checks if the drive letter where the drive is going to be is already set up before this program did it.
      * @param serv
      * @return Whether the execution should continue or not.
      */
@@ -282,7 +247,7 @@ public final class AccesoUPV {
     
     public boolean connectW() { 
         if (!checkUser()) return false;
-        boolean succeeded = connectDrive(WService);
+        boolean succeeded = connectDrive(WService, VpnUPVService);
         if (!succeeded) {
             Throwable ex = WService.getException();
             if (ex != null) {
@@ -299,7 +264,7 @@ public final class AccesoUPV {
         boolean passDefined = !getPassDSIC().isEmpty();
         if (!passDefined) passDefined = setPassDialog();
         if (!passDefined) return false;
-        boolean succeeded = connectDrive(DSICService);
+        boolean succeeded = connectDrive(DSICService, VpnUPVService);
         if (!succeeded) {
             Throwable ex = DSICService.getException();
             if (ex != null) {
@@ -319,17 +284,33 @@ public final class AccesoUPV {
         return userDefined;
     }
     
-    protected boolean connectDrive(AccesoDriveService serv) {
+    protected boolean connectDrive(AccesoDriveService serv, AccesoVPNService dep) {
         boolean connected = serv.isConnected();
         if (!connected) {//If drive is already connected, it's not necessary to connect it again
             if (!checkDrive(serv)) return false; //If the drive isn't available, abort the process
-            connected = connect(serv);
+            
+            LoadingStage stage = new LoadingStage();
+            List<Worker> workerList = stage.getLoadingService().getWorkerList();
+            
+            if (dep != null && !dep.isConnected() && !dep.isReachable()) { //If it has a dependency on a VPN, tries to connect it first
+                if (dep.getVPN().isEmpty() && !establishVPN(dep)) return false;
+                workerList.add(dep);
+            }
+            workerList.add(serv);
+            stage.showAndWait();
+            connected = stage.isSucceeded();
         }
         if (connected) {
             try {
                 Desktop.getDesktop().open(new File(serv.getDrive()));
             } catch (IOException ex) {
                 new Alert(Alert.AlertType.WARNING, WARNING_FOLDER_DRIVE_MSG).show();
+            }
+        } else if (dep != null && dep.getState() == Worker.State.FAILED) {
+            if (setVPNDialog(dep, false)) return connectDrive(serv, dep);
+            else {
+                if (establishVPN(dep)) return connectDrive(serv, dep);
+                else return false;
             }
         }
         
