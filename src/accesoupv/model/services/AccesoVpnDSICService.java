@@ -25,7 +25,7 @@ public class AccesoVpnDSICService extends AccesoVPNService {
     public AccesoVpnDSICService(String vpn) {
         super(vpn);
         conMsg = "Conectando con el DSIC...";
-        disMsg = "Desconectando VPN del DSIC...";
+        disMsg = "Desconectando del DSIC...";
         iServer = PORTAL_DSIC_WEB;
     }
 

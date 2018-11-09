@@ -183,20 +183,34 @@ public final class AccesoUPV {
     }
     //CONNECTING METHODS
     //VPN RELATED
-    protected boolean connectVPN(AccesoVPNService serv) {
+    protected Operation checkVPN(AccesoVPNService serv) {
         //If the VPN is already connected (or is reachable), it's not necessary to connect it.
-        if (serv.isConnected() || serv.isReachable()) return true;
+        if (serv.isConnected() || serv.isReachable()) return Operation.CANCEL;
         //If the VPN is not set and the establishVPN dialogue doesn't set it, it aborts.
-        if (serv.getVPN().isEmpty() && !establishVPN(serv)) return false;
+        else if (serv.getVPN().isEmpty() && !establishVPN(serv)) return Operation.ABORT;
+        else return Operation.CONTINUE;
+    }
+    protected Operation onFailedVPN(AccesoVPNService serv) {
+        //Si la VPN no era válida, permite cambiarla, y si la cambió, vuelve a intentarlo.
+        if (setVPNDialog(serv, false)) return Operation.RETRY;
+        else {
+            if (establishVPN(serv)) return Operation.RETRY;
+            else return Operation.ABORT;
+        }
+    }
+    protected boolean connectVPN(AccesoVPNService serv) {
+        switch(checkVPN(serv)) {
+            case CANCEL: return true;
+            case ABORT: return false;
+        }
         LoadingStage stage = new LoadingStage(serv);
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();        
         //Si la ejecución falló, permite cambiar el valor de la VPN por si lo puso mal
         if (!succeeded && serv.getState() == Worker.State.FAILED) { 
-            if (setVPNDialog(serv, false)) return connectVPN(serv); //Si la VPN no era válida, permite cambiarla, y si la cambió, vuelve a intentarlo.
-            else {
-                if (establishVPN(serv)) return connectVPN(serv);
-                else return false;
+            switch(onFailedVPN(serv)) {
+                case RETRY: return connectVPN(serv);
+                case ABORT: return false;
             }
         }
         return succeeded;
@@ -292,9 +306,11 @@ public final class AccesoUPV {
             LoadingStage stage = new LoadingStage();
             List<Worker> workerList = stage.getLoadingService().getWorkerList();
             
-            if (dep != null && !dep.isConnected() && !dep.isReachable()) { //If it has a dependency on a VPN, tries to connect it first
-                if (dep.getVPN().isEmpty() && !establishVPN(dep)) return false;
-                workerList.add(dep);
+            if (dep != null) { //If it has a dependency on a VPN, tries to connect it first
+                switch(checkVPN(dep)) {
+                    case ABORT: return false;
+                    case CONTINUE: workerList.add(dep);
+                }
             }
             workerList.add(serv);
             stage.showAndWait();
@@ -307,10 +323,9 @@ public final class AccesoUPV {
                 new Alert(Alert.AlertType.WARNING, WARNING_FOLDER_DRIVE_MSG).show();
             }
         } else if (dep != null && dep.getState() == Worker.State.FAILED) {
-            if (setVPNDialog(dep, false)) return connectDrive(serv, dep);
-            else {
-                if (establishVPN(dep)) return connectDrive(serv, dep);
-                else return false;
+            switch(onFailedVPN(dep)) {
+                case RETRY: return connectDrive(serv, dep);
+                case ABORT: return false;
             }
         }
         
