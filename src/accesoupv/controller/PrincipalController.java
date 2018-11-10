@@ -81,7 +81,7 @@ public class PrincipalController implements Initializable {
     public static final String ERROR_DSIC_MSG = "No se ha podido acceder al escritorio virtual del DSIC.";
     public static final String ERROR_PORTAL_DSIC_MSG = "Ha habido un error al tratar de acceder a la web del Portal.";
     public static final String EVIR_VPN_DSIC_WARNING = 
-            "El acceso a Portal (VPN DSIC) no puede estar conectado mientras se accede a un Escritorio Remoto del DSIC.\n\n"
+            "El acceso al Portal DSIC no puede estar conectado mientras se accede a un Escritorio Remoto del DSIC.\n\n"
             + "Si continúa, este será desconectado automáticamente.";
     //AccesoUPV Instance
     private static final AccesoUPV acceso = AccesoUPV.getInstance();
@@ -175,6 +175,10 @@ public class PrincipalController implements Initializable {
         menuDisconnectDSIC.disableProperty().bind(Bindings.not(acceso.connectedDSICProperty()));
         buttonDisconnectVpnDSIC.disableProperty().bind(Bindings.not(acceso.connectedVpnDSICProperty()));
         menuDisconnectVpnDSIC.disableProperty().bind(Bindings.not(acceso.connectedVpnDSICProperty()));
+        
+        Platform.setImplicitExit(false); //Se asegura de que el programa no se cierre solo
+        acceso.init(); //Comprueba si está conectado a la UPV, y si no, trata de conectarse a la VPN
+        Platform.runLater(() -> Platform.setImplicitExit(true));
         
     }
 }

@@ -167,10 +167,32 @@ public final class AccesoUPV {
         return drives;
     }
     
+    public void init() {
+        AccesoVPNService serv = VpnUPVService;
+        switch(checkVPN(serv)) {
+            case CANCEL: return;
+            case ABORT: System.exit(0);
+        }
+        serv.setOnCancelled((evt) -> System.exit(0));
+        
+        LoadingStage stage = new LoadingStage(serv);
+        stage.showAndWait();
+        boolean succeeded = stage.isSucceeded();
+        
+        serv.setOnCancelled(null);
+        //Si la ejecución falló, permite cambiar el valor de la VPN por si lo puso mal
+        if (!succeeded && serv.getState() == Worker.State.FAILED) { 
+            switch(onFailedVPN(serv)) {
+                case RETRY: init();
+                case ABORT: System.exit(-1);
+            }
+        }
+    }
+    
     //CREATING METHODS
-    public boolean createVpnUPV() { return createVpn(VpnUPVService); }
-    public boolean createVpnDSIC() { return createVpn(VpnDSICService); }
-    protected static boolean createVpn(AccesoVPNService serv) {
+    public boolean createVpnUPV() { return createVPN(VpnUPVService); }
+    public boolean createVpnDSIC() { return createVPN(VpnDSICService); }
+    protected static boolean createVPN(AccesoVPNService serv) {
         LoadingStage stage = new LoadingStage(serv.getCreateTask());
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
@@ -188,7 +210,20 @@ public final class AccesoUPV {
         if (serv.isConnected() || serv.isReachable()) return Operation.CANCEL;
         //If the VPN is not set and the establishVPN dialogue doesn't set it, it aborts.
         else if (serv.getVPN().isEmpty() && !establishVPN(serv)) return Operation.ABORT;
-        else return Operation.CONTINUE;
+        else if (WService.isConnected() || DSICService.isConnected()) {
+            Alert a = new Alert(Alert.AlertType.WARNING, 
+                "Si cambias de conexión VPN mientras hay un disco conectado, la próxima vez que intentes acceder tardará más de lo habitual.\n\n"
+                + "¿Desea que sean desconectados?\n ", ButtonType.YES, ButtonType.NO, ButtonType.CANCEL
+            );
+            a.setHeaderText(null);
+            Optional<ButtonType> res = a.showAndWait();
+            if (res.isPresent() && res.get() != ButtonType.CANCEL) {
+                if (res.get() == ButtonType.YES) {
+                    if (!disconnectW() || !disconnectDSIC()) return Operation.ABORT;
+                }
+                return Operation.CONTINUE;
+            } else return Operation.ABORT;
+        } else return Operation.CONTINUE;
     }
     protected Operation onFailedVPN(AccesoVPNService serv) {
         //Si la VPN no era válida, permite cambiarla, y si la cambió, vuelve a intentarlo.
@@ -261,7 +296,7 @@ public final class AccesoUPV {
     
     public boolean connectW() { 
         if (!checkUser()) return false;
-        boolean succeeded = connectDrive(WService, VpnUPVService);
+        boolean succeeded = connectDrive(WService);
         if (!succeeded) {
             Throwable ex = WService.getException();
             if (ex != null) {
@@ -278,7 +313,7 @@ public final class AccesoUPV {
         boolean passDefined = !getPassDSIC().isEmpty();
         if (!passDefined) passDefined = setPassDialog();
         if (!passDefined) return false;
-        boolean succeeded = connectDrive(DSICService, VpnUPVService);
+        boolean succeeded = connectDrive(DSICService);
         if (!succeeded) {
             Throwable ex = DSICService.getException();
             if (ex != null) {
@@ -298,21 +333,12 @@ public final class AccesoUPV {
         return userDefined;
     }
     
-    protected boolean connectDrive(AccesoDriveService serv, AccesoVPNService dep) {
+    protected boolean connectDrive(AccesoDriveService serv) {
         boolean connected = serv.isConnected();
         if (!connected) {//If drive is already connected, it's not necessary to connect it again
             if (!checkDrive(serv)) return false; //If the drive isn't available, abort the process
             
-            LoadingStage stage = new LoadingStage();
-            List<Worker> workerList = stage.getLoadingService().getWorkerList();
-            
-            if (dep != null) { //If it has a dependency on a VPN, tries to connect it first
-                switch(checkVPN(dep)) {
-                    case ABORT: return false;
-                    case CONTINUE: workerList.add(dep);
-                }
-            }
-            workerList.add(serv);
+            LoadingStage stage = new LoadingStage(serv);
             stage.showAndWait();
             connected = stage.isSucceeded();
         }
@@ -322,13 +348,7 @@ public final class AccesoUPV {
             } catch (IOException ex) {
                 new Alert(Alert.AlertType.WARNING, WARNING_FOLDER_DRIVE_MSG).show();
             }
-        } else if (dep != null && dep.getState() == Worker.State.FAILED) {
-            switch(onFailedVPN(dep)) {
-                case RETRY: return connectDrive(serv, dep);
-                case ABORT: return false;
-            }
         }
-        
         return connected;
     }
     //DISCONNECTING METHODS
@@ -397,7 +417,7 @@ public final class AccesoUPV {
             hasNewVPN = setVPNDialog(serv, setNewVPN);
 
             //Si la VPN ha sido cambiada (y es nueva), la crea.
-            if (hasNewVPN && setNewVPN) createVpn(serv);
+            if (hasNewVPN && setNewVPN) createVPN(serv);
         }
         return true;
     }    
