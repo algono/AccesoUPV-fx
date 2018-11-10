@@ -79,6 +79,10 @@ public class AjustesController implements Initializable {
     private CheckBox driveDSICCheckBox;
     @FXML
     private PasswordField passDriveDSIC;
+    @FXML
+    private Button buttonCreateVpnUPV;
+    @FXML
+    private Button buttonCreateVpnDSIC;
     
     //Constants (Messages)
     public static final String SUCCESS_MESSAGE = "El archivo ha sido creado con éxito.\n¿Desea abrir la carpeta en la cual ha sido guardado?";
@@ -105,32 +109,8 @@ public class AjustesController implements Initializable {
     private void savePrefs(ActionEvent evt) {
             Alert a = new Alert(Alert.AlertType.CONFIRMATION);
             a.setHeaderText(null);
-            if (VpnUPVChanged()) {
-                String vpn = textVpnUPV.getText();
-                if (AccesoVPNService.existsVPN(vpn)) {
-                    acceso.setVpnUPV(vpn);
-                } else {
-                    a.setContentText("No existe ninguna conexión VPN a la UPV con el nombre '" + vpn + "'. ¿Desea que se cree automáticamente?");
-                    Optional<ButtonType> res = a.showAndWait();
-                    if (res.isPresent() && res.get() == ButtonType.OK) {
-                        acceso.setVpnUPV(vpn);
-                        if (!acceso.createVpnUPV()) return;
-                    } else return;
-                }
-            }
-            if (VpnDSICChanged()) {
-                String vpn = textVpnDSIC.getText();
-                if (AccesoVPNService.existsVPN(vpn)) {
-                    acceso.setVpnDSIC(vpn);
-                } else {
-                    a.setContentText("No existe ninguna conexión VPN al DSIC con el nombre '" + vpn + "'. ¿Desea que se cree automáticamente?");
-                    Optional<ButtonType> res = a.showAndWait();
-                    if (res.isPresent() && res.get() == ButtonType.OK) {
-                        acceso.setVpnDSIC(vpn);
-                        if (!acceso.createVpnDSIC()) return;
-                    } else return;
-                }
-            }
+            if (VpnUPVChanged()) acceso.setVpnUPV(textVpnUPV.getText());
+            if (VpnDSICChanged()) acceso.setVpnDSIC(textVpnDSIC.getText());
             if (userChanged()) acceso.setUser(textUser.getText());
             if (driveWChanged()) acceso.setDriveW(driveWCheckBox.isSelected() ? "*" : comboDriveW.getValue());
             if (domainChanged()) acceso.setDomain(alumnoRadioButton.isSelected() ? Dominio.ALUMNOS : Dominio.UPVNET);
@@ -194,7 +174,32 @@ public class AjustesController implements Initializable {
         ((Node) evt.getSource()).getScene().getWindow().hide();
     }
     
-    private void initDriveBoxes(String drive, ComboBox<String> c, CheckBox ch, ObservableList<String> data) {
+    private static boolean checkCreateVPN(String name) {
+        Alert a;
+        if (name.isEmpty()) {
+            a = new Alert(Alert.AlertType.ERROR, "No ha indicado ningún nombre para la VPN. Indique uno.");
+            a.setHeaderText(null);
+            a.showAndWait();
+            return false;
+        } else if (AccesoVPNService.existsVPN(name)) {
+            a = new Alert(Alert.AlertType.ERROR, 
+                    "Ya existe una conexión VPN con el nombre indicado.\n\n"
+                    + "Compruebe si se trata de la conexión adecuada, pues puede que no sea necesario crear otra.");
+            a.setHeaderText(null);
+            a.showAndWait();
+            return false;
+        } else {
+            a = new Alert(Alert.AlertType.CONFIRMATION, 
+                    "Está a punto de crear una conexión VPN con el nombre '" + name + "'." + "\n"
+                    + "Tras el proceso, el cambio de VPN será guardado automáticamente.\n\n"
+                    + "¿Desea continuar?");
+            a.setHeaderText(null);
+            Optional<ButtonType> res = a.showAndWait();
+            return res.isPresent() && res.get() == ButtonType.OK;
+        }
+    }
+    
+    private static void initDriveBoxes(String drive, ComboBox<String> c, CheckBox ch, ObservableList<String> data) {
         c.setItems(data);
         //Si el comboBox no tiene unidades disponibles, selecciona el checkBox y deshabilita ambos
         if (data.isEmpty()) {
@@ -243,13 +248,14 @@ public class AjustesController implements Initializable {
         //Inicializa los links de ayuda
         for (MenuItem item : ayudaMenu.getItems()) {
             String text = item.getText();
+            Tooltip tooltip = new Tooltip("Si prefiere crear la conexión VPN de forma manual, haga click aquí para saber cómo");
             if (text != null && text.matches(".*crear.*VPN.*")) {
                 if (text.contains("UPV")) {
                     helpLinkVpnUPV.setOnAction(evt -> item.fire());
-                    helpLinkVpnUPV.setTooltip(new Tooltip("Click para ver \"" + text + "\""));
+                    helpLinkVpnUPV.setTooltip(tooltip);
                 } else if (text.contains("DSIC")) {
                     helpLinkVpnDSIC.setOnAction(evt -> item.fire());
-                    helpLinkVpnDSIC.setTooltip(new Tooltip("Click para ver \"" + text + "\""));
+                    helpLinkVpnDSIC.setTooltip(tooltip);
                 }
             }
         }
@@ -283,6 +289,22 @@ public class AjustesController implements Initializable {
         //Evento para que siempre que quites el ratón del nodo, esconda el Tooltip
         helpLinkUser.addEventHandler(MouseEvent.MOUSE_EXITED, evt -> helpLinkUser.getTooltip().hide());
         helpLinkUser.setTooltip(new Tooltip(HELP_USER_TOOLTIP));
+        
+        //Handler botones crear VPN
+        buttonCreateVpnUPV.setOnAction((evt) -> {
+            String text = textVpnUPV.getText();
+            if (checkCreateVPN(text)) {
+                acceso.setVpnUPV(text);
+                acceso.createVpnUPV();
+            }
+        });
+        buttonCreateVpnDSIC.setOnAction((evt) -> {
+            String text = textVpnDSIC.getText();
+            if (checkCreateVPN(text)) {
+                acceso.setVpnDSIC(text);
+                acceso.createVpnDSIC();
+            }
+        });
         
         //Escribe las preferencias guardadas
         String user = acceso.getUser();

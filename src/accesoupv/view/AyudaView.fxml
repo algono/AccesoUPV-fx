@@ -18,22 +18,22 @@
    <center>
       <Accordion fx:id="index" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
          <panes>
-            <TitledPane fx:id="VpnUPVPane" animated="false" expanded="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo crear una VPN a la UPV">
+            <TitledPane fx:id="VpnUPVPane" animated="false" expanded="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo crear una VPN a la UPV (manual)">
                <content>
                   <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="578.0">
                      <children>
-                        <Label text="Siga las instrucciones que ofrece la web de la UPV:" VBox.vgrow="ALWAYS" />
+                        <Label text="Si desea crear la VPN de forma manual, siga las instrucciones que ofrece la web de la UPV:" VBox.vgrow="ALWAYS" />
                         <Hyperlink fx:id="VpnUPVLink" focusTraversable="false" text="Pinche aquí para volver a la web original" />
                         <WebView fx:id="VpnUPVWeb" minHeight="-1.0" minWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS" />
                      </children>
                   </VBox>
                </content>
             </TitledPane>
-            <TitledPane animated="false" expanded="false" layoutX="10.0" layoutY="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo crear una VPN al DSIC">
+            <TitledPane animated="false" expanded="false" layoutX="10.0" layoutY="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Cómo crear una VPN al DSIC (manual)">
                <content>
                   <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="55.0" prefWidth="536.0" spacing="10.0">
                      <children>
-                        <Label text="Siga las instrucciones que ofrece la web del DSIC:" VBox.vgrow="ALWAYS" />
+                        <Label text="Si desea crear la VPN de forma manual, siga las instrucciones que ofrece la web del DSIC:" VBox.vgrow="ALWAYS" />
                         <Label layoutX="20.0" layoutY="20.0" text="(debe seguir la opción de Windows, que es lo que utiliza este programa)" />
                         <Hyperlink fx:id="VpnDSICLink" focusTraversable="false" text="Pinche aquí para acceder a la web (PDF)" />
                      </children>
