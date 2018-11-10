@@ -171,15 +171,14 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
         public Process runScript(String script) throws IOException, InterruptedException { return runScript(script, Input.NONE); }
         public Process runScript(String script, Input input) throws IOException, InterruptedException {
             Process p = ProcessUtils.runPsScript(script, input);
-            String output = ProcessUtils.getOutput(p);
-            if (p.waitFor() != 0) throw new IOException(output);
+            String output = ProcessUtils.getOutput(p);   
             //Nos toca comprobar este posible error siempre porque en el caso de que el Script Powershell lo lea de un archivo
             //(como es el caso de la VPN a la UPV), no devuelve correctamente un exitValue != 0 (lo cual indicaría que hay error).
-            else if (output.contains("ResourceExists")) {
+            if (output.contains("ResourceExists")) {
                 updateErrorMsg("Ya existe una conexión VPN con el nombre indicado.\n\n"
                 + "Compruebe si se trata de la conexión adecuada, pues puede que no sea necesario crear otra.");
                 throw new IllegalArgumentException();
-            }
+            } else if (p.waitFor() != 0) throw new IOException(output);
             return p;
         }
         
