@@ -7,7 +7,6 @@ package accesoupv.model.services;
 
 import java.io.File;
 import java.util.Scanner;
-import javafx.concurrent.Task;
 
 /**
  *
@@ -25,7 +24,7 @@ public class AccesoVpnUPVService extends AccesoVPNService {
     }
 
     @Override
-    public Task getCreateTask() {
+    public CreateVPNTask getCreateTask() {
         return new CreateVPNTask(vpn, "vpn.upv.es") {
             @Override
             protected String doTask() throws Exception {

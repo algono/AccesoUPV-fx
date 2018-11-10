@@ -27,7 +27,7 @@ import myLibrary.javafx.ErrorAlert;
  *
  * @author aleja
  */
-public abstract class AccesoVPNService extends AccesoService implements Creatable<String> {
+public abstract class AccesoVPNService extends AccesoService {
     //Error messages
     public static final String ERROR_CON_VPN
             = "Se ha producido un error al tratar de conectarse a la VPN.\n\n"
@@ -150,6 +150,7 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
             }
         };
     }
+    public abstract CreateVPNTask getCreateTask();
     //Initial class for creating VPN (Creatable impl)
     public abstract class CreateVPNTask extends AlertingTask<String> {
     

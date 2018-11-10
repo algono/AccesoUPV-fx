@@ -30,7 +30,7 @@ public class AccesoVpnDSICService extends AccesoVPNService {
     }
 
     @Override
-    public Task getCreateTask() {
+    public CreateVPNTask getCreateTask() {
         return new CreateVPNTask(vpn, "r1-vpn.dsic.upv.es") {
             @Override
             protected String doTask() throws Exception {

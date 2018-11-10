@@ -168,9 +168,9 @@ public final class AccesoUPV {
     }
     
     //CREATING METHODS
-    public boolean createVpnUPV() { return create(VpnUPVService); }
-    public boolean createVpnDSIC() { return create(VpnDSICService); }
-    protected static boolean create(AccesoVPNService serv) {
+    public boolean createVpnUPV() { return createVpn(VpnUPVService); }
+    public boolean createVpnDSIC() { return createVpn(VpnDSICService); }
+    protected static boolean createVpn(AccesoVPNService serv) {
         LoadingStage stage = new LoadingStage(serv.getCreateTask());
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
@@ -397,7 +397,7 @@ public final class AccesoUPV {
             hasNewVPN = setVPNDialog(serv, setNewVPN);
 
             //Si la VPN ha sido cambiada (y es nueva), la crea.
-            if (hasNewVPN && setNewVPN) create(serv);
+            if (hasNewVPN && setNewVPN) createVpn(serv);
         }
         return true;
     }    
