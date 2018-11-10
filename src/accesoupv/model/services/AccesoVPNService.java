@@ -15,9 +15,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Optional;
 import java.util.Scanner;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
@@ -45,19 +47,19 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
     //Timeout for checking if the connected VPN is able to connect the server (in ms)
     public static final int PING_TIMEOUT = 500, FINAL_PING_TIMEOUT = 4000;
     
-    protected String VPN, connectedVPN, iServer;
+    protected String vpn, connectedVpn, iServer;
     protected String conMsg = "Conectando VPN...", disMsg = "Desconectando VPN...";
     
     public AccesoVPNService(String vpn) {
-        VPN = vpn;
+        this.vpn = vpn;
     }
 
     public String getVPN() {
-        return VPN;
+        return vpn;
     }
     
     public String getConnectedVPN() {
-        return isConnected() ? connectedVPN : VPN;
+        return isConnected() ? connectedVpn : vpn;
     }
     
     public boolean isReachable() { return isReachable(PING_TIMEOUT); }
@@ -70,14 +72,22 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
         return false;
     }
     
-    public void setVPN(String vpn) {
-        this.VPN = vpn;
+    public static boolean existsVPN(String vpn) {
+        try {
+            return ProcessUtils.runPsScript("Get-VpnConnection " + vpn).waitFor() == 0;
+        } catch (IOException | InterruptedException ex) {
+            return false;
+        }
+    }
+    
+    public void setVPN(String vpn) {   
+        this.vpn = vpn;
     }
     
     @Override
     protected void succeeded() {
         super.succeeded();
-        connectedVPN = isConnected() ? VPN : null;
+        connectedVpn = isConnected() ? vpn : null;
     }
     
     class VPNConnectTask extends AlertingTask<Boolean> {
@@ -89,17 +99,17 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
         @Override
         protected Boolean doTask() throws Exception {
             updateMessage(conMsg);
-            Process p = ProcessUtils.startProcess("rasphone.exe", "-d", "\"" + VPN + "\"");
+            Process p = ProcessUtils.startProcess("rasphone.exe", "-d", "\"" + vpn + "\"");
             ProcessUtils.waitAndCheck(p);
             //Si el proceso fue correctamente pero la VPN no esta conectada, se entiende que el usuario canceló la operación
             p = ProcessUtils.startProcess("rasdial.exe");
             ProcessUtils.waitAndCheck(p);
             //Si el usuario no canceló la operación (lo cual implica que la VPN se conectó con éxito), continúa.
-            if (ProcessUtils.getOutput(p).contains(VPN)) {
+            if (ProcessUtils.getOutput(p).contains(vpn)) {
                 //Si desde la VPN a la que se conectó no se puede acceder al servidor, se entiende que ha elegido una incorrecta.
                 boolean reachable = isReachable(FINAL_PING_TIMEOUT);
                 if (!reachable || isCancelled()) {
-                    p = ProcessUtils.startProcess("rasdial.exe", "\"" + VPN + "\"", "/DISCONNECT");
+                    p = ProcessUtils.startProcess("rasdial.exe", "\"" + vpn + "\"", "/DISCONNECT");
                     ProcessUtils.waitAndCheck(p);
                     //Si no era alcanzable, lanza la excepción adecuada
                     if (!reachable) {
@@ -144,59 +154,44 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
             protected Boolean doTask() throws Exception {
                 updateErrorMsg(ERROR_DIS_VPN);
                 updateMessage(disMsg);
-                Process p = ProcessUtils.startProcess("rasdial.exe", "\"" + connectedVPN + "\"", "/DISCONNECT");
+                Process p = ProcessUtils.startProcess("rasdial.exe", "\"" + connectedVpn + "\"", "/DISCONNECT");
                 ProcessUtils.waitAndCheck(p, 1000);
                 return true;
             }
         };
     }
     //Initial class for creating VPN (Creatable impl)
-    abstract class CreateVPNTask extends AlertingTask<String> {
+    public abstract class CreateVPNTask extends AlertingTask<String> {
     
         protected final String name, server;
-        protected Input input;
-
+         
         protected CreateVPNTask(String vpnName, String vpnServer) {
-            this(vpnName, vpnServer, Input.NONE);
+            this(vpnName, vpnServer, "Ha habido un error mientras se creaba la conexión VPN.");
         }
         
-        protected CreateVPNTask(String vpnName, String vpnServer, Input in) {
-            this(vpnName, vpnServer, in, "Ha habido un error mientras se creaba la conexión VPN.");
-        }
-        
-        protected CreateVPNTask(String vpnName, String vpnServer, Input in, String errMsg) {
+        protected CreateVPNTask(String vpnName, String vpnServer, String errMsg) {
             super(errMsg);
             name = vpnName; 
             server = vpnServer;
-            input = in;
         }
 
         public String getName() { return name; }
         public String getServer() { return server; }
         
-        protected final void runScript(String script) throws IOException, InterruptedException {
-            File temp = File.createTempFile("temp", ".ps1");
+        protected final File transcriptToTempFile(String name, String ext, Scanner sc) throws IOException {
+            File temp = File.createTempFile(name, ext);
             //Just in case the task throws an exception, it ensures the temp file is deleted
             temp.deleteOnExit();
-            //Fills the new file with the script
-            try (Scanner sc = new Scanner(script); PrintWriter pw = new PrintWriter(new FileOutputStream(temp), true)) {
-                while (sc.hasNext()) {
-                    pw.println(sc.nextLine().replaceAll("VPNNAME", name)
-                            .replaceAll("VPNSERVER", server));
-                }
+            //Copies the file
+            try (PrintWriter pw = new PrintWriter(new FileOutputStream(temp), true)) {
+                while (sc.hasNext()) { pw.println(sc.nextLine()); }
+            } finally {
+                sc.close();
             }
-            //Runs the script and waits for its completion
-            Process p = new ProcessBuilder("powershell.exe", "-ExecutionPolicy", "ByPass", "-Command", temp.getAbsolutePath()).start();
-            //If the script needs an input, it is passed through a pipe.
-            if (input != Input.NONE) {
-                try (PrintWriter pw = new PrintWriter(p.getOutputStream(), true)) {
-                    pw.println(input.getInput());
-                }
-            }
-            p.waitFor();
-            //Deletes the temp file
-            temp.delete();
+            //Returns the file created
+            return temp;
         }
+        
     }
     
 }

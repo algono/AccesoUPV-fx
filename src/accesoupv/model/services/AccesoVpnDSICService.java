@@ -7,6 +7,7 @@ package accesoupv.model.services;
 
 import accesoupv.controller.AyudaController;
 import accesoupv.model.Input;
+import accesoupv.model.ProcessUtils;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Hyperlink;
@@ -31,11 +32,14 @@ public class AccesoVpnDSICService extends AccesoVPNService {
 
     @Override
     public Task getCreateTask() {
-        return new CreateVPNTask(VPN, "r1-vpn.dsic.upv.es", Input.ENTER) {
+        return new CreateVPNTask(vpn, "r1-vpn.dsic.upv.es") {
             @Override
             protected String doTask() throws Exception {
                 updateMessage("Creando VPN al DSIC...");
-                runScript("Add-VpnConnection -Name \"VPNNAME\" -ServerAddress \"VPNSERVER\" -AuthenticationMethod MSChapv2 -EncryptionLevel Optional -L2tpPsk dsic -RememberCredential -TunnelType L2tp" + "\n");
+                ProcessUtils.runPsScript(
+                    "Add-VpnConnection -Name \"" + vpn + "\" -ServerAddress \"" + server + "\" -AuthenticationMethod MSChapv2 -EncryptionLevel Optional -L2tpPsk dsic -RememberCredential -TunnelType L2tp" + "\n",
+                    Input.ENTER
+                ).waitFor();
                 return name;
             }
         };

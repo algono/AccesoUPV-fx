@@ -10,7 +10,7 @@ package accesoupv.model;
  * @author Alejandro
  */
 public enum Input {
-    NO("N"), ENTER(""), NONE(null);
+    NONE(null), ENTER(""), NO("N");
     
     private final String input;
     

@@ -6,6 +6,7 @@
 package accesoupv.model;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -45,6 +46,19 @@ public final class ProcessUtils {
         ProcessBuilder builder = new ProcessBuilder(args);
         builder.redirectErrorStream(true);
         return builder.start();
+    }
+    
+    public static Process runPsScript(String script) throws IOException, InterruptedException { return runPsScript(script, Input.NONE); }
+    public static Process runPsScript(String script, Input input) throws IOException, InterruptedException {
+        //Runs the script and waits for its completion
+        Process p = new ProcessBuilder("powershell.exe", "-ExecutionPolicy", "ByPass", "-Command", script).start();
+        //If the script needs an input, it is passed through a pipe.
+        if (input != Input.NONE) {
+            try (PrintWriter pw = new PrintWriter(p.getOutputStream(), true)) {
+                pw.println(input.getInput());
+            }
+        }
+        return p;
     }
     
 }

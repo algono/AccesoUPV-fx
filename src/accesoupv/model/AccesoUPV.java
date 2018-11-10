@@ -170,8 +170,8 @@ public final class AccesoUPV {
     //CREATING METHODS
     public boolean createVpnUPV() { return create(VpnUPVService); }
     public boolean createVpnDSIC() { return create(VpnDSICService); }
-    protected boolean create(Creatable cr) {
-        LoadingStage stage = new LoadingStage(cr.getCreateTask());
+    protected static boolean create(AccesoVPNService serv) {
+        LoadingStage stage = new LoadingStage(serv.getCreateTask());
         stage.showAndWait();
         boolean succeeded = stage.isSucceeded();
         if (succeeded) {

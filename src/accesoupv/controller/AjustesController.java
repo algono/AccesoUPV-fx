@@ -7,6 +7,7 @@ package accesoupv.controller;
 
 import accesoupv.model.AccesoUPV;
 import accesoupv.model.Dominio;
+import accesoupv.model.services.AccesoVPNService;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -102,8 +103,34 @@ public class AjustesController implements Initializable {
     
     @FXML
     private void savePrefs(ActionEvent evt) {
-            if (VpnUPVChanged()) acceso.setVpnUPV(textVpnUPV.getText());
-            if (VpnDSICChanged()) acceso.setVpnDSIC(textVpnDSIC.getText());
+            Alert a = new Alert(Alert.AlertType.CONFIRMATION);
+            a.setHeaderText(null);
+            if (VpnUPVChanged()) {
+                String vpn = textVpnUPV.getText();
+                if (AccesoVPNService.existsVPN(vpn)) {
+                    acceso.setVpnUPV(vpn);
+                } else {
+                    a.setContentText("No existe ninguna conexión VPN a la UPV con el nombre '" + vpn + "'. ¿Desea que se cree automáticamente?");
+                    Optional<ButtonType> res = a.showAndWait();
+                    if (res.isPresent() && res.get() == ButtonType.OK) {
+                        acceso.setVpnUPV(vpn);
+                        if (!acceso.createVpnUPV()) return;
+                    } else return;
+                }
+            }
+            if (VpnDSICChanged()) {
+                String vpn = textVpnDSIC.getText();
+                if (AccesoVPNService.existsVPN(vpn)) {
+                    acceso.setVpnDSIC(vpn);
+                } else {
+                    a.setContentText("No existe ninguna conexión VPN al DSIC con el nombre '" + vpn + "'. ¿Desea que se cree automáticamente?");
+                    Optional<ButtonType> res = a.showAndWait();
+                    if (res.isPresent() && res.get() == ButtonType.OK) {
+                        acceso.setVpnDSIC(vpn);
+                        if (!acceso.createVpnDSIC()) return;
+                    } else return;
+                }
+            }
             if (userChanged()) acceso.setUser(textUser.getText());
             if (driveWChanged()) acceso.setDriveW(driveWCheckBox.isSelected() ? "*" : comboDriveW.getValue());
             if (domainChanged()) acceso.setDomain(alumnoRadioButton.isSelected() ? Dominio.ALUMNOS : Dominio.UPVNET);

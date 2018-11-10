@@ -54,12 +54,6 @@ public abstract class AccesoDriveService extends AccesoService {
         return isConnected() ? connectedDrive : drive;
     }
     
-    @Override
-    protected void succeeded() {
-        super.succeeded();
-        connectedDrive = isConnected() ? drive : null;
-    }
-    
     abstract class DriveConnectTask extends AlertingTask<Boolean> {
         
         protected String initMsg = "Accediendo al disco...";
@@ -93,8 +87,8 @@ public abstract class AccesoDriveService extends AccesoService {
             if (drive.equals("*")) { //Si la unidad no estaba determinada, la obtiene del output del proceso.
                 String out = ProcessUtils.getOutput(p);
                 int indexOf = out.indexOf(':');
-                drive = out.charAt(indexOf-1) + ":";
-            }
+                connectedDrive = out.charAt(indexOf-1) + ":";
+            } else { connectedDrive = drive; }
             return true;
         }
     }

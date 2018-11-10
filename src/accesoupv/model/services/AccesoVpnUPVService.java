@@ -5,11 +5,8 @@
  */
 package accesoupv.model.services;
 
+import accesoupv.model.ProcessUtils;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
 import java.util.Scanner;
 import javafx.concurrent.Task;
 
@@ -30,30 +27,23 @@ public class AccesoVpnUPVService extends AccesoVPNService {
 
     @Override
     public Task getCreateTask() {
-        return new CreateVPNTask(VPN, "vpn.upv.es") {
+        return new CreateVPNTask(vpn, "vpn.upv.es") {
             @Override
             protected String doTask() throws Exception {
                 updateMessage("Creando conexión VPN...");
-                File tempXml = createXml();
-                runScript("$importXML = New-Object XML" + "\n"
+                File tempXml = transcriptToTempFile("temp", ".xml", new Scanner(getClass().getResourceAsStream("/accesoupv/resources/VPN_config.xml")));
+                
+                String script = "$importXML = New-Object XML" + "\n"
                     + "$importXML.Load(\"${env:temp}\\" + tempXml.getName() +"\")" + "\n"
-                    + "Add-VpnConnection -Name \"VPNNAME\" -ServerAddress \"VPNSERVER\" -AuthenticationMethod Eap -EncryptionLevel Required -RememberCredential -TunnelType Sstp -EapConfigXmlStream $importXML" + "\n");
-                tempXml.delete();
+                    + "Add-VpnConnection -Name \"" + vpn + "\" -ServerAddress \""+ server + "\" -AuthenticationMethod Eap -EncryptionLevel Required -RememberCredential -TunnelType Sstp -EapConfigXmlStream $importXML" + "\n";
+                File temp = transcriptToTempFile("temp", ".ps1", new Scanner(script));
+                
+                ProcessUtils.runPsScript(temp.getAbsolutePath()).waitFor();
+                
+                tempXml.delete(); temp.delete();
                 return name;
             }
-
-            protected File createXml() throws IOException {
-                InputStream xmlIn = getClass().getResourceAsStream("/accesoupv/resources/VPN_config.xml");
-                File temp = File.createTempFile("temp", ".xml");
-                //Just in case the task throws an exception, it ensures the temp file is deleted
-                temp.deleteOnExit();
-                //Copies the file
-                try (Scanner sc = new Scanner(xmlIn); PrintWriter pw = new PrintWriter(new FileOutputStream(temp), true)) {
-                    while (sc.hasNext()) { pw.println(sc.nextLine()); }
-                }
-                //Returns the file created
-                return temp;
-            }
+            
         };
     }
     
