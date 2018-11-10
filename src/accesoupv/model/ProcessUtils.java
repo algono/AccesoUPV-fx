@@ -48,10 +48,10 @@ public final class ProcessUtils {
         return builder.start();
     }
     
-    public static Process runPsScript(String script) throws IOException, InterruptedException { return runPsScript(script, Input.NONE); }
-    public static Process runPsScript(String script, Input input) throws IOException, InterruptedException {
+    public static Process runPsScript(String script) throws IOException { return runPsScript(script, Input.NONE); }
+    public static Process runPsScript(String script, Input input) throws IOException {
         //Runs the script and waits for its completion
-        Process p = new ProcessBuilder("powershell.exe", "-ExecutionPolicy", "ByPass", "-Command", script).start();
+        Process p = startProcess("powershell.exe", "-ExecutionPolicy", "ByPass", "-Command", script);
         //If the script needs an input, it is passed through a pipe.
         if (input != Input.NONE) {
             try (PrintWriter pw = new PrintWriter(p.getOutputStream(), true)) {

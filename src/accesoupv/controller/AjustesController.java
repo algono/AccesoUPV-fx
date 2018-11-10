@@ -7,7 +7,6 @@ package accesoupv.controller;
 
 import accesoupv.model.AccesoUPV;
 import accesoupv.model.Dominio;
-import accesoupv.model.services.AccesoVPNService;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -107,8 +106,6 @@ public class AjustesController implements Initializable {
     
     @FXML
     private void savePrefs(ActionEvent evt) {
-            Alert a = new Alert(Alert.AlertType.CONFIRMATION);
-            a.setHeaderText(null);
             if (VpnUPVChanged()) acceso.setVpnUPV(textVpnUPV.getText());
             if (VpnDSICChanged()) acceso.setVpnDSIC(textVpnDSIC.getText());
             if (userChanged()) acceso.setUser(textUser.getText());
@@ -175,21 +172,13 @@ public class AjustesController implements Initializable {
     }
     
     private static boolean checkCreateVPN(String name) {
-        Alert a;
         if (name.isEmpty()) {
-            a = new Alert(Alert.AlertType.ERROR, "No ha indicado ningún nombre para la VPN. Indique uno.");
-            a.setHeaderText(null);
-            a.showAndWait();
-            return false;
-        } else if (AccesoVPNService.existsVPN(name)) {
-            a = new Alert(Alert.AlertType.ERROR, 
-                    "Ya existe una conexión VPN con el nombre indicado.\n\n"
-                    + "Compruebe si se trata de la conexión adecuada, pues puede que no sea necesario crear otra.");
+            Alert a = new Alert(Alert.AlertType.ERROR, "No ha indicado ningún nombre para la VPN. Indique uno.");
             a.setHeaderText(null);
             a.showAndWait();
             return false;
         } else {
-            a = new Alert(Alert.AlertType.CONFIRMATION, 
+            Alert a = new Alert(Alert.AlertType.CONFIRMATION, 
                     "Está a punto de crear una conexión VPN con el nombre '" + name + "'." + "\n"
                     + "Tras el proceso, el cambio de VPN será guardado automáticamente.\n\n"
                     + "¿Desea continuar?");

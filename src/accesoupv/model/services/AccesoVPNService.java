@@ -15,11 +15,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Optional;
 import java.util.Scanner;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
@@ -70,14 +68,6 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
         } catch (IOException | InterruptedException ex) {}
         
         return false;
-    }
-    
-    public static boolean existsVPN(String vpn) {
-        try {
-            return ProcessUtils.runPsScript("Get-VpnConnection " + vpn).waitFor() == 0;
-        } catch (IOException | InterruptedException ex) {
-            return false;
-        }
     }
     
     public void setVPN(String vpn) {   
@@ -164,7 +154,7 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
     public abstract class CreateVPNTask extends AlertingTask<String> {
     
         protected final String name, server;
-         
+        
         protected CreateVPNTask(String vpnName, String vpnServer) {
             this(vpnName, vpnServer, "Ha habido un error mientras se creaba la conexión VPN.");
         }
@@ -177,6 +167,21 @@ public abstract class AccesoVPNService extends AccesoService implements Creatabl
 
         public String getName() { return name; }
         public String getServer() { return server; }
+        
+        public Process runScript(String script) throws IOException, InterruptedException { return runScript(script, Input.NONE); }
+        public Process runScript(String script, Input input) throws IOException, InterruptedException {
+            Process p = ProcessUtils.runPsScript(script, input);
+            String output = ProcessUtils.getOutput(p);
+            if (p.waitFor() != 0) throw new IOException(output);
+            //Nos toca comprobar este posible error siempre porque en el caso de que el Script Powershell lo lea de un archivo
+            //(como es el caso de la VPN a la UPV), no devuelve correctamente un exitValue != 0 (lo cual indicaría que hay error).
+            else if (output.contains("ResourceExists")) {
+                updateErrorMsg("Ya existe una conexión VPN con el nombre indicado.\n\n"
+                + "Compruebe si se trata de la conexión adecuada, pues puede que no sea necesario crear otra.");
+                throw new IllegalArgumentException();
+            }
+            return p;
+        }
         
         protected final File transcriptToTempFile(String name, String ext, Scanner sc) throws IOException {
             File temp = File.createTempFile(name, ext);

@@ -5,7 +5,6 @@
  */
 package accesoupv.model.services;
 
-import accesoupv.model.ProcessUtils;
 import java.io.File;
 import java.util.Scanner;
 import javafx.concurrent.Task;
@@ -38,7 +37,7 @@ public class AccesoVpnUPVService extends AccesoVPNService {
                     + "Add-VpnConnection -Name \"" + vpn + "\" -ServerAddress \""+ server + "\" -AuthenticationMethod Eap -EncryptionLevel Required -RememberCredential -TunnelType Sstp -EapConfigXmlStream $importXML" + "\n";
                 File temp = transcriptToTempFile("temp", ".ps1", new Scanner(script));
                 
-                ProcessUtils.runPsScript(temp.getAbsolutePath()).waitFor();
+                runScript(temp.getAbsolutePath());
                 
                 tempXml.delete(); temp.delete();
                 return name;
