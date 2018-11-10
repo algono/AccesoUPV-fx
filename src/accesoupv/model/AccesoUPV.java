@@ -318,7 +318,7 @@ public final class AccesoUPV {
         }
         if (connected) {
             try {
-                Desktop.getDesktop().open(new File(serv.getDrive()));
+                Desktop.getDesktop().open(new File(serv.getConnectedDrive()));
             } catch (IOException ex) {
                 new Alert(Alert.AlertType.WARNING, WARNING_FOLDER_DRIVE_MSG).show();
             }
