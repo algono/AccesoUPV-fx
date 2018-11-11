@@ -110,7 +110,7 @@ public class AjustesController implements Initializable {
             if (VpnDSICChanged()) acceso.setVpnDSIC(textVpnDSIC.getText());
             if (userChanged()) acceso.setUser(textUser.getText());
             if (driveWChanged()) acceso.setDriveW(driveWCheckBox.isSelected() ? "*" : comboDriveW.getValue());
-            if (domainChanged()) acceso.setDomain(alumnoRadioButton.isSelected() ? Dominio.ALUMNOS : Dominio.UPVNET);
+            if (domainChanged()) acceso.setDomain(alumnoRadioButton.isSelected() ? Dominio.ALUMNO : Dominio.UPVNET);
             if (driveDSICChanged()) acceso.setDriveDSIC(driveDSICCheckBox.isSelected() ? "*" : comboDriveDSIC.getValue());
             if (passDSICChanged()) acceso.setPassDSIC(passDriveDSIC.getText());
             //Cierra la ventana de ajustes
@@ -153,7 +153,7 @@ public class AjustesController implements Initializable {
     
     private boolean domainChanged() {
         //XOR (Iguales -> false, Distintos -> true)
-        return alumnoRadioButton.isSelected() != (acceso.getDomain() == Dominio.ALUMNOS);
+        return alumnoRadioButton.isSelected() != (acceso.getDomain() == Dominio.ALUMNO);
     }
     
     private boolean anyChanges() {
@@ -309,7 +309,7 @@ public class AjustesController implements Initializable {
         passDriveDSIC.setText(pass);
         
         //Si el dominio guardado es ALUMNOS, marca el RadioButton adecuado
-        if (acceso.getDomain() == Dominio.ALUMNOS) alumnoRadioButton.setSelected(true);
+        if (acceso.getDomain() == Dominio.ALUMNO) alumnoRadioButton.setSelected(true);
         
         //Hace que al abrir la ventana, el focus lo tenga el botón de aceptar
         Platform.runLater(() -> OKButton.requestFocus());

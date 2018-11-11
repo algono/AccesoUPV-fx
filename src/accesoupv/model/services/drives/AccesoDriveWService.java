@@ -35,7 +35,7 @@ public class AccesoDriveWService extends AccesoDriveService {
         return new DriveConnectTask() {
             @Override
             public String getDir() {
-                return "\\\\nasupv.upv.es\\" + dom.toString().toLowerCase() + "\\" + user.charAt(0) + "\\" + user;
+                return "\\\\nasupv.upv.es\\" + dom.getDir() + "\\" + user.charAt(0) + "\\" + user;
             }
             @Override
             protected Boolean doTask() throws Exception {

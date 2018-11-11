@@ -30,7 +30,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -74,7 +73,7 @@ public final class AccesoUPV {
         VpnUPVService = new AccesoVpnUPVService(prefs.get("vpn-upv", ""));
         VpnDSICService = new AccesoVpnDSICService(prefs.get("vpn-dsic", ""));
         user = prefs.get("user", "");
-        WService = new AccesoDriveWService(user, prefs.get("drive-w", "*"), prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS);
+        WService = new AccesoDriveWService(user, prefs.get("drive-w", "*"), prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNO);
         DSICService = new AccesoDriveDSICService(user, prefs.get("drive-dsic", "*"));
     }
     // Returns the object instance stored here
@@ -89,7 +88,7 @@ public final class AccesoUPV {
         setUser(prefs.get("user", ""));
         setDriveW(prefs.get("drive-w", "*"));
         setDriveDSIC(prefs.get("drive-dsic", "*"));
-        setDomain(prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNOS);
+        setDomain(prefs.getBoolean("non-student", false) ? Dominio.UPVNET : Dominio.ALUMNO);
     }
     public void savePrefs() {
         String VpnUPV = getVpnUPV();
@@ -106,7 +105,7 @@ public final class AccesoUPV {
         String driveDSIC = getDriveDSIC();
         if (driveDSIC.equals("*")) prefs.remove("drive-dsic");
         else prefs.put("drive-dsic", driveDSIC);
-        if (getDomain() == Dominio.ALUMNOS) prefs.remove("non-student");
+        if (getDomain() == Dominio.ALUMNO) prefs.remove("non-student");
         else prefs.putBoolean("non-student", true);
     }
     

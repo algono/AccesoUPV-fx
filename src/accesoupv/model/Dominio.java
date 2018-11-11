@@ -10,6 +10,14 @@ package accesoupv.model;
  * @author Alejandro
  */
 public enum Dominio {
-    ALUMNOS,
-    UPVNET
+    ALUMNO("alumnos"),
+    UPVNET("discos");
+    
+    private final String dir;
+    
+    private Dominio(String dir) {
+        this.dir = dir;
+    }
+    
+    public String getDir() { return dir; }
 }
