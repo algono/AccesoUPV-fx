@@ -39,7 +39,7 @@ public class AccesoDriveWService extends AccesoDriveService {
             }
             @Override
             protected Boolean doTask() throws Exception {
-                initMsg = "Accediendo al disco W...";
+                updateMessage("Conectando disco W...");
                 return super.doTask();
             }
         };

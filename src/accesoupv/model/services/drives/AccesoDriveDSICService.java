@@ -51,7 +51,7 @@ public class AccesoDriveDSICService extends AccesoDriveService {
             
             @Override
             protected Boolean doTask() throws Exception {
-                initMsg = "Accediendo al disco del DSIC...";
+                updateMessage("Conectando disco del DSIC...");
                 Boolean res = false;
                 try {
                     res = super.doTask();

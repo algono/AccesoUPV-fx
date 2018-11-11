@@ -56,8 +56,6 @@ public abstract class AccesoDriveService extends AccesoService {
     
     abstract class DriveConnectTask extends AlertingTask<Boolean> {
         
-        protected String initMsg = "Accediendo al disco...";
-        
         public DriveConnectTask() { super(ERROR_CON); }
         public DriveConnectTask(String errMsg) { super(errMsg); }
         
@@ -66,7 +64,6 @@ public abstract class AccesoDriveService extends AccesoService {
     
         @Override
         protected Boolean doTask() throws Exception {
-            updateMessage(initMsg);
             List<String> args = new ArrayList<>(Arrays.asList("cmd.exe", "/c", "net", "use", drive, getDir()));
             List<String> extraArgs = getExtraArgs();
             if (extraArgs != null) args.addAll(getExtraArgs());

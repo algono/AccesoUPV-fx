@@ -12,15 +12,17 @@ import accesoupv.controller.AjustesController;
 import accesoupv.controller.AyudaController;
 import java.awt.Desktop;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.concurrent.Worker;
+import javafx.geometry.Pos;
 import myLibrary.javafx.Loading.LoadingStage;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
@@ -30,7 +32,12 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 import lib.PasswordDialog;
+import myLibrary.javafx.AlertingTask;
+import myLibrary.javafx.Loading.LoadingScene;
 
 /**
  *
@@ -40,22 +47,22 @@ public final class AccesoUPV {
    
     //Preferences
     private final Preferences prefs = Preferences.userNodeForPackage(Launcher.class);
+    
     //Variables
     private String user; //I also save the user here because it is the same for all Services
     private boolean savePrefsOnExit = true;
+    
     //Services
     private final AccesoVPNService VpnUPVService, VpnDSICService;
     private final AccesoDriveWService WService;
     private final AccesoDriveDSICService DSICService;
+    
     //Servers
     public static final String LINUX_DSIC = "linuxdesktop.dsic.upv.es";
     public static final String WIN_DSIC = "windesktop.dsic.upv.es";
-    //Messages
-    public static final String WARNING_FOLDER_DRIVE_MSG = 
-            "El disco ha sido conectado correctamente, pero no se ha podido abrir la carpeta.\n"
-            + "Ábrala manualmente.";
+    
     //Timeout for checking if the user is already connected to a server (in ms)
-    public static final int PING_TIMEOUT = 500;
+    public static final int PING_TIMEOUT = 600;
     
     
     // Singleton patron (only 1 instance of this object can be constructed)
@@ -210,20 +217,7 @@ public final class AccesoUPV {
         if (serv.isConnected() || serv.isReachable()) return Operation.CANCEL;
         //If the VPN is not set and the establishVPN dialogue doesn't set it, it aborts.
         else if (serv.getVPN().isEmpty() && !establishVPN(serv)) return Operation.ABORT;
-        else if (WService.isConnected() || DSICService.isConnected()) {
-            Alert a = new Alert(Alert.AlertType.WARNING, 
-                "Si cambias de conexión VPN mientras hay un disco conectado, la próxima vez que intentes acceder tardará más de lo habitual.\n\n"
-                + "¿Desea que sean desconectados?\n ", ButtonType.YES, ButtonType.NO, ButtonType.CANCEL
-            );
-            a.setHeaderText(null);
-            Optional<ButtonType> res = a.showAndWait();
-            if (res.isPresent() && res.get() != ButtonType.CANCEL) {
-                if (res.get() == ButtonType.YES) {
-                    if (!disconnectW() || !disconnectDSIC()) return Operation.ABORT;
-                }
-                return Operation.CONTINUE;
-            } else return Operation.ABORT;
-        } else return Operation.CONTINUE;
+        else return Operation.CONTINUE;
     }
     protected Operation onFailedVPN(AccesoVPNService serv) {
         //Si la VPN no era válida, permite cambiarla, y si la cambió, vuelve a intentarlo.
@@ -335,21 +329,57 @@ public final class AccesoUPV {
     
     protected boolean connectDrive(AccesoDriveService serv) {
         boolean connected = serv.isConnected();
+        LoadingStage stage = new LoadingStage();
+        List<Worker> workerList = stage.getLoadingService().getWorkerList();
         if (!connected) {//If drive is already connected, it's not necessary to connect it again
             if (!checkDrive(serv)) return false; //If the drive isn't available, abort the process
-            
-            LoadingStage stage = new LoadingStage(serv);
-            stage.showAndWait();
-            connected = stage.isSucceeded();
+            workerList.add(serv);  
         }
-        if (connected) {
-            try {
+        //Opening drive folder task
+        AlertingTask openTask = new AlertingTask<Boolean>(
+                                "El disco ha sido conectado correctamente, pero no se ha podido abrir.\n"
+                                + "Ábralo manualmente desde el Explorador de Archivos.") {
+            @Override
+            protected Boolean doTask() throws Exception {
+                updateMessage("Abriendo disco...");
                 Desktop.getDesktop().open(new File(serv.getConnectedDrive()));
-            } catch (IOException ex) {
-                new Alert(Alert.AlertType.WARNING, WARNING_FOLDER_DRIVE_MSG).show();
+                return true;
             }
+            @Override
+            protected Alert getErrorAlert(Throwable ex) {
+                Logger.getLogger(AccesoUPV.class.getName()).log(Level.SEVERE, null, ex);
+                return new Alert(Alert.AlertType.WARNING, getErrorMessage());
+            }
+        };
+        workerList.add(openTask);
+        if (connected) {
+            //Si tarda más de lo normal en abrir la carpeta del disco, muestra un mensaje especial
+            Label extraLabel = new Label("Si lee esto es porque el proceso de abrir el disco está tardando más de lo habitual.\n"
+                    + "Esto probablemente se deba a que ha cambiado de VPN teniendo el disco conectado.\n"
+                    + "No se preocupe, en unos instantes volverá a tener el acceso habitual al disco.");
+            extraLabel.setTextFill(Color.web("#808080")); //Grey color
+            extraLabel.setFont(Font.font(10));
+            extraLabel.setTextAlignment(TextAlignment.JUSTIFY); extraLabel.setWrapText(true);
+            LoadingScene scene = (LoadingScene) stage.getScene();
+            VBox root = new VBox(20, scene.getRoot(), extraLabel);
+            stage.setWidth(400);
+            root.setAlignment(Pos.CENTER);
+            scene.setRoot(root);
+            
+            openTask.setOnRunning((evt) -> {
+                new Thread(() -> {
+                    try { Thread.sleep(1000);
+                    } catch (InterruptedException ex) {}
+                    Platform.runLater(() ->{
+                        if (openTask.isRunning()) stage.show();
+                    });
+                }).start();
+            });
+            stage.getLoadingService().start();
+        } else {
+            stage.showAndWait();
         }
-        return connected;
+        return connected || serv.getState() == Worker.State.SUCCEEDED;
     }
     //DISCONNECTING METHODS
     public boolean shutdown() {
