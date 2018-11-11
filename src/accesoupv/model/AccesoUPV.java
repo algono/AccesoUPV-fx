@@ -30,6 +30,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -329,7 +330,9 @@ public final class AccesoUPV {
     
     protected boolean connectDrive(AccesoDriveService serv) {
         boolean connected = serv.isConnected();
-        LoadingStage stage = new LoadingStage();
+        LoadingScene scene = new LoadingScene();
+        scene.showProgress(false);
+        LoadingStage stage = new LoadingStage(scene);
         List<Worker> workerList = stage.getLoadingService().getWorkerList();
         if (!connected) {//If drive is already connected, it's not necessary to connect it again
             if (!checkDrive(serv)) return false; //If the drive isn't available, abort the process
@@ -360,7 +363,6 @@ public final class AccesoUPV {
             extraLabel.setTextFill(Color.web("#808080")); //Grey color
             extraLabel.setFont(Font.font(10));
             extraLabel.setTextAlignment(TextAlignment.JUSTIFY); extraLabel.setWrapText(true);
-            LoadingScene scene = (LoadingScene) stage.getScene();
             VBox root = new VBox(20, scene.getRoot(), extraLabel);
             stage.setWidth(400);
             root.setAlignment(Pos.CENTER);
@@ -383,7 +385,9 @@ public final class AccesoUPV {
     }
     //DISCONNECTING METHODS
     public boolean shutdown() {
-        LoadingStage stage = new LoadingStage();
+        LoadingScene scene = new LoadingScene();
+        scene.setProgressBar(true);
+        LoadingStage stage = new LoadingStage(scene);
         List<Worker> workerList = stage.getLoadingService().getWorkerList();
         AccesoService[] services = {WService, DSICService, VpnDSICService, VpnUPVService};
         for (AccesoService serv : services) if (serv.isConnected()) workerList.add(serv);
