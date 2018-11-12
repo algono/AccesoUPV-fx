@@ -87,7 +87,7 @@ public abstract class AccesoVPNService extends AccesoService {
         }
         
         @Override
-        protected Boolean doTask() throws Exception {
+        protected Boolean call() throws Exception {
             updateMessage(conMsg);
             Process p = ProcessUtils.startProcess("rasphone.exe", "-d", "\"" + vpn + "\"");
             ProcessUtils.waitAndCheck(p);
@@ -141,7 +141,7 @@ public abstract class AccesoVPNService extends AccesoService {
     protected Task<Boolean> createDisconnectTask() {
         return new AlertingTask<Boolean>() {
             @Override
-            protected Boolean doTask() throws Exception {
+            protected Boolean call() throws Exception {
                 updateErrorMsg(ERROR_DIS_VPN);
                 updateMessage(disMsg);
                 Process p = ProcessUtils.startProcess("rasdial.exe", "\"" + connectedVpn + "\"", "/DISCONNECT");

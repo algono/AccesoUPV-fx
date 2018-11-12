@@ -63,7 +63,7 @@ public abstract class AccesoDriveService extends AccesoService {
         public List<String> getExtraArgs() { return null; }
     
         @Override
-        protected Boolean doTask() throws Exception {
+        protected Boolean call() throws Exception {
             List<String> args = new ArrayList<>(Arrays.asList("cmd.exe", "/c", "net", "use", drive, getDir()));
             List<String> extraArgs = getExtraArgs();
             if (extraArgs != null) args.addAll(getExtraArgs());
@@ -98,7 +98,7 @@ public abstract class AccesoDriveService extends AccesoService {
         public DriveDisconnectTask(String errMsg) { super(errMsg); }
         
         @Override
-        protected Boolean doTask() throws Exception {
+        protected Boolean call() throws Exception {
             updateMessage(initMsg);
             Process p = ProcessUtils.startProcess("cmd.exe", "/c", "net", "use", connectedDrive, "/delete");
             Thread.sleep(delay);

@@ -33,7 +33,7 @@ public class AccesoVpnDSICService extends AccesoVPNService {
     public CreateVPNTask getCreateTask() {
         return new CreateVPNTask(vpn, "r1-vpn.dsic.upv.es") {
             @Override
-            protected String doTask() throws Exception {
+            protected String call() throws Exception {
                 updateMessage("Creando VPN al DSIC...");
                 runScript(
                     "Add-VpnConnection -Name \"" + vpn + "\" -ServerAddress \"" + server + "\" -AuthenticationMethod MSChapv2 -EncryptionLevel Optional -L2tpPsk dsic -RememberCredential -TunnelType L2tp" + "\n",

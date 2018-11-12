@@ -22,7 +22,6 @@ import java.util.prefs.Preferences;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.concurrent.Worker;
-import javafx.geometry.Pos;
 import myLibrary.javafx.Loading.LoadingStage;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
@@ -32,9 +31,6 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.TextAlignment;
 import lib.PasswordDialog;
 import myLibrary.javafx.AlertingTask;
 import myLibrary.javafx.Loading.LoadingScene;
@@ -248,7 +244,18 @@ public final class AccesoUPV {
         return connectVPN(VpnUPVService);
     }
     public boolean connectVpnDSIC() {
-        return connectVPN(VpnDSICService); 
+        if (WService.isConnected()) {
+            Alert a = new Alert(Alert.AlertType.WARNING, 
+                "No se puede acceder a la VPN del DSIC teniendo el Disco W conectado.\n"
+                + "Si continúa, este será desconectado automáticamente.\n\n"
+                + "¿Desea continuar?", ButtonType.OK, ButtonType.CANCEL);
+            a.setHeaderText(null);
+            Optional<ButtonType> res = a.showAndWait();
+            if (res.isPresent() && res.get() == ButtonType.OK) {
+                if (!disconnectW()) return false;
+            } else return false;
+        }
+        return connectVPN(VpnDSICService);
     }
 
     // DRIVE RELATED
@@ -290,6 +297,17 @@ public final class AccesoUPV {
     
     public boolean connectW() { 
         if (!checkUser()) return false;
+        if (VpnDSICService.isConnected()) {
+            Alert a = new Alert(Alert.AlertType.WARNING, 
+                "No se puede acceder al disco W desde la VPN del DSIC.\n"
+                + "Si continúa, esta será desconectada automáticamente.\n\n"
+                + "¿Desea continuar?", ButtonType.OK, ButtonType.CANCEL);
+            a.setHeaderText(null);
+            Optional<ButtonType> res = a.showAndWait();
+            if (res.isPresent() && res.get() == ButtonType.OK) {
+                if (!disconnectVpnDSIC()) return false;
+            } else return false;
+        }
         boolean succeeded = connectDrive(WService);
         if (!succeeded) {
             Throwable ex = WService.getException();
@@ -329,9 +347,7 @@ public final class AccesoUPV {
     
     protected boolean connectDrive(AccesoDriveService serv) {
         boolean connected = serv.isConnected();
-        LoadingScene scene = new LoadingScene();
-        scene.showProgress(false);
-        LoadingStage stage = new LoadingStage(scene);
+        LoadingStage stage = new LoadingStage();
         List<Worker> workerList = stage.getLoadingService().getWorkerList();
         if (!connected) {//If drive is already connected, it's not necessary to connect it again
             if (!checkDrive(serv)) return false; //If the drive isn't available, abort the process
@@ -342,7 +358,7 @@ public final class AccesoUPV {
                                 "El disco ha sido conectado correctamente, pero no se ha podido abrir.\n"
                                 + "Ábralo manualmente desde el Explorador de Archivos.") {
             @Override
-            protected Boolean doTask() throws Exception {
+            protected Boolean call() throws Exception {
                 updateMessage("Abriendo disco...");
                 Desktop.getDesktop().open(new File(serv.getConnectedDrive()));
                 return true;
@@ -354,33 +370,8 @@ public final class AccesoUPV {
             }
         };
         workerList.add(openTask);
-        if (connected) {
-            //Si tarda más de lo normal en abrir la carpeta del disco, muestra un mensaje especial
-            Label extraLabel = new Label("Si lee esto es porque el proceso de abrir el disco está tardando más de lo habitual.\n"
-                    + "Esto probablemente se deba a que ha cambiado de VPN teniendo el disco conectado.\n"
-                    + "No se preocupe, en unos instantes volverá a tener el acceso habitual al disco.");
-            extraLabel.setTextFill(Color.web("#808080")); //Grey color
-            extraLabel.setFont(Font.font(10));
-            extraLabel.setTextAlignment(TextAlignment.JUSTIFY); extraLabel.setWrapText(true);
-            VBox root = new VBox(20, scene.getRoot(), extraLabel);
-            stage.setWidth(400);
-            root.setAlignment(Pos.CENTER);
-            scene.setRoot(root);
-            
-            openTask.setOnRunning((evt) -> {
-                new Thread(() -> {
-                    try { Thread.sleep(1000);
-                    } catch (InterruptedException ex) {}
-                    Platform.runLater(() ->{
-                        if (openTask.isRunning()) stage.show();
-                    });
-                }).start();
-            });
-            stage.getLoadingService().start();
-        } else {
-            stage.showAndWait();
-        }
-        return connected || serv.getState() == Worker.State.SUCCEEDED;
+        stage.showAndWait();
+        return stage.isSucceeded();
     }
     //DISCONNECTING METHODS
     public boolean shutdown() {

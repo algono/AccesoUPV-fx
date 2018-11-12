@@ -15,7 +15,6 @@ import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -169,12 +168,12 @@ public class PrincipalController implements Initializable {
         menuDisconnectVpnDSIC.setOnAction(e -> acceso.disconnectVpnDSIC());
         
         //Setting bindings for buttons
-        buttonDisconnectW.disableProperty().bind(Bindings.not(acceso.connectedWProperty()));
-        menuDisconnectW.disableProperty().bind(Bindings.not(acceso.connectedWProperty()));
-        buttonDisconnectDSIC.disableProperty().bind(Bindings.not(acceso.connectedDSICProperty()));
-        menuDisconnectDSIC.disableProperty().bind(Bindings.not(acceso.connectedDSICProperty()));
-        buttonDisconnectVpnDSIC.disableProperty().bind(Bindings.not(acceso.connectedVpnDSICProperty()));
-        menuDisconnectVpnDSIC.disableProperty().bind(Bindings.not(acceso.connectedVpnDSICProperty()));
+        buttonDisconnectW.disableProperty().bind(acceso.connectedWProperty().not());
+        menuDisconnectW.disableProperty().bind(acceso.connectedWProperty().not());
+        buttonDisconnectDSIC.disableProperty().bind(acceso.connectedDSICProperty().not());
+        menuDisconnectDSIC.disableProperty().bind(acceso.connectedDSICProperty().not());
+        buttonDisconnectVpnDSIC.disableProperty().bind(acceso.connectedVpnDSICProperty().not());
+        menuDisconnectVpnDSIC.disableProperty().bind(acceso.connectedVpnDSICProperty().not());
         
         Platform.setImplicitExit(false); //Se asegura de que el programa no se cierre solo
         acceso.init(); //Comprueba si está conectado a la UPV, y si no, trata de conectarse a la VPN

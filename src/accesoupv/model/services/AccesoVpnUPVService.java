@@ -27,7 +27,7 @@ public class AccesoVpnUPVService extends AccesoVPNService {
     public CreateVPNTask getCreateTask() {
         return new CreateVPNTask(vpn, "vpn.upv.es") {
             @Override
-            protected String doTask() throws Exception {
+            protected String call() throws Exception {
                 updateMessage("Creando conexión VPN...");
                 File tempXml = transcriptToTempFile("temp", ".xml", new Scanner(getClass().getResourceAsStream("/accesoupv/resources/VPN_config.xml")));
                 

@@ -50,11 +50,11 @@ public class AccesoDriveDSICService extends AccesoDriveService {
             }
             
             @Override
-            protected Boolean doTask() throws Exception {
+            protected Boolean call() throws Exception {
                 updateMessage("Conectando disco del DSIC...");
                 Boolean res = false;
                 try {
-                    res = super.doTask();
+                    res = super.call();
                 } catch (IOException ex) {
                     String out = ex.getMessage();
                     Throwable cause = null;
@@ -77,9 +77,9 @@ public class AccesoDriveDSICService extends AccesoDriveService {
     protected Task<Boolean> createDisconnectTask() {
         return new DriveDisconnectTask() {
             @Override
-            protected Boolean doTask() throws Exception {
+            protected Boolean call() throws Exception {
                 initMsg = "Desconectando disco del DSIC...";
-                return super.doTask();
+                return super.call();
             }
         };
     }

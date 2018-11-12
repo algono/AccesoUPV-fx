@@ -38,9 +38,9 @@ public class AccesoDriveWService extends AccesoDriveService {
                 return "\\\\nasupv.upv.es\\" + dom.getDir() + "\\" + user.charAt(0) + "\\" + user;
             }
             @Override
-            protected Boolean doTask() throws Exception {
+            protected Boolean call() throws Exception {
                 updateMessage("Conectando disco W...");
-                return super.doTask();
+                return super.call();
             }
         };
     }
@@ -49,9 +49,9 @@ public class AccesoDriveWService extends AccesoDriveService {
     protected Task<Boolean> createDisconnectTask() {
         return new DriveDisconnectTask() {
             @Override
-            protected Boolean doTask() throws Exception {
+            protected Boolean call() throws Exception {
                 initMsg = "Desconectando disco W...";
-                return super.doTask();
+                return super.call();
             }
         };
     }
