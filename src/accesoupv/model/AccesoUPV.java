@@ -22,7 +22,7 @@ import java.util.prefs.Preferences;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.concurrent.Worker;
-import myLibrary.javafx.Loading.LoadingStage;
+import myLibrary.javafx.Loading.LoadingDialog;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -33,7 +33,6 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.VBox;
 import lib.PasswordDialog;
 import myLibrary.javafx.AlertingTask;
-import myLibrary.javafx.Loading.LoadingScene;
 
 /**
  *
@@ -178,9 +177,9 @@ public final class AccesoUPV {
         }
         serv.setOnCancelled((evt) -> System.exit(0));
         
-        LoadingStage stage = new LoadingStage(serv);
-        stage.showAndWait();
-        boolean succeeded = stage.isSucceeded();
+        LoadingDialog dialog = new LoadingDialog(serv);
+        dialog.showAndWait();
+        boolean succeeded = dialog.isSucceeded();
         
         serv.setOnCancelled(null);
         //Si la ejecución falló, permite cambiar el valor de la VPN por si lo puso mal
@@ -196,9 +195,9 @@ public final class AccesoUPV {
     public boolean createVpnUPV() { return createVPN(VpnUPVService); }
     public boolean createVpnDSIC() { return createVPN(VpnDSICService); }
     protected static boolean createVPN(AccesoVPNService serv) {
-        LoadingStage stage = new LoadingStage(serv.getCreateTask());
-        stage.showAndWait();
-        boolean succeeded = stage.isSucceeded();
+        LoadingDialog dialog = new LoadingDialog(serv.getCreateTask());
+        dialog.showAndWait();
+        boolean succeeded = dialog.isSucceeded();
         if (succeeded) {
             Alert successAlert = new Alert(Alert.AlertType.INFORMATION, "La conexión ha sido creada con éxito.");
             successAlert.setHeaderText(null);
@@ -228,9 +227,9 @@ public final class AccesoUPV {
             case CANCEL: return true;
             case ABORT: return false;
         }
-        LoadingStage stage = new LoadingStage(serv);
-        stage.showAndWait();
-        boolean succeeded = stage.isSucceeded();        
+        LoadingDialog dialog = new LoadingDialog(serv);
+        dialog.showAndWait();
+        boolean succeeded = dialog.isSucceeded();        
         //Si la ejecución falló, permite cambiar el valor de la VPN por si lo puso mal
         if (!succeeded && serv.getState() == Worker.State.FAILED) { 
             switch(onFailedVPN(serv)) {
@@ -347,8 +346,8 @@ public final class AccesoUPV {
     
     protected boolean connectDrive(AccesoDriveService serv) {
         boolean connected = serv.isConnected();
-        LoadingStage stage = new LoadingStage();
-        List<Worker> workerList = stage.getLoadingService().getWorkerList();
+        LoadingDialog dialog = new LoadingDialog();
+        List<Worker> workerList = dialog.getLoadingService().getWorkerList();
         if (!connected) {//If drive is already connected, it's not necessary to connect it again
             if (!checkDrive(serv)) return false; //If the drive isn't available, abort the process
             workerList.add(serv);  
@@ -370,15 +369,14 @@ public final class AccesoUPV {
             }
         };
         workerList.add(openTask);
-        stage.showAndWait();
-        return stage.isSucceeded();
+        dialog.showAndWait();
+        return dialog.isSucceeded();
     }
     //DISCONNECTING METHODS
     public boolean shutdown() {
-        LoadingScene scene = new LoadingScene();
-        scene.setProgressBar(true);
-        LoadingStage stage = new LoadingStage(scene);
-        List<Worker> workerList = stage.getLoadingService().getWorkerList();
+        LoadingDialog dialog = new LoadingDialog();
+        dialog.setProgressBar(true);
+        List<Worker> workerList = dialog.getLoadingService().getWorkerList();
         AccesoService[] services = {WService, DSICService, VpnDSICService, VpnUPVService};
         for (AccesoService serv : services) if (serv.isConnected()) workerList.add(serv);
         if (WService.isConnected()) WService.setDelay(1000);
@@ -386,8 +384,8 @@ public final class AccesoUPV {
         //Si tiene que realizar alguna tarea, la realiza (si no, devuelve true)
         boolean succeeded = true;
         if (!workerList.isEmpty()) {
-            stage.showAndWait();
-            succeeded = stage.isSucceeded();
+            dialog.showAndWait();
+            succeeded = dialog.isSucceeded();
         }
         if (succeeded && savePrefsOnExit) savePrefs();
         return succeeded;
@@ -409,9 +407,9 @@ public final class AccesoUPV {
     protected boolean disconnect(AccesoService serv) {
         boolean succeeded = true;
         if (serv.isConnected()) { 
-            LoadingStage stage = new LoadingStage(serv);
-            stage.showAndWait();
-            succeeded = stage.isSucceeded();
+            LoadingDialog dialog = new LoadingDialog(serv);
+            dialog.showAndWait();
+            succeeded = dialog.isSucceeded();
         }
         return succeeded;
     }
