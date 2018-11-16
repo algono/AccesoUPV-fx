@@ -161,9 +161,7 @@ public final class AccesoUPV {
         char letter = 'Z';
         while (letter >= 'D') {
             String d = letter + ":";
-            if (!new File(d).exists() 
-                || (diskService.isConnected() && d.equals(diskService.getDrive()))
-                ) drives.add(d);
+            if (!new File(d).exists() || d.equals(diskService.getDrive())) drives.add(d);
             letter--;
         }
         return drives;
@@ -268,27 +266,19 @@ public final class AccesoUPV {
         if (!serv.isConnected() && isDriveUsed(drive)) {
             String WARNING_W = 
                     "La unidad definida para el disco (" + drive + ") ya contiene un disco asociado.\n\n"
-                    + "Antes de continuar, desconecte el disco asociado, o cambie la unidad utilizada para el disco.\n ";
+                    + "Antes de continuar, desconecte el disco asociado, o cambie la unidad utilizada para el disco.\n "
+                    + "(Si prefiere que se elija la primera unidad disponible sólo durante esta conexión, continúe).\n ";
             Alert warning = new Alert(Alert.AlertType.WARNING);
             String actDrive = drive;
             warning.setHeaderText("Unidad " + actDrive + " contiene disco");
             warning.setContentText(WARNING_W);
-            ButtonType retry = new ButtonType("Reintentar");
+            ButtonType retry = new ButtonType("Continuar");
             ButtonType change = new ButtonType("Cambiar", ButtonBar.ButtonData.LEFT);
             warning.getButtonTypes().setAll(retry, change, ButtonType.CANCEL);
             Optional<ButtonType> result = warning.showAndWait();
             if (!result.isPresent() || result.get() == ButtonType.CANCEL) { return false; }
             else if (result.get() == change) { 
                 if (!setDriveDialog(serv)) { return checkDrive(serv); }
-            }
-            else {
-                if (isDriveUsed(drive)) {
-                    Alert error = new Alert(Alert.AlertType.ERROR, "El disco aún no ha sido desconectado.\n"
-                            + "Desconéctelo y vuelva a intentarlo.");
-                    error.setHeaderText(null);
-                    error.showAndWait();
-                    return checkDrive(serv);
-                }
             }
         }
         return true;
@@ -314,6 +304,23 @@ public final class AccesoUPV {
                 ex = ex.getCause();
                 if (ex instanceof IllegalArgumentException) {
                     if (setUserDialog()) return connectW(); //Si el usuario no era válido, permite cambiarlo, y si puso alguno, vuelve a intentarlo.
+                } else if (ex.getMessage().equals("bug") && VpnUPVService.isConnected()) {
+                    if (disconnectVpnUPV()) {
+                        boolean rec = false;
+                        while (!rec) {
+                            rec = connectVpnUPV();
+                            if (!rec) {
+                                if (VpnUPVService.getState() == Worker.State.CANCELLED) {
+                                    Alert a = new Alert(Alert.AlertType.WARNING, "No puede continuar con la VPN desconectada.\n"
+                                            + "¿Desea salir del programa?", ButtonType.OK, ButtonType.CANCEL);
+                                    a.setHeaderText(null);
+                                    Optional<ButtonType> res = a.showAndWait();
+                                    if (!res.isPresent() || res.get() != ButtonType.OK) System.exit(0);
+                                }
+                            }
+                        }
+                        connectW();
+                    }
                 }
             }
         }
@@ -346,10 +353,16 @@ public final class AccesoUPV {
     
     protected boolean connectDrive(AccesoDriveService serv) {
         boolean connected = serv.isConnected();
+        String drive = serv.getDrive();
         LoadingDialog dialog = new LoadingDialog();
         List<Worker> workerList = dialog.getLoadingService().getWorkerList();
-        if (!connected) {//If drive is already connected, it's not necessary to connect it again
-            if (!checkDrive(serv)) return false; //If the drive isn't available, abort the process
+        //If drive is already connected, it's not necessary to connect it again
+        if (!connected) {
+            //If the drive isn't available, abort the process
+            if (!checkDrive(serv)) return false;
+            //If after checking the drive is still used, just use the first available
+            if (isDriveUsed(drive)) serv.setDrive("*");
+            
             workerList.add(serv);  
         }
         //Opening drive folder task
@@ -370,12 +383,15 @@ public final class AccesoUPV {
         };
         workerList.add(openTask);
         dialog.showAndWait();
+        
+        serv.setDrive(drive); //If the drive was changed while connecting, change it back
         return dialog.isSucceeded();
     }
     //DISCONNECTING METHODS
     public boolean shutdown() {
         LoadingDialog dialog = new LoadingDialog();
         dialog.setProgressBar(true);
+        dialog.showProgressNumber(true);
         List<Worker> workerList = dialog.getLoadingService().getWorkerList();
         AccesoService[] services = {WService, DSICService, VpnDSICService, VpnUPVService};
         for (AccesoService serv : services) if (serv.isConnected()) workerList.add(serv);

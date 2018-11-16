@@ -63,7 +63,7 @@ public class AccesoDriveDSICService extends AccesoDriveService {
                     //Cuando las credenciales son erróneas, da uno de estos dos errores de forma arbitraria.
                     if (out.contains("86") || out.contains("1326")) {
                         updateErrorMsg(ERROR_INVALID_DATA);
-                        out = null;
+                        out = "";
                         cause = new IllegalArgumentException();
                     }
                     throw new IOException(out, cause);

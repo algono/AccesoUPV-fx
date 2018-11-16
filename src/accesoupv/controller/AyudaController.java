@@ -14,6 +14,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -22,7 +23,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -32,9 +32,9 @@ import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import myLibrary.javafx.ErrorAlert;
 
 /**
  * FXML Controller class
@@ -45,10 +45,6 @@ public class AyudaController implements Initializable {
     
     @FXML
     private Accordion index;
-    @FXML
-    private TitledPane VpnUPVPane;
-    @FXML
-    private WebView VpnUPVWeb;
     @FXML
     private Hyperlink VpnUPVLink;
     @FXML
@@ -65,8 +61,6 @@ public class AyudaController implements Initializable {
     private Label copiedLinux;
     @FXML
     private Label copiedWindows;
-    @FXML
-    private Button buttonClose;
     
     //Constants
     public static final String VPN_UPV_WEB = "https://www.upv.es/contenidos/INFOACCESO/infoweb/infoacceso/dat/697481normalc.html";
@@ -77,7 +71,7 @@ public class AyudaController implements Initializable {
     public static final String DEVICES_ERROR_MESSAGE = 
             "Hubo un error al tratar de abrir el Administrador de dispositivos.\n" 
             + "Ábralo manualmente (Buscar - Administrador de dispositivos)";
-    public static final String VPN_DSIC_ERROR_MESSAGE = "Hubo un error al tratar de abrir la página web.";
+    public static final String WEB_ERROR_MESSAGE = "Hubo un error al tratar de abrir la página web.";
     public static final String EVIR_LINUX = "linuxdesktop.dsic.upv.es";
     public static final String EVIR_WINDOWS = "windesktop.dsic.upv.es";
     
@@ -101,7 +95,7 @@ public class AyudaController implements Initializable {
 
             stage.setScene(scene);
             stage.getIcons().add(new Image(AyudaController.class.getResourceAsStream("/accesoupv/resources/icons/help-icon.png")));
-            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initModality(Modality.NONE);
         } catch (IOException ex) {
             new Alert(Alert.AlertType.ERROR, "Hubo un error inesperado.").show();
             System.err.println("Hubo un error al tratar de crear la ventana de ayuda");
@@ -147,6 +141,14 @@ public class AyudaController implements Initializable {
         Clipboard.getSystemClipboard().setContent(content);
     }
     
+    public static final void openURL(String url) {
+        try {
+            Desktop.getDesktop().browse(new URI(url));
+        } catch (URISyntaxException | IOException ex) {
+            new ErrorAlert(ex, WEB_ERROR_MESSAGE).show();
+        }
+    }
+    
     /**
      * Initializes the controller class.
      * @param url
@@ -154,16 +156,13 @@ public class AyudaController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        VpnUPVWeb.getEngine().load(VPN_UPV_WEB);
-        VpnUPVLink.setOnAction(e -> VpnUPVWeb.getEngine().load(VPN_UPV_WEB));
-        VpnUPVPane.expandedProperty().addListener((obs, oldValue, newValue) -> primaryStage.setMaximized(newValue));
-        VpnDSICLink.setOnAction(e -> {
-            try {
-                Desktop.getDesktop().browse(new URI(VPN_DSIC_WEB));
-            } catch (URISyntaxException | IOException ex) {
-                new Alert(Alert.AlertType.ERROR, VPN_DSIC_ERROR_MESSAGE).show();
-            }
+        //Se asegura de que la ventana se autoajusta conforme abres/cierras tabs
+        index.expandedPaneProperty().addListener((obs, oldExp, newExp) -> {
+            Platform.runLater(() -> primaryStage.sizeToScene());
         });
+        
+        VpnUPVLink.setOnAction(e -> openURL(VPN_UPV_WEB));
+        VpnDSICLink.setOnAction(e -> openURL(VPN_DSIC_WEB));
         evirLink.setOnAction(e -> {
             try { Runtime.getRuntime().exec("mstsc");
             } catch (IOException ex) { 
@@ -188,6 +187,5 @@ public class AyudaController implements Initializable {
                 a.setHeaderText(null); a.show(); 
             }
         });
-        buttonClose.setOnAction((evt) -> primaryStage.hide());
     }
 }
