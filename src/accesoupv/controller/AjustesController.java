@@ -264,7 +264,7 @@ public class AjustesController implements Initializable {
                     acceso.shutdown();
                     System.exit(0);
                 } catch (BackingStoreException ex) {
-                    new ErrorAlert(ex, "Hubo un error al tratar de borrar las preferencias.\nPara más información, pulse 'más detalles'.").show();
+                    new ErrorAlert(ex, "Hubo un error al tratar de borrar las preferencias.\nPara más información, pulse 'más detalles'.").showAndWait();
                 }
             }
         });

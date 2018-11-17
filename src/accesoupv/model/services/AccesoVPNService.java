@@ -123,7 +123,7 @@ public abstract class AccesoVPNService extends AccesoService {
                     URI oURL = new URI(AccesoVPNService.WEB_ERROR_VPN);
                     desktop.browse(oURL);
                 } catch (IOException | URISyntaxException linkEx) {
-                    new ErrorAlert(linkEx, "Ha ocurrido un error al tratar de abrir el navegador.").show();
+                    new ErrorAlert(linkEx, "Ha ocurrido un error al tratar de abrir el navegador.").showAndWait();
                 }
             });
             VBox box = new VBox(new Label(getErrorMessage()), helpLink);
