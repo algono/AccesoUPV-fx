@@ -19,53 +19,57 @@
    <top>
       <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
         <menus>
-            <Menu mnemonicParsing="false" text="Inicio">
+            <Menu mnemonicParsing="false" text="Discos">
               <items>
                   <Menu mnemonicParsing="false" text="Disco W">
                      <items>
-                      <MenuItem fx:id="menuAccessW" mnemonicParsing="false" text="Acceder">
-                           <accelerator>
-                              <KeyCodeCombination alt="UP" code="A" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                           </accelerator>
-                        </MenuItem>
-                        <MenuItem fx:id="menuDisconnectW" disable="true" mnemonicParsing="false" text="Desconectar">
-                           <accelerator>
-                              <KeyCodeCombination alt="UP" code="D" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                           </accelerator>
-                        </MenuItem>
+                      <MenuItem fx:id="menuAccessW" mnemonicParsing="false" text="Acceder" />
+                        <MenuItem fx:id="menuDisconnectW" disable="true" mnemonicParsing="false" text="Desconectar" />
                      </items>
                   </Menu>
                   <Menu mnemonicParsing="false" text="DSIC">
                     <items>
-                        <Menu mnemonicParsing="false" text="Disco">
-                          <items>
-                            <MenuItem fx:id="menuAccessDSIC" mnemonicParsing="false" text="Acceder" />
-                              <MenuItem fx:id="menuDisconnectDSIC" mnemonicParsing="false" text="Desconectar" />
-                          </items>
-                        </Menu>
-                        <Menu mnemonicParsing="false" text="Escritorios Virtuales">
-                          <items>
-                              <MenuItem fx:id="menuLinuxDSIC" mnemonicParsing="false" text="Linux">
-                                 <accelerator>
-                                    <KeyCodeCombination alt="UP" code="DIGIT1" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                                 </accelerator>
-                              </MenuItem>
-                            <MenuItem fx:id="menuWinDSIC" mnemonicParsing="false" text="Windows">
-                                 <accelerator>
-                                    <KeyCodeCombination alt="UP" code="DIGIT2" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                                 </accelerator>
-                              </MenuItem>
-                          </items>
-                        </Menu>
-                        <Menu mnemonicParsing="false" text="Portal">
-                          <items>
-                              <MenuItem fx:id="menuPortalDSIC" mnemonicParsing="false" text="Acceder" />
-                            <MenuItem fx:id="menuDisconnectVpnDSIC" mnemonicParsing="false" text="Desconectar" />
-                          </items>
-                        </Menu>
+                      <MenuItem fx:id="menuAccessDSIC" mnemonicParsing="false" text="Acceder" />
+                        <MenuItem fx:id="menuDisconnectDSIC" mnemonicParsing="false" text="Desconectar" />
                     </items>
                   </Menu>
               </items>
+            </Menu>
+            <Menu mnemonicParsing="false" text="Servicios">
+               <items>
+                  <Menu mnemonicParsing="false" text="Escritorios DSIC">
+                     <items>
+                        <MenuItem fx:id="menuLinuxDSIC" mnemonicParsing="false" text="Linux">
+                           <accelerator>
+                              <KeyCodeCombination alt="UP" code="DIGIT1" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                           </accelerator>
+                        </MenuItem>
+                        <MenuItem fx:id="menuWinDSIC" mnemonicParsing="false" text="Windows">
+                           <accelerator>
+                              <KeyCodeCombination alt="UP" code="DIGIT2" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                           </accelerator>
+                        </MenuItem>
+                     </items>
+                  </Menu>
+                  <Menu mnemonicParsing="false" text="Portal">
+                     <items>
+                        <MenuItem fx:id="menuPortalDSIC" mnemonicParsing="false" text="Acceder" />
+                        <MenuItem fx:id="menuDisconnectVpnDSIC" mnemonicParsing="false" text="Desconectar" />
+                     </items>
+                  </Menu>
+                  <Menu mnemonicParsing="false" text="SSH">
+                    <items>
+                        <MenuItem fx:id="menuSSHDisca" mnemonicParsing="false" text="DISCA">
+                           <accelerator>
+                              <KeyCodeCombination alt="UP" code="D" control="DOWN" meta="UP" shift="DOWN" shortcut="UP" />
+                           </accelerator></MenuItem>
+                      <MenuItem fx:id="menuSSHKahan" mnemonicParsing="false" text="Kahan">
+                           <accelerator>
+                              <KeyCodeCombination alt="UP" code="K" control="DOWN" meta="UP" shift="DOWN" shortcut="UP" />
+                           </accelerator></MenuItem>
+                    </items>
+                  </Menu>
+               </items>
             </Menu>
           <Menu mnemonicParsing="false" text="Ajustes">
             <items>

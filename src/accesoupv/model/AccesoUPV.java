@@ -19,7 +19,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.concurrent.Worker;
 import myLibrary.javafx.Loading.LoadingDialog;
@@ -30,6 +29,7 @@ import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
 import lib.PasswordDialog;
 import myLibrary.javafx.AlertingTask;
@@ -55,6 +55,7 @@ public final class AccesoUPV {
     //Servers
     public static final String LINUX_DSIC = "linuxdesktop.dsic.upv.es";
     public static final String WIN_DSIC = "windesktop.dsic.upv.es";
+    public static final String DISCA_SSH = "home-labs.disca.upv.es", KAHAN_SSH = "kahan.dsic.upv.es";
     
     //Timeout for checking if the user is already connected to a server (in ms)
     public static final int PING_TIMEOUT = 600;
@@ -442,7 +443,17 @@ public final class AccesoUPV {
                     + "¿Desea que se cree la VPN automáticamente?\n\n"
                     + "Si ya tiene una creada o prefiere crearla manualmente, elija \"No\".");
             Hyperlink help = new Hyperlink("Para saber cómo crear una VPN manualmente, pulse aquí");
-            help.setOnAction((evt) -> Platform.runLater(() -> AyudaController.getInstance().getStage().show()));
+            help.setOnAction((evt) -> {
+                AyudaController ayuda = AyudaController.getInstance();
+                ayuda.getStage().show();
+                for (TitledPane t : ayuda.getIndex().getPanes()) {
+                    //Comprueba si contiene "crear" y "vpn" en ese orden, con lo que sea en medio
+                    // (. = Cualquier carácter) (* = Cualquier número de veces)
+                    if (t.getText().toLowerCase().matches(".*crear.*vpn.*")) {
+                        t.setExpanded(true); break; //En cuanto lo encuentra lo maximiza y sale del bucle
+                    }
+                }
+            });
             alert.getDialogPane().setContent(new VBox(content, help));
             alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO,ButtonType.CANCEL);
             Optional<ButtonType> alertRes = alert.showAndWait();

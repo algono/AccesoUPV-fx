@@ -6,6 +6,7 @@
 package accesoupv.controller;
 
 import accesoupv.model.AccesoUPV;
+import accesoupv.model.ProcessUtils;
 import static accesoupv.model.services.AccesoVpnDSICService.PORTAL_DSIC_WEB;
 import java.awt.Desktop;
 import java.io.IOException;
@@ -60,6 +61,10 @@ public class PrincipalController implements Initializable {
     @FXML
     private MenuItem menuDisconnectVpnDSIC;
     @FXML
+    private MenuItem menuSSHDisca;
+    @FXML
+    private MenuItem menuSSHKahan;
+    @FXML
     private Button buttonAccessW;
     @FXML
     private Button buttonDisconnectW;
@@ -78,6 +83,7 @@ public class PrincipalController implements Initializable {
     
     //Messages
     public static final String ERROR_DSIC_MSG = "No se ha podido acceder al escritorio virtual del DSIC.";
+    public static final String ERROR_SSH_MSG = "Ha habido un error al tratar de abrir el terminal.";
     public static final String ERROR_PORTAL_DSIC_MSG = "Ha habido un error al tratar de acceder a la web del Portal.";
     public static final String EVIR_VPN_DSIC_WARNING = 
             "El acceso al Portal DSIC no puede estar conectado mientras se accede a un Escritorio Remoto del DSIC.\n\n"
@@ -135,6 +141,14 @@ public class PrincipalController implements Initializable {
         }
     }
     
+    private void openSSH(String server) {
+        try {
+            ProcessUtils.startProcess("cmd", "/c", "start", "cmd", "/k", "ssh " + acceso.getUser() + "@" + server);
+        } catch (IOException ex) {
+            new Alert(Alert.AlertType.ERROR, ERROR_SSH_MSG).show();
+        }
+    }
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         //Assigns actions to buttons and menu items
@@ -166,6 +180,9 @@ public class PrincipalController implements Initializable {
         
         buttonDisconnectVpnDSIC.setOnAction(e -> acceso.disconnectVpnDSIC());
         menuDisconnectVpnDSIC.setOnAction(e -> acceso.disconnectVpnDSIC());
+        
+        menuSSHDisca.setOnAction(e -> openSSH(AccesoUPV.DISCA_SSH));
+        menuSSHKahan.setOnAction(e -> openSSH(AccesoUPV.KAHAN_SSH));
         
         //Setting bindings for buttons
         buttonDisconnectW.disableProperty().bind(acceso.connectedWProperty().not());

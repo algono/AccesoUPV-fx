@@ -56,7 +56,7 @@ public class AccesoVpnDSICService extends AccesoVPNService {
                     AyudaController ayuda = AyudaController.getInstance();
                     ayuda.getStage().show();
                     for (TitledPane t : ayuda.getIndex().getPanes()) {
-                        //Comprueba si contiene "no", "vpn", "dsic", en ese orden, con lo que sea en medio
+                        //Comprueba si contiene "no", "vpn" y "dsic" en ese orden, con lo que sea en medio
                         // (. = Cualquier carácter) (* = Cualquier número de veces)
                         if (t.getText().toLowerCase().matches(".*no.*vpn.*dsic.*")) {
                             t.setExpanded(true); break; //En cuanto lo encuentra lo maximiza y sale del bucle
