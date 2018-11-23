@@ -151,7 +151,7 @@ public class PrincipalController implements Initializable {
         try {
             ProcessUtils.startProcess("cmd", "/c", "start", "cmd", "/k", "ssh " + acceso.getUser() + "@" + server);
         } catch (IOException ex) {
-            new Alert(Alert.AlertType.ERROR, ERROR_SSH_MSG).show();
+            new Alert(Alert.AlertType.ERROR, ERROR_SSH_MSG).showAndWait();
         }
     }
     
