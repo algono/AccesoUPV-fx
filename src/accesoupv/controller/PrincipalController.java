@@ -90,7 +90,12 @@ public class PrincipalController implements Initializable {
             + "Si continúa, este será desconectado automáticamente.";
     //AccesoUPV Instance
     private static final AccesoUPV acceso = AccesoUPV.getInstance();
+    //Stage
+    private Stage primaryStage;
     
+    public void initStage(Stage stage) {
+        primaryStage = stage;
+    }
     private void showAjustes() {
         try {
             Stage stage = new Stage();
@@ -101,7 +106,8 @@ public class PrincipalController implements Initializable {
 
             stage.setScene(scene);
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/icons/preferences-icon.png")));
-            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initOwner(primaryStage);
+            stage.initModality(Modality.WINDOW_MODAL);
             stage.showAndWait();
         } catch (IOException ex) {}
     }
@@ -120,7 +126,7 @@ public class PrincipalController implements Initializable {
             try {
                 new ProcessBuilder("cmd.exe", "/c", "mstsc", "/v:" + server).start();
             } catch (IOException ex) {
-                new Alert(Alert.AlertType.ERROR, ERROR_DSIC_MSG).show();
+                new Alert(Alert.AlertType.ERROR, ERROR_DSIC_MSG).showAndWait();
             }
         }
     }
@@ -136,7 +142,7 @@ public class PrincipalController implements Initializable {
                 HBox box = new HBox(new Label("Link (click para copiar al portapapeles): "), link);
                 a.getDialogPane().getChildren().add(box);
                 a.getDialogPane().setExpandableContent(new TextArea(ex.getMessage()));
-                a.show();
+                a.showAndWait();
             }
         }
     }

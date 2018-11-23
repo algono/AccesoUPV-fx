@@ -5,6 +5,7 @@
  */
 package accesoupv;
 
+import accesoupv.controller.PrincipalController;
 import accesoupv.model.AccesoUPV;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -35,6 +36,7 @@ public class Launcher extends Application {
             if (AccesoUPV.getInstance().shutdown()) Platform.exit(); 
             else we.consume();
         });
+        myLoader.<PrincipalController>getController().initStage(stage);
         stage.show();
     }
 

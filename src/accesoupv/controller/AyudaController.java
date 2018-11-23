@@ -97,7 +97,7 @@ public class AyudaController implements Initializable {
             stage.getIcons().add(new Image(AyudaController.class.getResourceAsStream("/accesoupv/resources/icons/help-icon.png")));
             stage.initModality(Modality.NONE);
         } catch (IOException ex) {
-            new Alert(Alert.AlertType.ERROR, "Hubo un error inesperado.").show();
+            new Alert(Alert.AlertType.ERROR, "Hubo un error inesperado.").showAndWait();
             System.err.println("Hubo un error al tratar de crear la ventana de ayuda");
             Logger.getLogger(AyudaController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -145,7 +145,7 @@ public class AyudaController implements Initializable {
         try {
             Desktop.getDesktop().browse(new URI(url));
         } catch (URISyntaxException | IOException ex) {
-            new ErrorAlert(ex, WEB_ERROR_MESSAGE).show();
+            new ErrorAlert(ex, WEB_ERROR_MESSAGE).showAndWait();
         }
     }
     
@@ -167,7 +167,7 @@ public class AyudaController implements Initializable {
             try { Runtime.getRuntime().exec("mstsc");
             } catch (IOException ex) { 
                 Alert a = new Alert(Alert.AlertType.ERROR, EVIR_ERROR_MESSAGE);
-                a.setHeaderText(null); a.show(); 
+                a.setHeaderText(null); a.showAndWait(); 
             }
         });
         clipLinux.setOnAction((e) -> { 
@@ -184,7 +184,7 @@ public class AyudaController implements Initializable {
             try { ProcessUtils.startProcess("cmd", "/c", "devmgmt.msc");
             } catch (IOException ex) {
                 Alert a = new Alert(Alert.AlertType.ERROR, DEVICES_ERROR_MESSAGE);
-                a.setHeaderText(null); a.show(); 
+                a.setHeaderText(null); a.showAndWait(); 
             }
         });
     }

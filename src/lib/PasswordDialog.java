@@ -15,7 +15,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 
 /**
- * A dialog that shows a text input control to the user.
+ * A dialog that shows a password text input control to the user.
  *
  * @see Dialog
  * @since JavaFX 8u40
@@ -42,16 +42,16 @@ public class PasswordDialog extends Dialog<String> {
      **************************************************************************/
 
     /**
-     * Creates a new TextInputDialog without a default value entered into the
-     * dialog {@link TextField}.
+     * Creates a new PasswordDialog without a default value entered into the
+     * dialog {@link PasswordField}.
      */
     public PasswordDialog() {
         this("");
     }
 
     /**
-     * Creates a new TextInputDialog with the default value entered into the
-     * dialog {@link TextField}.
+     * Creates a new PasswordDialog with the default value entered into the
+     * dialog {@link PasswordField}.
      * @param defaultValue
      */
     public PasswordDialog(@NamedArg("defaultValue") String defaultValue) {
