@@ -10,6 +10,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
 <VBox spacing="10.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="accesoupv.controller.AyudaController">
    <children>
@@ -94,6 +95,45 @@
                         <Label text="5. Arriba en el menú, click en &quot;Acción&quot; - &quot;Buscar cambios de hardware&quot;." />
                         <Label text="6. Si todo va bien, debería haber vuelto a aparecer &quot;WAN Miniport (L2TP) en la lista." />
                         <Label layoutX="20.0" layoutY="136.0" text="7. Pruebe a volver a conectarse y ya debería funcionar." />
+                     </children>
+                  </VBox>
+               </content>
+            </TitledPane>
+            <TitledPane animated="false" expanded="false" layoutX="10.0" layoutY="60.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Conectarse manualmente a los sitios SSH">
+               <content>
+                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="8.0">
+                     <children>
+                        <Label text="Formato:">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font>
+                        </Label>
+                        <Label text="ssh &lt;usuario&gt;@&lt;dirección&gt;" />
+                        <Label text="Direcciones:">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font>
+                        </Label>
+                        <GridPane alignment="CENTER" hgap="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
+                           <columnConstraints>
+                              <ColumnConstraints fillWidth="false" hgrow="NEVER" maxWidth="-Infinity" minWidth="10.0" />
+                              <ColumnConstraints fillWidth="false" hgrow="NEVER" maxWidth="-Infinity" minWidth="10.0" />
+                              <ColumnConstraints fillWidth="false" hgrow="NEVER" maxWidth="-Infinity" minWidth="10.0" />
+                           </columnConstraints>
+                           <rowConstraints>
+                              <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                           </rowConstraints>
+                           <children>
+                              <Label text="(*) DISCA: home-labs.disca.upv.es" />
+                              <Hyperlink fx:id="clipDISCA" text="Copiar al portapapeles" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                              <Label fx:id="copiedDISCA" text="¡Copiado!" textFill="#8a8787" visible="false" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                              <Label text="Kahan: kahan.dsic.upv.es" GridPane.rowIndex="1" />
+                              <Hyperlink fx:id="clipKahan" text="Copiar al portapapeles" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+                              <Label fx:id="copiedKahan" text="¡Copiado!" textFill="#8a8787" visible="false" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+                           </children>
+                        </GridPane>
+                        <Label layoutX="20.0" layoutY="70.0" text="(*) = Requiere conexión a la UPV (VPN o Wi-Fi de la UPV)" />
                      </children>
                   </VBox>
                </content>

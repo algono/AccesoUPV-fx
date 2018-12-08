@@ -5,6 +5,7 @@
  */
 package accesoupv.controller;
 
+import accesoupv.model.AccesoUPV;
 import accesoupv.model.ProcessUtils;
 import java.awt.Desktop;
 import java.io.IOException;
@@ -56,11 +57,19 @@ public class AyudaController implements Initializable {
     @FXML
     private Hyperlink clipWindows;
     @FXML
+    private Hyperlink clipDISCA;
+    @FXML
+    private Hyperlink clipKahan;
+    @FXML
     private Hyperlink devicesLink;
     @FXML
     private Label copiedLinux;
     @FXML
     private Label copiedWindows;
+    @FXML
+    private Label copiedDISCA;
+    @FXML
+    private Label copiedKahan;
     
     //Constants
     public static final String VPN_UPV_WEB = "https://www.upv.es/contenidos/INFOACCESO/infoweb/infoacceso/dat/697481normalc.html";
@@ -72,8 +81,6 @@ public class AyudaController implements Initializable {
             "Hubo un error al tratar de abrir el Administrador de dispositivos.\n" 
             + "Ábralo manualmente (Buscar - Administrador de dispositivos)";
     public static final String WEB_ERROR_MESSAGE = "Hubo un error al tratar de abrir la página web.";
-    public static final String EVIR_LINUX = "linuxdesktop.dsic.upv.es";
-    public static final String EVIR_WINDOWS = "windesktop.dsic.upv.es";
     
     private Stage primaryStage;
     
@@ -171,14 +178,32 @@ public class AyudaController implements Initializable {
             }
         });
         clipLinux.setOnAction((e) -> { 
-            addToClipboard(EVIR_LINUX); 
+            addToClipboard(AccesoUPV.LINUX_DSIC); 
             copiedWindows.setVisible(false);
+            copiedDISCA.setVisible(false);
+            copiedKahan.setVisible(false);
             copiedLinux.setVisible(true);
         });
         clipWindows.setOnAction((e) -> { 
-            addToClipboard(EVIR_WINDOWS); 
+            addToClipboard(AccesoUPV.WIN_DSIC); 
             copiedLinux.setVisible(false);
+            copiedDISCA.setVisible(false);
+            copiedKahan.setVisible(false);
             copiedWindows.setVisible(true);
+        });
+        clipDISCA.setOnAction((e) -> { 
+            addToClipboard(AccesoUPV.DISCA_SSH);
+            copiedLinux.setVisible(false);
+            copiedWindows.setVisible(false);
+            copiedKahan.setVisible(false);
+            copiedDISCA.setVisible(true);
+        });
+        clipKahan.setOnAction((e) -> { 
+            addToClipboard(AccesoUPV.KAHAN_SSH); 
+            copiedLinux.setVisible(false);
+            copiedWindows.setVisible(false);
+            copiedDISCA.setVisible(false);
+            copiedKahan.setVisible(true);
         });
         devicesLink.setOnAction(e -> {
             try { ProcessUtils.startProcess("cmd", "/c", "devmgmt.msc");
