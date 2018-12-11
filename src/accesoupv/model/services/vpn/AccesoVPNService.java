@@ -3,11 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package accesoupv.model.services;
+package accesoupv.model.services.vpn;
 
 import accesoupv.model.ProcessUtils;
 import myLibrary.javafx.AlertingTask;
 import accesoupv.model.Input;
+import accesoupv.model.services.AccesoService;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileOutputStream;

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package accesoupv.model.services;
+package accesoupv.model.services.vpn;
 
 import java.io.File;
 import java.util.Scanner;
@@ -34,7 +34,7 @@ public class AccesoVpnUPVService extends AccesoVPNService {
                 String script = "$importXML = New-Object XML" + "\n"
                     + "$importXML.Load(\"${env:temp}\\" + tempXml.getName() +"\")" + "\n"
                     + "Add-VpnConnection -Name \"" + vpn + "\" -ServerAddress \""+ server + "\" -AuthenticationMethod Eap -EncryptionLevel Required -RememberCredential -TunnelType Sstp -EapConfigXmlStream $importXML" + "\n";
-                File temp = transcriptToTempFile("temp", ".ps1", new Scanner(script));
+                File temp = transcriptToTempFile("temp_upv", ".ps1", new Scanner(script));
                 
                 runScript(temp.getAbsolutePath());
                 

@@ -5,6 +5,9 @@
  */
 package accesoupv.model;
 
+import accesoupv.model.services.vpn.AccesoVpnDSICService;
+import accesoupv.model.services.vpn.AccesoVpnUPVService;
+import accesoupv.model.services.vpn.AccesoVPNService;
 import accesoupv.Launcher;
 import accesoupv.model.services.*;
 import accesoupv.model.services.drives.*;

@@ -7,7 +7,7 @@ package accesoupv.controller;
 
 import accesoupv.model.AccesoUPV;
 import accesoupv.model.ProcessUtils;
-import static accesoupv.model.services.AccesoVpnDSICService.PORTAL_DSIC_WEB;
+import static accesoupv.model.services.vpn.AccesoVpnDSICService.PORTAL_DSIC_WEB;
 import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;

@@ -3,10 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package accesoupv.model.services;
+package accesoupv.model.services.vpn;
 
 import accesoupv.controller.AyudaController;
 import accesoupv.model.Input;
+import java.io.File;
+import java.util.Scanner;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Hyperlink;
@@ -35,10 +37,13 @@ public class AccesoVpnDSICService extends AccesoVPNService {
             @Override
             protected String call() throws Exception {
                 updateMessage("Creando VPN al DSIC...");
-                runScript(
-                    "Add-VpnConnection -Name \"" + vpn + "\" -ServerAddress \"" + server + "\" -AuthenticationMethod MSChapv2 -EncryptionLevel Optional -L2tpPsk dsic -RememberCredential -TunnelType L2tp" + "\n",
-                    Input.ENTER
-                );
+                String script = "Add-VpnConnection -Name \"" + vpn 
+                        + "\" -ServerAddress \"" + server 
+                        + "\" -AuthenticationMethod MSChapv2 -EncryptionLevel Optional -L2tpPsk dsic -RememberCredential -TunnelType L2tp" 
+                        + "\n";
+                File scriptFile = transcriptToTempFile("temp_dsic", ".ps1", new Scanner(script));
+                runScript(scriptFile.getAbsolutePath(), Input.ENTER);
+                scriptFile.delete();
                 return name;
             }
         };
