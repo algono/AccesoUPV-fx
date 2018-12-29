@@ -16,9 +16,6 @@ import javafx.concurrent.Task;
  */
 public abstract class AccesoService extends Service<Boolean> {
     
-    //Task delay (being used or not depends on task implementation)
-    protected int delay = 0;
-    
     private final ReadOnlyBooleanWrapper connectedProperty = new ReadOnlyBooleanWrapper(false);
     
     @Override
@@ -41,11 +38,6 @@ public abstract class AccesoService extends Service<Boolean> {
     protected void checkConnected() {
         if (isConnected()) throw new IllegalStateException("You cannot change any variable while the service is connected.");
     }
-    
-    public int getDelay() { return delay; }
-    
-    //Setters
-    public void setDelay(int d) { delay = d; }
     
     //Properties
     public ReadOnlyBooleanProperty connectedProperty() { return connectedProperty.getReadOnlyProperty(); }

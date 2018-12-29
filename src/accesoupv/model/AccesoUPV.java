@@ -399,8 +399,6 @@ public final class AccesoUPV {
         List<Worker> workerList = dialog.getLoadingService().getWorkerList();
         AccesoService[] services = {WService, DSICService, VpnDSICService, VpnUPVService};
         for (AccesoService serv : services) if (serv.isConnected()) workerList.add(serv);
-        if (WService.isConnected()) WService.setDelay(1000);
-        if (DSICService.isConnected()) DSICService.setDelay(1000);
         //Si tiene que realizar alguna tarea, la realiza (si no, devuelve true)
         boolean succeeded = true;
         if (!workerList.isEmpty()) {
@@ -411,19 +409,11 @@ public final class AccesoUPV {
         return succeeded;
     }
     
-    public boolean disconnectW() {
-        if (WService.isConnected()) WService.setDelay(0);
-        else return true;
-        return disconnect(WService);
-    }
-    
-    public boolean disconnectDSIC() {
-        if (DSICService.isConnected()) DSICService.setDelay(0);
-        else return true;
-        return disconnect(DSICService);
-    }
+    public boolean disconnectW() { return disconnect(WService); }
+    public boolean disconnectDSIC() { return disconnect(DSICService); }
     public boolean disconnectVpnUPV() { return disconnect(VpnUPVService); }
     public boolean disconnectVpnDSIC() { return disconnect(VpnDSICService); }
+    
     protected boolean disconnect(AccesoService serv) {
         boolean succeeded = true;
         if (serv.isConnected()) { 

@@ -146,7 +146,7 @@ public abstract class AccesoVPNService extends AccesoService {
                 updateErrorMsg(ERROR_DIS_VPN);
                 updateMessage(disMsg);
                 Process p = ProcessUtils.startProcess("rasdial.exe", "\"" + connectedVpn + "\"", "/DISCONNECT");
-                ProcessUtils.waitAndCheck(p, 1000);
+                ProcessUtils.waitAndCheck(p);
                 return true;
             }
         };

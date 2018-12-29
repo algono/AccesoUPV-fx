@@ -18,13 +18,9 @@ import java.util.Scanner;
 public final class ProcessUtils {
     
     public static boolean waitAndCheck(Process p) throws IOException, InterruptedException {
-        return waitAndCheck(p, 0);
+        return waitAndCheck(p, true);
     }
-    public static boolean waitAndCheck(Process p, int tMin) throws IOException, InterruptedException {
-        return waitAndCheck(p, tMin, true);
-    }
-    public static boolean waitAndCheck(Process p, int tMin, boolean showExMsg) throws IOException, InterruptedException {
-        if (tMin > 0) Thread.sleep(tMin);
+    public static boolean waitAndCheck(Process p, boolean showExMsg) throws IOException, InterruptedException {
         int exitValue = p.waitFor();
         if (exitValue != 0) {
             String msg = showExMsg ? getOutput(p) : "";

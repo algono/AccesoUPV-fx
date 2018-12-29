@@ -19,6 +19,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -33,6 +34,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 /**
  *
@@ -90,13 +92,8 @@ public class PrincipalController implements Initializable {
             + "Si continúa, este será desconectado automáticamente.";
     //AccesoUPV Instance
     private static final AccesoUPV acceso = AccesoUPV.getInstance();
-    //Stage
-    private Stage primaryStage;
-    
-    public void initStage(Stage stage) {
-        primaryStage = stage;
-    }
-    private void showAjustes() {
+
+    private void showAjustes(Window owner) {
         try {
             Stage stage = new Stage();
             FXMLLoader myLoader = new FXMLLoader(getClass().getResource("/accesoupv/view/AjustesView.fxml"));
@@ -106,7 +103,7 @@ public class PrincipalController implements Initializable {
 
             stage.setScene(scene);
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/icons/preferences-icon.png")));
-            stage.initOwner(primaryStage);
+            stage.initOwner(owner);
             stage.initModality(Modality.WINDOW_MODAL);
             stage.showAndWait();
         } catch (IOException ex) {}
@@ -167,7 +164,7 @@ public class PrincipalController implements Initializable {
         //Añade un menú de ayuda a la barra de menú
         menuBar.getMenus().add(AyudaController.getMenu());
         
-        menuAjustes.setOnAction(e -> showAjustes());
+        menuAjustes.setOnAction(evt -> showAjustes(((Node) evt.getSource()).getScene().getWindow()));
         
         buttonAccessW.setOnAction(e -> acceso.connectW());
         menuAccessW.setOnAction(e -> acceso.connectW());

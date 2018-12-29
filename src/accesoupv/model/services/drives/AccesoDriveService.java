@@ -69,7 +69,7 @@ public abstract class AccesoDriveService extends AccesoService {
             if (extraArgs != null) args.addAll(getExtraArgs());
             Process p = ProcessUtils.startProcess(args);
             try {
-                ProcessUtils.waitAndCheck(p, delay);
+                ProcessUtils.waitAndCheck(p);
             } catch (IOException ex) {
                 String out = ex.getMessage();
                 Throwable cause = null;
@@ -101,7 +101,6 @@ public abstract class AccesoDriveService extends AccesoService {
         protected Boolean call() throws Exception {
             updateMessage(initMsg);
             Process p = ProcessUtils.startProcess("cmd.exe", "/c", "net", "use", connectedDrive, "/delete");
-            Thread.sleep(delay);
             int exitValue = p.waitFor();
             if (exitValue != 0) {
                 String out = ProcessUtils.getOutput(p);
@@ -120,7 +119,7 @@ public abstract class AccesoDriveService extends AccesoService {
                     if (res.get()) {
                         //"/y" le pasa un "Sí" automáticamente, mientras que "/no" le pasaría un "No".
                         p = ProcessUtils.startProcess("cmd.exe", "/c", "net", "use", drive, "/delete", "/y");
-                        ProcessUtils.waitAndCheck(p, 1000);
+                        ProcessUtils.waitAndCheck(p);
                     } else {
                         cancel();
                     }
