@@ -29,16 +29,14 @@ public class Launcher extends Application {
         Parent root = (Parent) myLoader.load();
         stage.setResizable(false);
         Scene scene = new Scene(root);
-        
         stage.setTitle("Acceso UPV");
-        stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/icons/app-icon.png")));       
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/accesoupv/resources/icons/app-icon.png")));
         stage.setScene(scene);
-        
         stage.setOnCloseRequest((WindowEvent we) -> {
             if (AccesoUPV.getInstance().shutdown()) Platform.exit(); 
             else we.consume();
         });
-        
+        myLoader.<PrincipalController>getController().initStage(stage);
         stage.show();
     }
 
