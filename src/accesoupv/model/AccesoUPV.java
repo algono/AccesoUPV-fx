@@ -15,7 +15,6 @@ import accesoupv.controller.AjustesController;
 import accesoupv.controller.AyudaController;
 import java.awt.Desktop;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -158,18 +157,9 @@ public final class AccesoUPV {
     public boolean isDriveWUsed() { return isDriveUsed(getDriveW()); }
     public boolean isDriveDSICUsed() { return isDriveUsed(getDriveDSIC()); }
     
-    public List<String> getAvailableDrivesW() { return getAvailableDrives(WService); }
-    public List<String> getAvailableDrivesDSIC() { return getAvailableDrives(DSICService); }
-    protected List<String> getAvailableDrives(AccesoDriveService diskService) {
-        List<String> drives = new ArrayList<>();
-        char letter = 'Z';
-        while (letter >= 'D') {
-            String d = letter + ":";
-            if (!new File(d).exists() || d.equals(diskService.getDrive())) drives.add(d);
-            letter--;
-        }
-        return drives;
-    }
+    public List<String> getAvailableDrivesW() { return WService.getAvailableDrives(); }
+    public List<String> getAvailableDrivesDSIC() { return DSICService.getAvailableDrives(); }
+    
     
     public void init() {
         AccesoVPNService serv = VpnUPVService;
@@ -465,8 +455,8 @@ public final class AccesoUPV {
     }    
     public boolean setVPNDialog(AccesoVPNService serv, boolean isNew) {
         String inputContentText = (isNew)
-                        ? "Introduzca el nombre de la nueva conexión VPN a la UPV: " 
-                        : "Introduzca el nombre de la conexión VPN existente a la UPV: ";
+                        ? "Introduzca el nombre de la nueva conexión VPN: " 
+                        : "Introduzca el nombre de la conexión VPN existente: ";
         TextInputDialog dialog = new TextInputDialog(serv.getVPN());
         dialog.setTitle("Introduzca nombre VPN");
         dialog.setHeaderText(null);
@@ -499,7 +489,7 @@ public final class AccesoUPV {
     public boolean setDriveDialogW() { return setDriveDialog(WService); }
     public boolean setDriveDialogDSIC() { return setDriveDialog(DSICService); }
     protected boolean setDriveDialog(AccesoDriveService serv) {
-        List<String> drives = getAvailableDrives(serv);
+        List<String> drives = serv.getAvailableDrives();
         String def = drives.contains("W:") ? "W:" : null;
         ChoiceDialog<String> dialog = new ChoiceDialog<>(def, drives);
         dialog.setTitle("Elegir unidad Disco");

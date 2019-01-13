@@ -7,6 +7,7 @@ package accesoupv.model.services.drives;
 
 import accesoupv.model.ProcessUtils;
 import accesoupv.model.services.AccesoService;
+import java.io.File;
 import myLibrary.javafx.AlertingTask;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,6 +53,25 @@ public abstract class AccesoDriveService extends AccesoService {
     
     public String getConnectedDrive() {
         return isConnected() ? connectedDrive : drive;
+    }
+    
+    public List<String> getAvailableDrives() {
+        List<String> drives = new ArrayList<>();
+        char letter = 'Z';
+        while (letter >= 'D') {
+            String d = letter + ":";
+            if (!new File(d).exists() || d.equals(drive)) drives.add(d);
+            letter--;
+        }
+        return drives;
+    }
+    
+    public void setUser(String user) {
+        this.user = user;
+    }
+    
+    public void setDrive(String drive) {
+        this.drive = drive; 
     }
     
     abstract class DriveConnectTask extends AlertingTask<Boolean> {
@@ -130,11 +150,5 @@ public abstract class AccesoDriveService extends AccesoService {
             return true;
         }
     }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-    public void setDrive(String drive) {
-        this.drive = drive; 
-    }
+    
 }

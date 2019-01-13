@@ -13,24 +13,25 @@ import javafx.concurrent.Task;
 /**
  *
  * @author Alejandro
+ * @param <T> Service return type
  */
-public abstract class AccesoService extends Service<Boolean> {
+public abstract class AccesoService<T> extends Service<T> {
     
     private final ReadOnlyBooleanWrapper connectedProperty = new ReadOnlyBooleanWrapper(false);
     
     @Override
     protected void succeeded() {
         //Si todo fue bien, invierte el estado entre conectado y desconectado
-        if (getValue()) connectedProperty.set(!connectedProperty.get());
+        connectedProperty.set(!connectedProperty.get());
     }
     
     @Override
-    public final Task<Boolean> createTask() {
+    public final Task<T> createTask() {
         return connectedProperty.get() ? createDisconnectTask() : createConnectTask();
     }
     //La Task devuelve si la acción de conexión/desconexión se tuvo que realizar (puede que no hiciera falta)
-    protected abstract Task<Boolean> createConnectTask();
-    protected abstract Task<Boolean> createDisconnectTask();
+    protected abstract Task<T> createConnectTask();
+    protected abstract Task<T> createDisconnectTask();
     
     //Getters
     public boolean isConnected() { return connectedProperty.get(); }
