@@ -57,11 +57,10 @@ public abstract class AccesoDriveService extends AccesoService {
     
     public List<String> getAvailableDrives() {
         List<String> drives = new ArrayList<>();
-        char letter = 'Z';
-        while (letter >= 'D') {
+        
+        for (char letter = 'Z'; letter >= 'D'; letter--) {
             String d = letter + ":";
             if (!new File(d).exists() || d.equals(drive)) drives.add(d);
-            letter--;
         }
         return drives;
     }
