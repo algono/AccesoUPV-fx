@@ -16,7 +16,7 @@ import javafx.concurrent.Task;
  */
 public class AccesoDriveDSICService extends AccesoDriveService {
     
-    public static final String ERROR_INVALID_DATA = "El usuario o la contraseña son incorrectos.";
+    public static final String ERROR_INVALID_DATA = "El usuario o la contrase\u00f1a son incorrectos.";
     
     private String password = "";
     
@@ -58,9 +58,9 @@ public class AccesoDriveDSICService extends AccesoDriveService {
                 } catch (IOException ex) {
                     String out = ex.getMessage();
                     Throwable cause = null;
-                    // 86 - Error del sistema "La contraseña de red es incorrecta"
-                    // 1326 - Error del sistema "El usuario o la contraseña son incorrectos"
-                    //Cuando las credenciales son erróneas, da uno de estos dos errores de forma arbitraria.
+                    // 86 - Error del sistema "La contrase\u00f1a de red es incorrecta"
+                    // 1326 - Error del sistema "El usuario o la contrase\u00f1a son incorrectos"
+                    //Cuando las credenciales son erroneas, da uno de estos dos errores de forma arbitraria.
                     if (out.contains("86") || out.contains("1326")) {
                         updateErrorMsg(ERROR_INVALID_DATA);
                         out = "";

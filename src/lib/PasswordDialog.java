@@ -20,6 +20,7 @@ import javafx.scene.layout.Region;
  * @see Dialog
  * @since JavaFX 8u40
  */
+@SuppressWarnings("restriction")
 public class PasswordDialog extends Dialog<String> {
 
     /**************************************************************************

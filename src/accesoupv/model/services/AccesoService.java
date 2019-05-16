@@ -15,7 +15,7 @@ import javafx.concurrent.Task;
  * @author Alejandro
  * @param <T> Service return type
  */
-public abstract class AccesoService<T> extends Service<T> {
+public abstract class AccesoService extends Service<Boolean> {
     
     private final ReadOnlyBooleanWrapper connectedProperty = new ReadOnlyBooleanWrapper(false);
     
@@ -26,12 +26,12 @@ public abstract class AccesoService<T> extends Service<T> {
     }
     
     @Override
-    public final Task<T> createTask() {
+    public final Task<Boolean> createTask() {
         return connectedProperty.get() ? createDisconnectTask() : createConnectTask();
     }
-    //La Task devuelve si la acción de conexión/desconexión se tuvo que realizar (puede que no hiciera falta)
-    protected abstract Task<T> createConnectTask();
-    protected abstract Task<T> createDisconnectTask();
+    //La Task devuelve si la accion de conexion/desconexion se tuvo que realizar (puede que no hiciera falta)
+    protected abstract Task<Boolean> createConnectTask();
+    protected abstract Task<Boolean> createDisconnectTask();
     
     //Getters
     public boolean isConnected() { return connectedProperty.get(); }

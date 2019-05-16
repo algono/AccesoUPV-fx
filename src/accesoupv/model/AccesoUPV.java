@@ -166,6 +166,7 @@ public final class AccesoUPV {
         switch(checkVPN(serv)) {
             case CANCEL: return;
             case ABORT: System.exit(0);
+            default : break;
         }
         serv.setOnCancelled((evt) -> System.exit(0));
         
@@ -174,11 +175,12 @@ public final class AccesoUPV {
         boolean succeeded = dialog.isSucceeded();
         
         serv.setOnCancelled(null);
-        //Si la ejecución falló, permite cambiar el valor de la VPN por si lo puso mal
+        //Si la ejecucion fall, permite cambiar el valor de la VPN por si lo puso mal
         if (!succeeded && serv.getState() == Worker.State.FAILED) { 
             switch(onFailedVPN(serv)) {
-                case RETRY: init();
+                case RETRY: init(); break;
                 case ABORT: System.exit(-1);
+                default: break;
             }
         }
     }
@@ -191,7 +193,7 @@ public final class AccesoUPV {
         dialog.showAndWait();
         boolean succeeded = dialog.isSucceeded();
         if (succeeded) {
-            Alert successAlert = new Alert(Alert.AlertType.INFORMATION, "La conexión ha sido creada con éxito.");
+            Alert successAlert = new Alert(Alert.AlertType.INFORMATION, "La conexion ha sido creada con Ã©xito.");
             successAlert.setHeaderText(null);
             successAlert.showAndWait();
         }
@@ -207,7 +209,7 @@ public final class AccesoUPV {
         else return Operation.CONTINUE;
     }
     protected Operation onFailedVPN(AccesoVPNService serv) {
-        //Si la VPN no era válida, permite cambiarla, y si la cambió, vuelve a intentarlo.
+        //Si la VPN no era vÃ¡lida, permite cambiarla, y si la cambio, vuelve a intentarlo.
         if (setVPNDialog(serv, false)) return Operation.RETRY;
         else {
             if (establishVPN(serv)) return Operation.RETRY;
@@ -218,15 +220,17 @@ public final class AccesoUPV {
         switch(checkVPN(serv)) {
             case CANCEL: return true;
             case ABORT: return false;
+            default : break;
         }
         LoadingDialog dialog = new LoadingDialog(serv);
         dialog.showAndWait();
         boolean succeeded = dialog.isSucceeded();        
-        //Si la ejecución falló, permite cambiar el valor de la VPN por si lo puso mal
+        //Si la ejecucion fallo, permite cambiar el valor de la VPN por si lo puso mal
         if (!succeeded && serv.getState() == Worker.State.FAILED) { 
             switch(onFailedVPN(serv)) {
                 case RETRY: return connectVPN(serv);
                 case ABORT: return false;
+                default: break;
             }
         }
         return succeeded;
@@ -238,8 +242,8 @@ public final class AccesoUPV {
         if (WService.isConnected()) {
             Alert a = new Alert(Alert.AlertType.WARNING, 
                 "No se puede acceder a la VPN del DSIC teniendo el Disco W conectado.\n"
-                + "Si continúa, este será desconectado automáticamente.\n\n"
-                + "¿Desea continuar?", ButtonType.OK, ButtonType.CANCEL);
+                + "Si continÃºa, este serÃ¡ desconectado automÃ¡ticamente.\n\n"
+                + "Â¿Desea continuar?", ButtonType.OK, ButtonType.CANCEL);
             a.setHeaderText(null);
             Optional<ButtonType> res = a.showAndWait();
             if (res.isPresent() && res.get() == ButtonType.OK) {
@@ -261,7 +265,7 @@ public final class AccesoUPV {
             String WARNING_W = 
                     "La unidad definida para el disco (" + drive + ") ya contiene un disco asociado.\n\n"
                     + "Antes de continuar, desconecte el disco asociado, o cambie la unidad utilizada para el disco.\n "
-                    + "(Si prefiere que se elija la primera unidad disponible sólo durante esta conexión, continúe).\n ";
+                    + "(Si prefiere que se elija la primera unidad disponible solo durante esta conexion, continÃºe).\n ";
             Alert warning = new Alert(Alert.AlertType.WARNING);
             String actDrive = drive;
             warning.setHeaderText("Unidad " + actDrive + " contiene disco");
@@ -283,8 +287,8 @@ public final class AccesoUPV {
         if (VpnDSICService.isConnected()) {
             Alert a = new Alert(Alert.AlertType.WARNING, 
                 "No se puede acceder al disco W desde la VPN del DSIC.\n"
-                + "Si continúa, esta será desconectada automáticamente.\n\n"
-                + "¿Desea continuar?", ButtonType.OK, ButtonType.CANCEL);
+                + "Si continÃºa, esta serÃ¡ desconectada automÃ¡ticamente.\n\n"
+                + "Â¿Desea continuar?", ButtonType.OK, ButtonType.CANCEL);
             a.setHeaderText(null);
             Optional<ButtonType> res = a.showAndWait();
             if (res.isPresent() && res.get() == ButtonType.OK) {
@@ -297,7 +301,7 @@ public final class AccesoUPV {
             if (ex != null) {
                 ex = ex.getCause();
                 if (ex instanceof IllegalArgumentException) {
-                    if (setUserDialog()) return connectW(); //Si el usuario no era válido, permite cambiarlo, y si puso alguno, vuelve a intentarlo.
+                    if (setUserDialog()) return connectW(); //Si el usuario no era vÃ¡lido, permite cambiarlo, y si puso alguno, vuelve a intentarlo.
                 } else if (ex.getMessage().equals("bug") && VpnUPVService.isConnected()) {
                     if (disconnectVpnUPV()) {
                         boolean rec = false;
@@ -306,7 +310,7 @@ public final class AccesoUPV {
                             if (!rec) {
                                 if (VpnUPVService.getState() == Worker.State.CANCELLED) {
                                     Alert a = new Alert(Alert.AlertType.WARNING, "No puede continuar con la VPN desconectada.\n"
-                                            + "¿Desea salir del programa?", ButtonType.OK, ButtonType.CANCEL);
+                                            + "Â¿Desea salir del programa?", ButtonType.OK, ButtonType.CANCEL);
                                     a.setHeaderText(null);
                                     Optional<ButtonType> res = a.showAndWait();
                                     if (!res.isPresent() || res.get() != ButtonType.OK) System.exit(0);
@@ -331,7 +335,7 @@ public final class AccesoUPV {
             if (ex != null) {
                 ex = ex.getCause();
                 if (ex instanceof IllegalArgumentException) {
-                    //Si algún dato no era válido, permite cambiarlo, y si puso los datos, vuelve a intentarlo.
+                    //Si algÃºn dato no era vÃ¡lido, permite cambiarlo, y si puso los datos, vuelve a intentarlo.
                     if (setUserDialog() && setPassDialog()) return connectDSIC();
                 }
             }
@@ -349,7 +353,7 @@ public final class AccesoUPV {
         boolean connected = serv.isConnected();
         String drive = serv.getDrive();
         LoadingDialog dialog = new LoadingDialog();
-        List<Worker> workerList = dialog.getLoadingService().getWorkerList();
+        List<Worker<?>> workerList = dialog.getLoadingService().getWorkerList();
         //If drive is already connected, it's not necessary to connect it again
         if (!connected) {
             //If the drive isn't available, abort the process
@@ -360,9 +364,9 @@ public final class AccesoUPV {
             workerList.add(serv);  
         }
         //Opening drive folder task
-        AlertingTask openTask = new AlertingTask<Boolean>(
+        AlertingTask<Boolean> openTask = new AlertingTask<Boolean>(
                                 "El disco ha sido conectado correctamente, pero no se ha podido abrir.\n"
-                                + "Ábralo manualmente desde el Explorador de Archivos.") {
+                                + "Abralo manualmente desde el Explorador de Archivos.") {
             @Override
             protected Boolean call() throws Exception {
                 updateMessage("Abriendo disco...");
@@ -386,7 +390,7 @@ public final class AccesoUPV {
         LoadingDialog dialog = new LoadingDialog();
         dialog.setProgressBar(true);
         dialog.showProgressNumber(true);
-        List<Worker> workerList = dialog.getLoadingService().getWorkerList();
+        List<Worker<?>> workerList = dialog.getLoadingService().getWorkerList();
         AccesoService[] services = {WService, DSICService, VpnDSICService, VpnUPVService};
         for (AccesoService serv : services) if (serv.isConnected()) workerList.add(serv);
         //Si tiene que realizar alguna tarea, la realiza (si no, devuelve true)
@@ -423,15 +427,15 @@ public final class AccesoUPV {
             String warningText = "Debe establecer una red VPN para poder acceder a"
                     + (serv.equals(VpnUPVService) ? " la UPV desde fuera del campus." : "l portal DSIC.");
             Label content = new Label(warningText + "\n\n"
-                    + "¿Desea que se cree la VPN automáticamente?\n\n"
+                    + "Â¿Desea que se cree la VPN automÃ¡ticamente?\n\n"
                     + "Si ya tiene una creada o prefiere crearla manualmente, elija \"No\".");
-            Hyperlink help = new Hyperlink("Para saber cómo crear una VPN manualmente, pulse aquí");
+            Hyperlink help = new Hyperlink("Para saber como crear una VPN manualmente, pulse aquÃ­");
             help.setOnAction((evt) -> {
                 AyudaController ayuda = AyudaController.getInstance();
                 ayuda.getStage().show();
                 for (TitledPane t : ayuda.getIndex().getPanes()) {
                     //Comprueba si contiene "crear" y "vpn" en ese orden, con lo que sea en medio
-                    // (. = Cualquier carácter) (* = Cualquier número de veces)
+                    // (. = Cualquier carÃ¡cter) (* = Cualquier nÃºmero de veces)
                     if (t.getText().toLowerCase().matches(".*crear.*vpn.*")) {
                         t.setExpanded(true); break; //En cuanto lo encuentra lo maximiza y sale del bucle
                     }
@@ -441,10 +445,10 @@ public final class AccesoUPV {
             alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO,ButtonType.CANCEL);
             Optional<ButtonType> alertRes = alert.showAndWait();
 
-            //Si el usuario canceló o cerró el diálogo, sale
+            //Si el usuario cancelo o cerro el diÃ¡logo, sale
             if (!alertRes.isPresent() || alertRes.get() == ButtonType.CANCEL) return false;
 
-            //Si pulsó que sí, se debe crear una VPN nueva. Si pulsó que no, se debe introducir una existente.
+            //Si pulso que sÃ­, se debe crear una VPN nueva. Si pulso que no, se debe introducir una existente.
             boolean setNewVPN = alertRes.get() == ButtonType.YES;
             hasNewVPN = setVPNDialog(serv, setNewVPN);
 
@@ -455,8 +459,8 @@ public final class AccesoUPV {
     }    
     public boolean setVPNDialog(AccesoVPNService serv, boolean isNew) {
         String inputContentText = (isNew)
-                        ? "Introduzca el nombre de la nueva conexión VPN: " 
-                        : "Introduzca el nombre de la conexión VPN existente: ";
+                        ? "Introduzca el nombre de la nueva conexion VPN: " 
+                        : "Introduzca el nombre de la conexion VPN existente: ";
         TextInputDialog dialog = new TextInputDialog(serv.getVPN());
         dialog.setTitle("Introduzca nombre VPN");
         dialog.setHeaderText(null);
@@ -477,10 +481,11 @@ public final class AccesoUPV {
         return res.isPresent();
     }
     public boolean setPassDialog() {
+    	// \u00f1 = Letter of 'espaNa'
         PasswordDialog dialog = new PasswordDialog(getPassDSIC());
-        dialog.setTitle("Introduzca contraseña");
+        dialog.setTitle("Introduzca contrase\u00f1a");
         dialog.setHeaderText(null);
-        dialog.setContentText("Introduzca su contraseña del DSIC: ");
+        dialog.setContentText("Introduzca su contrase\u00f1a del DSIC: ");
         
         Optional<String> res = dialog.showAndWait();
         res.ifPresent((newPass) -> setPassDSIC(newPass));

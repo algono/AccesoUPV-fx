@@ -26,3 +26,5 @@ hs_err_pid*
 
 # Dont ignore libraries (lib package)
 !/src/lib/*
+/bin/
+/target/
