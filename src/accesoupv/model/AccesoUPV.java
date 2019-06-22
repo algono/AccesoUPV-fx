@@ -33,7 +33,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
-import lib.PasswordDialog;
+import myLibrary.javafx.PasswordDialog;
 import myLibrary.javafx.AlertingTask;
 
 /**
