@@ -76,10 +76,10 @@ public class AyudaController implements Initializable {
     public static final String VPN_DSIC_WEB = "http://www.dsic.upv.es/docs/infraestructura/portal-ng/manual_portal2_usuario_v8.pdf";
     public static final String EVIR_ERROR_MESSAGE = 
             "Hubo un error al tratar de abrir el Escritorio Remoto.\n"
-            + "Ábralo manualmente (Buscar - Escritorio Remoto)";
+            + "Abralo manualmente (Buscar - Escritorio Remoto)";
     public static final String DEVICES_ERROR_MESSAGE = 
             "Hubo un error al tratar de abrir el Administrador de dispositivos.\n" 
-            + "Ábralo manualmente (Buscar - Administrador de dispositivos)";
+            + "Abralo manualmente (Buscar - Administrador de dispositivos)";
     public static final String WEB_ERROR_MESSAGE = "Hubo un error al tratar de abrir la página web.";
     
     private Stage primaryStage;
@@ -113,7 +113,7 @@ public class AyudaController implements Initializable {
     
     public static Menu getMenu() {
         Menu menu = new Menu("Ayuda");
-        MenuItem menuIndice = new MenuItem("Índice de ayuda");
+        MenuItem menuIndice = new MenuItem("Indice de ayuda");
         menuIndice.setOnAction((evt) -> getInstance().getStage().show());
         
         ObservableList<MenuItem> items = menu.getItems();

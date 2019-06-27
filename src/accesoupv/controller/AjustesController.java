@@ -84,20 +84,20 @@ public class AjustesController implements Initializable {
     private Button buttonCreateVpnDSIC;
     
     //Constants (Messages)
-    public static final String SUCCESS_MESSAGE = "El archivo ha sido creado con éxito.\n¿Desea abrir la carpeta en la cual ha sido guardado?";
+    public static final String SUCCESS_MESSAGE = "El archivo ha sido creado con éxito.\n�Desea abrir la carpeta en la cual ha sido guardado?";
     public static final String ERROR_MESSAGE = "Ha habido un error al crear el programa. Vuelva a intentarlo.";
-    public static final String FOLDER_ERROR_MESSAGE = "Ha habido un error al abrir la carpeta. Ábrala manualmente.";
+    public static final String FOLDER_ERROR_MESSAGE = "Ha habido un error al abrir la carpeta. Abrala manualmente.";
     public static final String RESET_MESSAGE = 
-            "Se reestablecerán los valores predeterminados, por tanto será como si acabaras de ejecutar el programa por primera vez.\n\n"
-            + "Para completar este proceso, el programa se cerrará. Al volverlo a abrir se habrá completado.\n\n"
-            + "¿Estás seguro?";
+            "Se reestableceran los valores predeterminados, por tanto sera como si acabaras de ejecutar el programa por primera vez.\n\n"
+            + "Para completar este proceso, el programa se cerrara. Al volverlo a abrir se habra completado.\n\n"
+            + "�Estas seguro?";
     public static final String HELP_USER_TOOLTIP = 
             "Formato:\n"
             + "Siendo tu usuario completo: \"usuario@dominio.upv.es\"\n"
             + "Escriba: \"usuario\"";
     public static final String DRIVE_TOOLTIP = 
-            "Si te es indiferente la unidad en la que se cree la conexión con el disco, habilita esta opción.\n"
-            + "(la conexión se creará en la primera unidad disponible)";
+            "Si te es indiferente la unidad en la que se cree la conexion con el disco, habilita esta opcion.\n"
+            + "(la conexion se creara en la primera unidad disponible)";
     
     //Lists with available drives for comboDrives
     private ObservableList<String> dataDrivesW, dataDrivesDSIC;
@@ -163,7 +163,7 @@ public class AjustesController implements Initializable {
     @FXML
     private void closeDialogue(ActionEvent evt) {
         if (anyChanges()) {
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Desea salir sin guardar los cambios?");
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "�Desea salir sin guardar los cambios?");
             confirm.setHeaderText(null);
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.get() != ButtonType.OK) return;
@@ -173,15 +173,15 @@ public class AjustesController implements Initializable {
     
     private static boolean checkCreateVPN(String name) {
         if (name.isEmpty()) {
-            Alert a = new Alert(Alert.AlertType.ERROR, "No ha indicado ningún nombre para la VPN. Indique uno.");
+            Alert a = new Alert(Alert.AlertType.ERROR, "No ha indicado ningun nombre para la VPN. Indique uno.");
             a.setHeaderText(null);
             a.showAndWait();
             return false;
         } else {
             Alert a = new Alert(Alert.AlertType.CONFIRMATION, 
-                    "Está a punto de crear una conexión VPN con el nombre '" + name + "'." + "\n"
-                    + "Tras el proceso, el cambio de VPN será guardado automáticamente.\n\n"
-                    + "¿Desea continuar?");
+                    "Esta a punto de crear una conexion VPN con el nombre '" + name + "'." + "\n"
+                    + "Tras el proceso, el cambio de VPN sera guardado automaticamente.\n\n"
+                    + "�Desea continuar?");
             a.setHeaderText(null);
             Optional<ButtonType> res = a.showAndWait();
             return res.isPresent() && res.get() == ButtonType.OK;
@@ -197,14 +197,14 @@ public class AjustesController implements Initializable {
         }
         //Por defecto se selecciona siempre el primer elemento de comboDrive
         c.getSelectionModel().selectFirst();
-        //Si está en "indiferente" activa el checkbox
+        //Si esta en "indiferente" activa el checkbox
         if (drive.equals("*")) ch.setSelected(true);
         //Si la lista lo contiene, selecciona la unidad guardada
         else if (data.contains(drive)) {
             c.getSelectionModel().select(drive);
         }
         
-        //Si el checkbox de "unidad indiferente" está seleccionado, la comboBox se desactiva (y viceversa)
+        //Si el checkbox de "unidad indiferente" esta seleccionado, la comboBox se desactiva (y viceversa)
         c.disableProperty().bind(ch.selectedProperty());
         
         ch.setTooltip(new Tooltip(DRIVE_TOOLTIP));
@@ -223,7 +223,7 @@ public class AjustesController implements Initializable {
         initDriveBoxes(acceso.getDriveW(), comboDriveW, driveWCheckBox, dataDrivesW);
         initDriveBoxes(acceso.getDriveDSIC(), comboDriveDSIC, driveDSICCheckBox, dataDrivesDSIC);
         
-        //Si se ha cambiado algún valor de un servicio que se encuentra conectado, muestra un mensaje.
+        //Si se ha cambiado algun valor de un servicio que se encuentra conectado, muestra un mensaje.
         textWarningConnected.visibleProperty().bind(Bindings.createBooleanBinding(() ->
             (acceso.isVpnUPVConnected() && VpnUPVChanged())
             || (acceso.isDriveWConnected() && (userChanged() || driveWChanged() || domainChanged()))
@@ -237,7 +237,7 @@ public class AjustesController implements Initializable {
         //Inicializa los links de ayuda
         for (MenuItem item : ayudaMenu.getItems()) {
             String text = item.getText();
-            Tooltip tooltip = new Tooltip("Si prefiere crear la conexión VPN de forma manual, haga click aquí para saber cómo");
+            Tooltip tooltip = new Tooltip("Si prefiere crear la conexion VPN de forma manual, haga click aqui para saber como");
             if (text != null && text.matches(".*crear.*VPN.*")) {
                 if (text.contains("UPV")) {
                     helpLinkVpnUPV.setOnAction(evt -> item.fire());
@@ -248,11 +248,11 @@ public class AjustesController implements Initializable {
                 }
             }
         }
-        //Añade un menú de ayuda a la barra de menú
+        //Añade un menu de ayuda a la barra de menu
         menuBar.getMenus().add(ayudaMenu);
         
         resetButton.setOnAction(evt -> {
-            //Ventana de confirmación
+            //Ventana de confirmacion
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, RESET_MESSAGE);
             confirm.setHeaderText(null);
             Optional<ButtonType> res = confirm.showAndWait();
@@ -264,7 +264,7 @@ public class AjustesController implements Initializable {
                     acceso.shutdown();
                     System.exit(0);
                 } catch (BackingStoreException ex) {
-                    new ErrorAlert(ex, "Hubo un error al tratar de borrar las preferencias.\nPara más información, pulse 'más detalles'.").showAndWait();
+                    new ErrorAlert(ex, "Hubo un error al tratar de borrar las preferencias.\nPara mas informacion, pulse 'mas detalles'.").showAndWait();
                 }
             }
         });
@@ -275,7 +275,7 @@ public class AjustesController implements Initializable {
             evt.consume();
         });
         
-        //Evento para que siempre que quites el ratón del nodo, esconda el Tooltip
+        //Evento para que siempre que quites el raton del nodo, esconda el Tooltip
         helpLinkUser.addEventHandler(MouseEvent.MOUSE_EXITED, evt -> helpLinkUser.getTooltip().hide());
         helpLinkUser.setTooltip(new Tooltip(HELP_USER_TOOLTIP));
         
@@ -311,7 +311,7 @@ public class AjustesController implements Initializable {
         //Si el dominio guardado es ALUMNOS, marca el RadioButton adecuado
         if (acceso.getDomain() == Dominio.ALUMNO) alumnoRadioButton.setSelected(true);
         
-        //Hace que al abrir la ventana, el focus lo tenga el botón de aceptar
+        //Hace que al abrir la ventana, el focus lo tenga el boton de aceptar
         Platform.runLater(() -> OKButton.requestFocus());
     }    
 }
